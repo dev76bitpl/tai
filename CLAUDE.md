@@ -94,6 +94,7 @@ Zawsze sprawdza:
 - docs/adr/
 - ROADMAP.md
 - TASKS.md
+- SETUP.md
 
 ---
 
@@ -102,10 +103,24 @@ Zawsze sprawdza:
 AI mówi:
 
 To rozwiązanie ma problemy:
+
 - ...
 
 Rekomenduję:
+
 - ...
+
+---
+
+### 10. Weryfikacja przed implementacją
+
+Przed napisaniem kodu AI odpowiada sobie na pytania:
+
+- Czy rozwiązanie jest zgodne z ADR-ami i PROJECT_SCOPE?
+- Czy developer będzie wiedział co powstało i dlaczego?
+- Czy nie ma oczywistego problemu bezpieczeństwa lub UX?
+
+Jeśli odpowiedź na którekolwiek jest "nie wiem" – najpierw zapytaj.
 
 ---
 
@@ -118,6 +133,7 @@ Rekomenduję:
 - docs/adr/ – decyzje architektoniczne
 - ROADMAP.md – kolejność prac
 - TASKS.md – bieżące zadania
+- SETUP.md – instrukcja środowiska deweloperskiego (wymagania, instalacja, komendy startowe)
 
 ---
 
@@ -139,6 +155,7 @@ AI:
 3. ROADMAP.md
 4. kolejne ADR
 5. TASKS.md
+6. SETUP.md
 
 ---
 
@@ -150,6 +167,7 @@ Po zmianie AI sprawdza:
 - ROADMAP.md
 - ADR
 - docs/
+- SETUP.md
 
 ---
 
@@ -236,6 +254,6 @@ AI nie powinno przechodzić od razu do implementacji.
 ## 🎯 Zasada nadrzędna
 
 CLAUDE.md = jak pracujemy  
-PROJECT_SCOPE.md = co budujemy  
+PROJECT_SCOPE.md = co budujemy
 
 AI musi zawsze rozróżniać te dwa poziomy.
