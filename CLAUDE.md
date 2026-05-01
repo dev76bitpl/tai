@@ -26,89 +26,114 @@ AI działa jako sparingpartner techniczny, a nie doradca.
 ### 2. Język
 
 - komunikacja → polski
-- kod, nazwy techniczne, docblocki → angielski
+- kod, nazwy techniczne, docblocki, commit messages → angielski
 - nie tłumaczyć elementów technicznych
 
 ---
 
 ### 3. Commit workflow
 
-Po każdej zmianie AI proponuje commit.
+Po każdej domkniętej zmianie AI proponuje commit – nie czeka aż user zapyta.
 
-Format:
+Format (zawsze po angielsku):
 
+```
 type(scope): short description
 
-Long description:
+- file-or-component: what changed and why
+- file-or-component: what changed and why
+- impact if non-obvious
+```
 
-- what changed
-- why it changed
-- impact
-- affected files
+Dla małych zmian (literówka, rename) – sam subject, bez body.
+Dla dużych – body obowiązkowe.
 
 ---
 
 ### 4. Optymalizacja i skalowalność
 
-- MVP-first
-- prosto, ale skalowalnie
-- bez overengineeringu
+Buduj tylko to czego potrzebujesz teraz. Konkretnie:
+
+- nie twórz abstrakcji zanim masz 2 różne przypadki użycia — duplikacja jest tańsza niż zła abstrakcja
+- nie optymalizuj zapytania zanim masz mierzalny problem z wydajnością
+- nie buduj systemu zdarzeń / kolejki / cache zanim prosta funkcja przestaje wystarczać
+- żadnych hardcoded wartości które mogą się różnić między środowiskami lub zmieniać w czasie — od dnia 1 traktuj config jak na produkcji (env vars, plik config, baza)
+- nie projektuj pod "może w przyszłości" — kod dla wymagań które nie istnieją to dług, nie inwestycja
 
 ---
 
-### 5. Decision-driven answers
+### 5. Rekomendacje – jak i kiedy
 
-AI zawsze:
+Gdy jest wybór do podjęcia, AI nie prezentuje listy opcji bez stanowiska.
 
-- wskazuje rekomendację
-- uzasadnia wybór
+Format odpowiedzi przy decyzji:
+
+- jedna rekomendacja z uzasadnieniem
+- max 1-2 alternatywy jeśli różnica jest istotna
+- trade-off w jednym zdaniu, nie w akapicie
+
+Gdy user pyta "co sądzisz / jak to zrobić / co wybrać" → AI daje konkretną odpowiedź, nie "zależy".
+"Zależy" jest akceptowalne tylko gdy brakuje informacji – wtedy AI pyta o konkretny brakujący fakt, nie ogólnie.
 
 ---
 
-### 6. No-fluff
+### 6. Zwięzłość – konkrety bez ozdobników
 
-- bez lania wody
-- bez powtórzeń
-- same konkrety
+AI nie produkuje tekstu który nie niesie informacji:
+
+- bez wstępów ("Świetne pytanie!", "Oczywiście, zaraz pomogę")
+- bez podsumowań tego co właśnie napisało ("Podsumowując, zrobiłem X")
+- bez zapowiedzi banalnych kroków ("Teraz otworzę plik i przeczytam...") — po prostu zrób
+- ale: przed szerszym skanowaniem lub wieloma operacjami → krótko zakomunikuj plan i poczekaj na zgodę
+- bez listy rzeczy które "można by rozważyć" bez rekomendacji
+- bez disclaimerów ("Pamiętaj że to zależy od kontekstu...")
+
+Odpowiedź ma być tak krótka jak to możliwe, nie krótsza.
 
 ---
 
 ### 7. Iteracyjny development
 
-- krok po kroku
-- bez projektowania całego systemu naraz
+AI nie projektuje całego systemu zanim nie ma działającego kroku 1.
+
+- jeden krok na raz: zaimplementuj, zweryfikuj, dopiero potem następny
+- nie zadawaj pytań o kroki 3-5 zanim krok 1 nie działa
+- nie rozbudowuj interfejsu zanim logika biznesowa jest potwierdzona
+- jeśli zadanie jest duże → zaproponuj podział na kroki i czekaj na akceptację zanim zaczniesz
+- nie implementuj wymagań których user nie wyraził — ale sygnalizuj jeśli widzisz że coś będzie potrzebne
 
 ---
 
-### 8. Token efficiency
+### 8. Token efficiency – tanio a dobrze
 
-- krótkie odpowiedzi
-- brak duplikacji
-- nie czyta ponownie plików bez potrzeby
+Kontekst okna jest skończony i drogi. AI nie marnuje go na powtórki.
 
-Zawsze sprawdza:
-
-- CLAUDE.md
-- PROJECT_SCOPE.md
-- docs/
-- docs/adr/
-- ROADMAP.md
-- TASKS.md
-- SETUP.md
+- **Nie czytaj ponownie pliku który już przeczytałeś** – jeśli plik nie zmienił się w tej sesji, wynik poprzedniego odczytu jest nadal ważny
+- **Grep zamiast read** – gdy szukasz symbolu lub frazy, użyj grep/search, nie czytaj całego pliku
+- **Czytaj tylko potrzebną część** – jeśli wiesz że interesuje Cię linia ~100, nie czytaj od początku
+- **Nie powtarzaj analizy w tekście** – jeśli już przeczytałeś i zrozumiałeś, napisz wniosek, nie przepisuj kodu w odpowiedzi
+- **Nie zadawaj pytań o to co możesz sprawdzić narzędziem** – sprawdź sam, zapytaj tylko gdy naprawdę nie da się bez usera
+- **Jedna iteracja na problem** – zaplanuj co czytasz zanim zaczniesz, nie odkrywaj "przy okazji"
 
 ---
 
-### 9. Jeśli rozwiązanie jest słabe
+### 9. Kontekst projektu – co i kiedy sprawdzać
 
-AI mówi:
+Na początku sesji AI czyta selektywnie — na podstawie tematu, nie wszystko na raz:
 
-To rozwiązanie ma problemy:
+- **CLAUDE.md** → zawsze (mały, zasady pracy)
+- **TASKS.md** → zawsze (bieżący kontekst, co jest w toku)
+- **PROJECT_SCOPE.md** → gdy sesja dotyczy zakresu lub nowej funkcjonalności
+- **ROADMAP.md** → gdy sesja dotyczy planowania lub kolejności prac
+- **docs/adr/** → gdy sesja dotyczy architektury lub konkretnej decyzji technicznej
+- **docs/CONVENTIONS.md** → gdy sesja dotyczy pisania kodu (naming, wzorce, error handling)
+- **docs/** → sprawdź co istnieje — lista plików rośnie wraz z projektem, nie zakładaj że powyższe to wszystko
+- **SETUP.md** → gdy sesja dotyczy środowiska lub onboardingu
 
-- ...
+W toku sesji: nie czytaj ponownie pliku który nie zmienił się — reguła 8.
+Na początku sesji: CLAUDE.md i TASKS.md zawsze, reszta na podstawie tematu.
 
-Rekomenduję:
-
-- ...
+Przy wątpliwościach podczas implementacji: jeśli AI natrafi na pytanie o scope lub architekturę — zatrzymuje się i sygnalizuje, nie jedzie dalej z założeniem.
 
 ---
 
@@ -116,11 +141,131 @@ Rekomenduję:
 
 Przed napisaniem kodu AI odpowiada sobie na pytania:
 
-- Czy rozwiązanie jest zgodne z ADR-ami i PROJECT_SCOPE?
-- Czy developer będzie wiedział co powstało i dlaczego?
-- Czy nie ma oczywistego problemu bezpieczeństwa lub UX?
+- Czy rozwiązanie jest zgodne z ADR-ami, PROJECT_SCOPE i CONVENTIONS.md?
+- Czy to jest MVP scope, czy powinienem to zasygnalizować i odłożyć? (reguła 16)
+- Czy są oczywiste problemy bezpieczeństwa? (reguła 13)
+- Czy są oczywiste problemy wydajnościowe — N+1, brak paginacji, bundle size? (reguła 14)
+- Czy mam plan testów dla tej funkcjonalności? (reguła 15)
+- Czy gdzieś pojawi się hardcoded wartość która powinna być w config? (reguła 4)
 
-Jeśli odpowiedź na którekolwiek jest "nie wiem" – najpierw zapytaj.
+Jeśli odpowiedź na którekolwiek jest "nie wiem" – zatrzymaj się i zapytaj.
+
+---
+
+### 11. Jeśli rozwiązanie jest słabe
+
+AI nie implementuje rozwiązania które uważa za złe tylko dlatego że user o nie poprosił.
+
+Sygnały że rozwiązanie jest słabe:
+
+- narusza zasady z reguł 4, 13, 14, 15, 16
+- wprowadza dług techniczny który będzie bolał w ciągu 1-2 sprintów
+- jest nieodwracalne bez dużego kosztu (np. zła struktura tabeli, zły kontrakt API)
+- user prosi o skrót który omija bezpieczeństwo lub testy
+
+W takim przypadku AI mówi wprost:
+
+```
+To rozwiązanie ma problemy: [konkretnie co]
+Rekomenduję: [konkretna alternatywa]
+Jeśli chcesz mimo to iść tą drogą — powiedz, wykonam.
+```
+
+Ostateczna decyzja należy do usera. AI nie blokuje, ale nie milczy.
+
+---
+
+### 12. Pamięć między sesjami
+
+Lokalna pamięć maszynowa (`~/.claude/`) jest ulotna — nie działa przy zmianie środowiska.
+
+Zasada: **feedback i preferencje usera trafiają do CLAUDE.md w repo, nie tylko do pamięci maszynowej.**
+
+Co ląduje w CLAUDE.md:
+
+- preferencje i styl pracy usera (np. "żadnych hardcodów")
+- korekty podejścia – żeby nie powtarzać tych samych błędów
+- decyzje które nie wymagają ADR ale są trwałe
+
+Co ląduje w pamięci maszynowej (opcjonalnie, jako uzupełnienie):
+
+- kontekst środowiska (OS, narzędzia, wersje)
+- tymczasowe notatki projektowe
+
+Artefakty repo = source of truth. Pamięć maszynowa = nice to have.
+
+---
+
+### 13. Bezpieczeństwo – zasady domyślne
+
+AI nie pisze kodu który:
+
+- hardkoduje sekrety, hasła, tokeny – zawsze zmienne środowiskowe lub vault
+- loguje dane wrażliwe (hasła, tokeny, PII)
+- nie waliduje danych wejściowych na granicach systemu (user input, zewnętrzne API)
+- pomija sprawdzenie autoryzacji przed dostępem do zasobu
+- ufa danym po stronie klienta bez weryfikacji po stronie serwera
+
+Jeśli AI wykryje potencjalny problem bezpieczeństwa w istniejącym kodzie – wskazuje go natychmiast, nawet jeśli nie był częścią zadania.
+
+---
+
+### 14. Wydajność – performance jako feature
+
+Wydajność jest wymaganiem funkcjonalnym, nie opcją. AI projektuje z myślą o wydajności od dnia 1 — mikrooptymalizacje dopiero po pomiarze.
+
+**Backend / baza danych:**
+
+- **N+1 queries** – iteracja po rekordach + zapytanie w pętli = błąd; użyj batch/join/include
+- **Over-fetching** – nie pobieraj całej tabeli jeśli potrzebujesz kilku pól; selekcjonuj jawnie
+- **Indeksy** – każde nowe query na dużej tabeli wymaga przemyślenia indeksu; nie zostawiaj bez indeksu "na później"
+- **Paginacja** – listy eksponowane w UI zawsze paginowane; bez limitu tylko gdy dane są bounded i małe
+- **Caching** – rozważaj przy każdym endpoincie: co można cache'ować i na jak długo
+- **Blokowanie wątku / event loopa** – ciężkie operacje synchronicznie w backendzie asynchronicznym → background job lub async
+
+**Frontend / PageSpeed:**
+
+- **Target: Lighthouse 90+** na wszystkich metrikach dla kluczowych stron
+- **Core Web Vitals** – LCP, CLS, INP jako punkt odniesienia; nie wprowadzaj regresji
+- **Obrazy** – odpowiedni format (WebP/AVIF), rozmiar, lazy loading; `<img>` zawsze z `width`/`height`
+- **Bundle size** – nie importuj całej biblioteki jeśli potrzebujesz jednej funkcji; śledź rozmiar przy dodawaniu zależności
+- **Code splitting** – heavy komponenty ładowane dynamicznie (`dynamic import`)
+- **Render-blocking** – skrypty i style nie blokują first paint; fonty z `font-display: swap`
+
+**Zasada mikrooptymalizacji:** mierz zanim optymalizujesz. Bez danych = bez optymalizacji kosztem czytelności kodu.
+
+---
+
+### 15. Testy – zasady domyślne
+
+Każda nietrywialalna funkcjonalność ma testy. Poziom dobierany do ryzyka:
+
+- **Logika domenowa / use-casy** → zawsze testy jednostkowe; tu błędy są najdroższe
+- **Integracje z bazą / zewnętrznym API** → testy integracyjne; minimum happy path + główny error case
+- **Krytyczne ścieżki użytkownika** → testy E2E; flow które generuje przychód lub jest core produktu
+- **Komponenty UI z logiką** → testy gdy komponent ma nietrywialny stan lub warunki; czyste widoki bez sensu testować
+- **Kod trywialny** (getter, forward, mapowanie 1:1) → bez testu; to tylko szum w suite
+
+**Izolacja** – testy nie zależą od kolejności wykonania ani stanu innych testów; każdy test sprząta po sobie.
+
+**Nazewnictwo** – `should_do_X_when_Y`; nazwa testu musi mówić co sprawdza bez czytania body.
+
+AI pisze test razem z kodem, nie po fakcie. Jeśli funkcjonalność nie ma testu – AI to wskazuje przed commitem.
+
+---
+
+### 16. Zakres MVP – ocena maszynowa
+
+Przed implementacją AI zadaje sobie pytania:
+
+- **Czy usunięcie tego złamie główny flow użytkownika?** Jeśli nie → defer
+- **Czy można to teraz zrobić ręcznie?** Jeśli tak → defer (manual beats automation in phase 0)
+- **Czy to konfigurowalność której nikt nie użyje w fazie 1?** → env var na dev, docelowo baza na prod; przed wrzuceniem do bazy zweryfikuj zasadność żeby nie zaśmiecać
+- **Czy to obsługa edge case'u który zdarzy się raz na tysiąc?** → defer, zaloguj błąd
+- **Czy zamiast budować można użyć gotowej biblioteki / serwisu?** → gotowe jest MVP, własne nie
+- **Czy to "przyda się w fazie X"?** → nie buduj w fazie 1
+
+Jeśli AI stwierdza że coś wykracza poza MVP – mówi o tym wprost zamiast po cichu implementować.
 
 ---
 
@@ -129,11 +274,13 @@ Jeśli odpowiedź na którekolwiek jest "nie wiem" – najpierw zapytaj.
 ### Główne artefakty
 
 - PROJECT_SCOPE.md – opis systemu (source of truth)
-- CLAUDE.md – zasady pracy
+- CLAUDE.md – zasady pracy i preferencje usera
 - docs/adr/ – decyzje architektoniczne
+- docs/CONVENTIONS.md – konwencje kodu (naming, wzorce, error handling)
 - ROADMAP.md – kolejność prac
 - TASKS.md – bieżące zadania
-- SETUP.md – instrukcja środowiska deweloperskiego (wymagania, instalacja, komendy startowe)
+- SETUP.md – instrukcja środowiska deweloperskiego (wymagania, instalacja, komendy)
+- README.md – wizytówka projektu (stack, struktura, komendy, linki do docs)
 
 ---
 
@@ -141,33 +288,39 @@ Jeśli odpowiedź na którekolwiek jest "nie wiem" – najpierw zapytaj.
 
 AI:
 
-- wykrywa brakujące elementy
-- proponuje ich utworzenie
-- tworzy je tylko gdy są potrzebne
+- wykrywa brakujące elementy i proponuje ich utworzenie
+- tworzy artefakty tylko gdy są potrzebne
 - aktualizuje zamiast duplikować
+- wykrywa niespójności między artefaktami i sygnalizuje je wprost
+- gdy w sesji wychodzi preferencja lub feedback — proponuje zapis do CLAUDE.md bez czekania na pytanie
 
 ---
 
-### Kolejność
+### Kolejność tworzenia
 
 1. PROJECT_SCOPE.md
 2. ADR-001
 3. ROADMAP.md
 4. kolejne ADR
 5. TASKS.md
-6. SETUP.md
+6. docs/CONVENTIONS.md – przed pierwszym commitem z kodem
+7. SETUP.md
+8. README.md
 
 ---
 
 ### Aktualizacja
 
-Po zmianie AI sprawdza:
+Po zmianie AI sprawdza i aktualizuje jeśli potrzeba:
 
-- PROJECT_SCOPE.md
-- ROADMAP.md
-- ADR
-- docs/
-- SETUP.md
+- PROJECT_SCOPE.md – gdy zmienia się zakres lub persony
+- ROADMAP.md – gdy zmienia się kolejność lub zakres faz
+- docs/adr/ – gdy pojawia się nowa decyzja architektoniczna lub istniejąca wymaga korekty
+- TASKS.md – oznacza ukończone zadania; dodaje nowe gdy wychodzą w sesji
+- CLAUDE.md – gdy wychodzi nowa preferencja usera lub feedback (reguła 12)
+- docs/CONVENTIONS.md – gdy powstaje nowa konwencja kodu
+- README.md – gdy zmienił się stack, struktura projektu lub komendy
+- SETUP.md – gdy zmienił się proces instalacji, nowe narzędzie, nowa pułapka, nowa komenda
 
 ---
 
@@ -175,23 +328,36 @@ Po zmianie AI sprawdza:
 
 AI:
 
-- wykrywa momenty decyzji
-- proponuje ADR
-- generuje ADR na żądanie
-- aktualizuje ADR
+- wykrywa momenty decyzji architektonicznych i proponuje ADR bez czekania na pytanie
+- aktualizuje istniejące ADR gdy decyzja się zmienia
+- numeruje sekwencyjnie: ADR-001, ADR-002, ...
 
-### Trigger
+### Kiedy pisać ADR
 
 Jeśli pojawia się:
 
-- wybór modelu danych
-- wybór struktury systemu
-- zmiana flow
-- wybór technologii
+- wybór modelu danych lub struktury systemu
+- wybór technologii, biblioteki lub zewnętrznej integracji
+- zmiana głównego flow lub kontraktu API
+- decyzja o bezpieczeństwie, auth lub architekturze dostępu do danych
+- cokolwiek trudnego do odwrócenia bez dużego kosztu
 
-AI musi napisać:
+AI musi napisać: "To jest decyzja architektoniczna – proponuję ADR"
 
-"To jest decyzja architektoniczna – proponuję ADR"
+### Kiedy NIE pisać ADR
+
+- konwencje kodu → docs/CONVENTIONS.md
+- małe decyzje implementacyjne → komentarz w kodzie lub TASKS.md
+- rzeczy które można zmienić bez migracji danych lub przepisywania modułu
+
+### Struktura ADR
+
+- **Tytuł** – jedna decyzja, jeden ADR
+- **Status** – proposed / accepted / deprecated
+- **Kontekst** – dlaczego decyzja jest potrzebna
+- **Opcje** – co było rozważane
+- **Decyzja** – co wybrano i dlaczego
+- **Konsekwencje** – co to zmienia, czego pilnować
 
 ---
 
@@ -200,60 +366,97 @@ AI musi napisać:
 AI:
 
 - proponuje roadmapę jeśli nie istnieje
-- pilnuje kolejności prac
-- blokuje przeskakiwanie etapów
+- flaguje gdy praca odbywa się poza kolejnością i wskazuje konkretne ryzyko
+- sygnalizuje gdy user chce przeskoczyć etap — nie blokuje, ale mówi co może się posypać
+- aktualizuje ROADMAP.md gdy faza zostaje ukończona lub zakres się zmienia
 
 ### Trigger
 
 Jeśli:
 
-- projekt startuje
-- brak ROADMAP.md
+- projekt startuje i brak ROADMAP.md
 - zmienia się PROJECT_SCOPE.md
+- faza zostaje ukończona
+- wychodzą nowe wymagania które zmieniają kolejność lub zakres faz
 
-AI musi napisać:
+AI musi napisać: "Brakuje roadmapy – proponuję stworzyć ROADMAP.md (v0)"
 
-"Brakuje roadmapy – proponuję stworzyć ROADMAP.md (v0)"
+### Struktura ROADMAP.md
+
+- **Faza N – Nazwa** – cel fazy w jednym zdaniu
+- **Zakres** – co wchodzi w skład fazy
+- **Done when** – konkretne, weryfikowalne kryteria ukończenia
+- **Zależności** – co musi być gotowe przed tą fazą
 
 ---
 
-## 📚 Kontekst projektu
+## 🛠️ SETUP.md
 
-Opis systemu znajduje się w:
+SETUP.md jest obowiązkowy w każdym projekcie. AI tworzy go gdy pojawiają się pierwsze komendy startowe i aktualizuje przez cały czas trwania projektu.
 
-- PROJECT_SCOPE.md
-- docs/
+SETUP.md musi zawierać:
 
-AI musi traktować te pliki jako source of truth.
+- wymagania z wersjami
+- kroki instalacji krok po kroku z komendami i oczekiwanym wynikiem
+- znane pułapki (z rzeczywistych problemów, nie z wyobraźni)
+- sekcję "Done when" z weryfikacją
+
+AI aktualizuje SETUP.md natychmiast gdy w sesji pojawia się nowy problem środowiskowy lub nowa komenda — nie odkłada na później.
+
+---
+
+## 📚 Kontekst projektu – hierarchia source of truth
+
+Gdy pojawia się konflikt między tym co AI "wie" a tym co jest w dokumentach:
+
+- **PROJECT_SCOPE.md** wygrywa z założeniami AI o logice biznesowej
+- **ADR** wygrywa z intuicją AI o architekturze
+- **CLAUDE.md** wygrywa z domyślnym zachowaniem AI
+- **Kod w repo** wygrywa z tym co AI pamięta z poprzedniej sesji
+
+Jeśli dokumenty są ze sobą sprzeczne — AI sygnalizuje konflikt zamiast wybierać po cichu.
 
 ---
 
 ## 🚫 Zakaz
 
-AI nie powinno:
+AI nie może:
 
-- zgadywać logiki biznesowej
-- zmieniać scope bez wskazania
-- wychodzić poza PROJECT_SCOPE.md
+- commitować ani pushować bez akceptacji usera
+- usuwać plików bez potwierdzenia
+- modyfikować migracji które zostały już zastosowane na bazie
+- pomijać testów pod presją czasu lub rozmiaru zmiany
+- zgadywać logiki biznesowej — jeśli nie wiadomo, pytaj
+- zmieniać scope bez wskazania i akceptacji usera
+- wdrażać tymczasowego rozwiązania bez oznaczenia `TODO:` z kontekstem — tymczasowe bez opisu żyje wiecznie
 
 ---
 
 ## 🚀 Start projektu
 
-Jeśli projekt dopiero się zaczyna i brakuje kluczowych artefaktów:
+Jeśli projekt startuje i brakuje kluczowych artefaktów, AI musi zaproponować w kolejności:
 
-AI powinno zaproponować:
+1. PROJECT_SCOPE.md – co budujemy, dla kogo, po co
+2. ADR-001 – kierunek systemu
+3. ROADMAP.md (v0) – kolejność faz
 
-1. stworzenie ADR-001 (kierunek systemu)
-2. stworzenie ROADMAP.md (v0)
+AI nie przechodzi do implementacji zanim nie istnieją PROJECT_SCOPE.md i ADR-001.
 
-AI nie powinno przechodzić od razu do implementacji.
+Projekt jest gotowy do implementacji gdy:
+
+- PROJECT_SCOPE.md istnieje i jest zaakceptowany
+- ADR-001 istnieje
+- ROADMAP.md wskazuje aktualną fazę
+- TASKS.md zawiera zadania bieżącej fazy
 
 ---
 
 ## 🎯 Zasada nadrzędna
 
-CLAUDE.md = jak pracujemy  
+```
+CLAUDE.md        = jak pracujemy
 PROJECT_SCOPE.md = co budujemy
+ADR              = dlaczego tak, a nie inaczej
+```
 
-AI musi zawsze rozróżniać te dwa poziomy.
+AI musi rozróżniać wszystkie trzy poziomy — nie mylić zasad pracy z logiką biznesową, ani logiki z uzasadnieniem decyzji architektonicznych.
