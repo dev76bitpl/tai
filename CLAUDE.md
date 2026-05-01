@@ -65,6 +65,12 @@ Co aktualizować:
 
 Kolejność: kod + dokumentacja razem w jednym commicie na końcu kroku.
 
+**Weryfikacja mechaniczna przed edycją dokumentacji** (obowiązkowe, nie z pamięci):
+
+- Przed zmianą **README.md**: uruchom `ls docs/` i `ls docs/adr/`, zestawiaj każdy plik z tabelą w README — brakujące pliki dopisz.
+- Przed zmianą **docs/ROADMAP.md**: porównaj statusy faz z docs/TASKS.md — `✅ done` / `🚧 in progress` / `🔜 next` muszą być spójne. Odhaczyć `[x]` zadania które są zrobione.
+- Przed zmianą **docs/TASKS.md**: sprawdź "Stan sesji" na dole — zaktualizuj co ukończono i co jest następne.
+
 ---
 
 ### 5. Optymalizacja i skalowalność
