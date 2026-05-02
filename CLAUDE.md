@@ -62,8 +62,11 @@ Co aktualizować:
 - **docs/CONVENTIONS.md** – jeśli powstała nowa konwencja kodu
 - **docs/UI_GUIDELINES.md** – jeśli zmienił się wzorzec UI, dodano nowy komponent lub stan
 - **docs/adr/** – jeśli pojawiła się decyzja architektoniczna
+- **docs/TESTING.md** – jeśli pojawił się nowy krytyczny flow wymagający testu manualnego
 
 Kolejność: kod + dokumentacja razem w jednym commicie na końcu kroku.
+
+Po każdym domkniętym kroku AI proponuje też checklistę testów manualnych — nie czeka aż user zapyta. Format: krótka lista punktów "co sprawdzić" dla danego flow (happy path + główne edge case'y). Jeśli flow jest krytyczny i lista jest dłuższa — proponuje dopisanie do docs/TESTING.md.
 
 **Weryfikacja mechaniczna przed edycją dokumentacji** (obowiązkowe, nie z pamięci):
 
@@ -153,6 +156,7 @@ Na początku sesji AI czyta selektywnie — na podstawie tematu, nie wszystko na
 - **docs/UI_GUIDELINES.md** → zawsze gdy sesja dotyczy UI (komponenty, formularze, layout, stany)
 - **docs/** → sprawdź co istnieje — lista plików rośnie wraz z projektem, nie zakładaj że powyższe to wszystko
 - **docs/SETUP.md** → gdy sesja dotyczy środowiska lub onboardingu
+- **docs/TESTING.md** → gdy sesja dotyczy testowania lub dodawania nowego krytycznego flow
 
 W toku sesji: nie czytaj ponownie pliku który nie zmienił się — reguła 9.
 Na początku sesji: CLAUDE.md i docs/TASKS.md zawsze, reszta na podstawie tematu.
@@ -306,6 +310,7 @@ Jeśli AI stwierdza że coś wykracza poza MVP – mówi o tym wprost zamiast po
 - docs/ROADMAP.md – kolejność prac
 - docs/TASKS.md – bieżące zadania
 - docs/SETUP.md – instrukcja środowiska deweloperskiego (wymagania, instalacja, komendy)
+- docs/TESTING.md – checklisty testów manualnych dla krytycznych flow (pairing, QR scanner, ...)
 - README.md – wizytówka projektu (stack, struktura, komendy, linki do docs)
 
 ---
@@ -348,6 +353,7 @@ Po zmianie AI sprawdza i aktualizuje jeśli potrzeba:
 - docs/UI_GUIDELINES.md – gdy zmienia się wzorzec UI, pojawia się nowy komponent lub stan
 - README.md – gdy zmienił się stack, struktura projektu lub komendy
 - docs/SETUP.md – gdy zmienił się proces instalacji, nowe narzędzie, nowa pułapka, nowa komenda
+- docs/TESTING.md – gdy pojawia się nowy krytyczny flow wymagający testu manualnego
 
 ---
 
