@@ -80,7 +80,7 @@ Buduj tylko to czego potrzebujesz teraz. Konkretnie:
 - nie twórz abstrakcji zanim masz 2 różne przypadki użycia — duplikacja jest tańsza niż zła abstrakcja
 - nie optymalizuj zapytania zanim masz mierzalny problem z wydajnością
 - nie buduj systemu zdarzeń / kolejki / cache zanim prosta funkcja przestaje wystarczać
-- żadnych hardcoded wartości które mogą się różnić między środowiskami lub zmieniać w czasie — od dnia 1 traktuj config jak na produkcji (env vars, plik config, baza)
+- żadnych hardcoded wartości które mogą się różnić między środowiskami lub zmieniać w czasie — od dnia 1 traktuj config jak na produkcji (env vars, plik config, baza); **dotyczy też plików seed** (nazwy, slugi, kraje, strefy czasowe — wszystko z env)
 - nie projektuj pod "może w przyszłości" — kod dla wymagań które nie istnieją to dług, nie inwestycja
 
 ---
