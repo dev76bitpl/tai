@@ -84,6 +84,7 @@ Buduj tylko to czego potrzebujesz teraz. Konkretnie:
 - nie optymalizuj zapytania zanim masz mierzalny problem z wydajnością
 - nie buduj systemu zdarzeń / kolejki / cache zanim prosta funkcja przestaje wystarczać
 - żadnych hardcoded wartości które mogą się różnić między środowiskami lub zmieniać w czasie — od dnia 1 traktuj config jak na produkcji (env vars, plik config, baza); **dotyczy też plików seed** (nazwy, slugi, kraje, strefy czasowe — wszystko z env)
+- współdzielone stałe UI (etykiety, mapowania enum→tekst, warianty komponentów) trafiają do dedykowanego pliku config od pierwszego użycia — nie inline w komponencie; przed zdefiniowaniem nowej stałej sprawdź czy już istnieje
 - nie projektuj pod "może w przyszłości" — kod dla wymagań które nie istnieją to dług, nie inwestycja
 
 ---
@@ -295,6 +296,27 @@ Przed implementacją AI zadaje sobie pytania:
 - **Czy to "przyda się w fazie X"?** → nie buduj w fazie 1
 
 Jeśli AI stwierdza że coś wykracza poza MVP – mówi o tym wprost zamiast po cichu implementować.
+
+---
+
+### 18. Review designu przed implementacją UI
+
+Przed napisaniem kodu każdego nowego ekranu lub flow UI, AI najpierw opisuje proponowany flow (skrócony opis: skąd użytkownik wchodzi, co widzi, co robi, dokąd trafia) i czeka na akceptację usera.
+
+Dotyczy każdego nowego ekranu — listy, formularza, widoku szczegółowego, flow wielokrokowego.
+
+Nie dotyczy: drobnych zmian w istniejących ekranach (np. nowa kolumna w tabeli, nowe pole w formularzu).
+
+Format review:
+
+```
+Flow: [nazwa flow]
+1. User wchodzi z: [skąd]
+2. Widzi: [co]
+3. Robi: [akcja]
+4. Efekt: [co się dzieje, dokąd trafia]
+Pytanie: czy taki flow jest ok?
+```
 
 ---
 
