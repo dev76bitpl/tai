@@ -55,7 +55,6 @@ Dla dużych – body obowiązkowe.
 Po każdym domkniętym kroku AI proponuje aktualizację dokumentacji — nie czeka aż user zapyta.
 
 Co aktualizować:
-
 - **docs/TASKS.md** – odhaczyć ukończone zadanie, dodać nowe jeśli wyszły w sesji
 - **docs/SETUP.md** – jeśli pojawiły się nowe komendy, pułapki lub zmieniło się "done when"
 - **docs/ROADMAP.md** – jeśli faza została ukończona lub zmienił się zakres
@@ -63,6 +62,7 @@ Co aktualizować:
 - **docs/UI_GUIDELINES.md** – jeśli zmienił się wzorzec UI, dodano nowy komponent lub stan
 - **docs/adr/** – jeśli pojawiła się decyzja architektoniczna
 - **docs/TESTING.md** – jeśli pojawił się nowy krytyczny flow wymagający testu manualnego
+- **docs/DELIVERY_CHECKLIST.md** – jeśli zmienia się standard domykania funkcjonalności
 
 Kolejność: kod + dokumentacja razem w jednym commicie na końcu kroku.
 
@@ -101,6 +101,15 @@ Format odpowiedzi przy decyzji:
 
 Gdy user pyta "co sądzisz / jak to zrobić / co wybrać" → AI daje konkretną odpowiedź, nie "zależy".
 "Zależy" jest akceptowalne tylko gdy brakuje informacji – wtedy AI pyta o konkretny brakujący fakt, nie ogólnie.
+
+Kolejność priorytetów przy rekomendacji technicznej (obowiązkowa):
+
+1. kryterium akceptacji / cel produktu
+2. ryzyko przepisywania i krótkiego życia rozwiązania
+3. koszt utrzymania i złożoność operacyjna
+4. dopiero na końcu optymalizacje typu mniej zależności / mniejszy bundle
+
+AI nie może proponować rozwiązania "na chwilę", jeśli jest wysoka szansa, że będzie zaraz wyrzucone i zastąpione.
 
 ---
 
@@ -284,6 +293,28 @@ AI pisze test razem z kodem, nie po fakcie. Jeśli funkcjonalność nie ma testu
 
 ---
 
+### 16a. Domknięcie modułu – testy i artefakty (obowiązkowe)
+
+Każde zakończenie prac nad modułem **musi** obejmować testy i propozycję domknięcia kroku.
+
+Twarde zasady:
+
+- AI **zawsze** proponuje testy dla modułu (bez czekania na pytanie usera)
+- AI nie uznaje modułu za domknięty bez testów adekwatnych do zakresu zmiany
+- dla krytycznych flow testy **muszą** pokrywać logikę biznesową i ścieżkę integracyjną (nie tylko mocki jednostkowe)
+- minimalny zestaw dla krytycznego flow: happy path + główny błąd biznesowy + regresja dla najważniejszej ścieżki manualnej
+- przed merge/PR: AI zawsze wykonuje check regresji dla obszaru zmiany (minimum: testy automatyczne modułu + smoke manualny krytycznego flow)
+- po domknięciu modułu AI **zawsze** proponuje message commita
+- po domknięciu modułu AI **zawsze** proponuje aktualizację dokumentacji:
+  - `docs/TASKS.md`
+  - `docs/ROADMAP.md`
+  - `docs/adr/*` (jeśli decyzja ma charakter architektoniczny)
+  - inne artefakty jeśli zmiana ich dotyczy (`CONVENTIONS`, `TESTING`, `SETUP`, `README`)
+
+Definicja "done" dla modułu: kod + testy (biznesowe i integracyjne dla flow krytycznych) + propozycja commita + aktualizacja odpowiednich dokumentów.
+
+---
+
 ### 17. Zakres MVP – ocena maszynowa
 
 Przed implementacją AI zadaje sobie pytania:
@@ -333,6 +364,7 @@ Pytanie: czy taki flow jest ok?
 - docs/TASKS.md – bieżące zadania
 - docs/SETUP.md – instrukcja środowiska deweloperskiego (wymagania, instalacja, komendy)
 - docs/TESTING.md – checklisty testów manualnych dla krytycznych flow (pairing, QR scanner, ...)
+- docs/DELIVERY_CHECKLIST.md – standard domknięcia kroku (testy auto/manualne, regresja, docs, commit)
 - README.md – wizytówka projektu (stack, struktura, komendy, linki do docs)
 
 ---
@@ -376,6 +408,7 @@ Po zmianie AI sprawdza i aktualizuje jeśli potrzeba:
 - README.md – gdy zmienił się stack, struktura projektu lub komendy
 - docs/SETUP.md – gdy zmienił się proces instalacji, nowe narzędzie, nowa pułapka, nowa komenda
 - docs/TESTING.md – gdy pojawia się nowy krytyczny flow wymagający testu manualnego
+- docs/DELIVERY_CHECKLIST.md – gdy zmienia się sposób domykania funkcjonalności
 
 ---
 
