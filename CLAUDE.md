@@ -62,7 +62,7 @@ Po każdym domkniętym kroku AI proponuje aktualizację dokumentacji — nie cze
 
 Co aktualizować:
 
-- **docs/TASKS.md** – odhaczyć ukończone zadanie, dodać nowe jeśli wyszły w sesji
+- **docs/TASKS.md** – odhaczyć ukończone zadanie, dodać nowe jeśli wyszły w sesji; każde wyjście poza główny temat sesji odnotować w "Stan sesji" z dopiskiem dlaczego — żeby zawsze było wiadomo co było celem a co dygresją
 - **docs/SETUP.md** – jeśli pojawiły się nowe komendy, pułapki lub zmieniło się "done when"
 - **docs/ROADMAP.md** – jeśli faza została ukończona lub zmienił się zakres
 - **docs/CONVENTIONS.md** – jeśli powstała nowa konwencja kodu
