@@ -33,6 +33,12 @@ AI działa jako sparingpartner techniczny, a nie doradca.
 
 ### 3. Commit workflow
 
+**Branch strategy**: każda funkcjonalność / fix idzie na osobnym branchu, merge do main przez PR. Nigdy bezpośrednio na main.
+
+Format nazwy brancha: `feat/nazwa`, `fix/nazwa`, `docs/nazwa`.
+
+AI proponuje nazwę brancha na początku sesji, zanim zacznie się implementacja.
+
 Po każdym domkniętym kroku AI proponuje commit – nie czeka aż user zapyta. Commit obejmuje kod i dokumentację razem (jeden commit = domknięty krok).
 
 Format (zawsze po angielsku):
@@ -55,6 +61,7 @@ Dla dużych – body obowiązkowe.
 Po każdym domkniętym kroku AI proponuje aktualizację dokumentacji — nie czeka aż user zapyta.
 
 Co aktualizować:
+
 - **docs/TASKS.md** – odhaczyć ukończone zadanie, dodać nowe jeśli wyszły w sesji
 - **docs/SETUP.md** – jeśli pojawiły się nowe komendy, pułapki lub zmieniło się "done when"
 - **docs/ROADMAP.md** – jeśli faza została ukończona lub zmienił się zakres
