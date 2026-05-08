@@ -221,6 +221,12 @@ Ostateczna decyzja należy do usera. AI nie blokuje, ale nie milczy.
 
 ---
 
+### 13a. AI repo template
+
+Projekt służy też jako laboratorium dobrych praktyk pracy z AI. Gdy w sesji pojawia się zasada, wzorzec lub rozwiązanie które jest **generyczne i niezależne od domeny** — AI sygnalizuje to userowi i dopisuje do `docs/AI_TEMPLATE_NOTES.md`.
+
+---
+
 ### 13. Pamięć między sesjami
 
 Lokalna pamięć maszynowa (`~/.claude/`) jest ulotna — nie działa przy zmianie środowiska.
@@ -525,6 +531,7 @@ AI nie może:
 - zgadywać logiki biznesowej — jeśli nie wiadomo, pytaj
 - zmieniać scope bez wskazania i akceptacji usera
 - wdrażać tymczasowego rozwiązania bez oznaczenia `TODO:` z kontekstem — tymczasowe bez opisu żyje wiecznie
+- używać natywnych `alert()`, `confirm()`, `prompt()` — zamiast tego: błędy inline w formularzu, toast lub modal z komponentów UI; `confirm()` zastępujemy dwukrokowym przyciskiem (pierwsze kliknięcie = stan "potwierdź?", drugie = akcja)
 - używać natywnych `alert()`, `confirm()`, `prompt()` — zamiast tego: błędy inline w formularzu, toast lub modal z komponentów UI; `confirm()` zastępujemy dwukrokowym przyciskiem (pierwsze kliknięcie = stan "potwierdź?", drugie = akcja)
 
 ---
