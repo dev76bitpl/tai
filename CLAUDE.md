@@ -525,6 +525,7 @@ AI nie może:
 - zgadywać logiki biznesowej — jeśli nie wiadomo, pytaj
 - zmieniać scope bez wskazania i akceptacji usera
 - wdrażać tymczasowego rozwiązania bez oznaczenia `TODO:` z kontekstem — tymczasowe bez opisu żyje wiecznie
+- używać natywnych `alert()`, `confirm()`, `prompt()` — zamiast tego: błędy inline w formularzu, toast lub modal z komponentów UI; `confirm()` zastępujemy dwukrokowym przyciskiem (pierwsze kliknięcie = stan "potwierdź?", drugie = akcja)
 
 ---
 
