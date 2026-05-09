@@ -77,6 +77,31 @@ def get_project_root() -> str:
     return result.stdout.strip() if result.returncode == 0 else ""
 
 
+def get_command_git_cwd(command: str) -> str | None:
+    """Extract target directory from git -C /path or cd /path && patterns."""
+    import re
+    m = re.search(r"git\s+-C\s+([^\s]+)", command)
+    if m:
+        return m.group(1)
+    m = re.search(r"cd\s+([^\s\"']+)\s+&&", command)
+    if m:
+        return m.group(1)
+    return None
+
+
+def is_foreign_repo(command: str) -> bool:
+    """Return True if the git command targets a different repo than the current project."""
+    git_cwd = get_command_git_cwd(command)
+    if not git_cwd:
+        return False
+    project_root = get_project_root()
+    from pathlib import Path
+    try:
+        return Path(git_cwd).resolve() != Path(project_root).resolve()
+    except Exception:
+        return False
+
+
 def chdir_to_project_root() -> None:
     """CD to project root so all relative paths work regardless of CWD."""
     import os

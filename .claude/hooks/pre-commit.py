@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from stack import chdir_to_project_root, cmd_exists, detect_stack, get_lint_cmd, get_test_cmd, run_cmd
+from stack import chdir_to_project_root, cmd_exists, detect_stack, get_lint_cmd, get_test_cmd, run_cmd, is_foreign_repo
 
 
 def get_command() -> str:
@@ -49,6 +49,9 @@ def main():
     command = get_command()
 
     if "git commit" not in command:
+        sys.exit(0)
+
+    if is_foreign_repo(command):
         sys.exit(0)
 
     # 1. Format commita

@@ -16,7 +16,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from stack import chdir_to_project_root, get_adr_patterns
+from stack import chdir_to_project_root, get_adr_patterns, is_foreign_repo
 
 
 def get_command() -> str:
@@ -32,6 +32,9 @@ def main():
     command = get_command()
 
     if "git commit" not in command:
+        sys.exit(0)
+
+    if is_foreign_repo(command):
         sys.exit(0)
 
     if "[no-adr]" in command:
