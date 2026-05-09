@@ -239,7 +239,25 @@ Ten sam wzorzec dotyczy errorów runtime'u: pierwsza reakcja to **zrozumienie co
 
 ### 13a. AI repo template
 
-Projekt służy też jako laboratorium dobrych praktyk pracy z AI. Gdy w sesji pojawia się zasada, wzorzec lub rozwiązanie które jest **generyczne i niezależne od domeny** — AI sygnalizuje to userowi i dopisuje do `docs/AI_TEMPLATE_NOTES.md`.
+To repo jest **template'm pracy z AI** — zbiorem uniwersalnych wzorców (zasady w `CLAUDE.md`, guardy w `.claude/hooks/`, scaffoldy dokumentów w `docs/`) gotowych do skopiowania w nowy projekt jako fundament.
+
+**Co tu jest**:
+- Reguły workflow w `CLAUDE.md` (komunikacja, commit, testy, MVP scope, zakazy)
+- Guardy w `.claude/hooks/` (PreToolUse hooks dla AI workflow discipline)
+- Generyczne wzorce w `docs/CONVENTIONS.md` (error handling, naming, struktura modułów, walidacja)
+- Generyczne wzorce w `docs/UI_GUIDELINES.md` (stany, przyciski, formularze, błędy)
+- Standard z `docs/DELIVERY_CHECKLIST.md` (kompletny standard domknięcia kroku)
+- Scaffoldy (puste szkielety) dla `docs/SETUP.md`, `docs/TESTING.md`, `docs/ROADMAP.md`, `docs/TASKS.md`, `docs/PROJECT_SCOPE.md`
+
+**Czego tu NIE ma**:
+- Nazwy konkretnych produktów, branż, klientów, person, faz biznesowych
+- Konkretnych URL-i, modeli DB, integracji, schematów
+- Operacyjnych logów sesji konkretnych projektów (release notes, "Stan sesji")
+- Wzmianki o tym z jakiego projektu wzorzec został wyciągnięty
+
+Każda zasada w tym repo musi być sformułowana tak, żeby miała sens w **dowolnym** projekcie który użyje template'u jako fundamentu — bez kontekstu kto ją wymyślił i gdzie była najpierw weryfikowana.
+
+Pamięć maszynowa (`~/.claude/...`) = supplement do CLAUDE.md, nie zamiennik.
 
 ---
 
