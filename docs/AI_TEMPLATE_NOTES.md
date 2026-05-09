@@ -32,6 +32,24 @@ Dobre praktyki zebrane w trakcie pracy z AI. Aktualizowane na bieżąco — każ
 
 ---
 
+## Praca z AI — meta-zasady
+
+- **Po 2-3 nieudanych iteracjach — zatrzymaj się i zapytaj o cel, nie proponuj kolejnej wariacji** — jeśli kolejne próby dają wynik "nadal nie to", problem nie leży w implementacji tylko w niejasnym celu. AI powinno powiedzieć wprost: "coś jest nie tak z kierunkiem — powiedz mi co ten element ma robić dla odbiorcy" i poczekać na odpowiedź. Kontynuowanie iteracji bez tego to przepalanie tokenów i czasu.
+
+---
+
+## HTML do druku / generowanie PDF
+
+- **Iteruj w przeglądarce, nie w PDF rendererze** — Puppeteer/Chromium headless zachowuje się inaczej niż przeglądarka przy `height` w mm, flex, grid i `page-break`. Dopracuj layout w zwykłym pliku HTML (`temp/templates/nazwa.html`) otwartym w Chrome, PDF generuj dopiero na końcu jako weryfikację. Każda iteracja przez PDF renderer kosztuje restart + akcję w UI — to 10× wolniej niż odświeżenie pliku.
+
+- **Zanim zaczniesz layout — zwerbalizuj cel dokumentu, nie wygląd** — "oficjalny druk z rubrykami" to inny dokument niż "potwierdzenie dla klienta". Różny cel = inny layout. Format: "ten dokument dostaje X po to żeby Y" — to wystarczy żeby AI zaproponowało właściwy kierunek.
+
+- **Static import dla stałych szablonów, nie `await import()`** — dynamiczny `await import()` jest cachowany przez Node.js przez cały czas życia procesu. Jeśli stała zmieni się w pliku, a serwer nie jest zrestartowany, `await import()` zwróci starą wartość bez żadnego błędu. Dla stałych: zawsze static import na górze pliku.
+
+- **Server action resetująca dane w DB powinna zwracać nową wartość do klienta** — `router.refresh()` po server action nie resetuje stanu React komponentu (stan jest zachowany między soft-refresh). Zwróć nową wartość z akcji i ustaw stan bezpośrednio (`setState(result.data.value)`). Bez tego użytkownik widzi brak zmiany mimo zaktualizowanej bazy — cichy błąd trudny do zdiagnozowania.
+
+---
+
 ## Dokumentacja
 
 - **CLAUDE.md** — zasady pracy AI, nie logika biznesowa; source of truth dla każdej maszyny i każdego developera.
