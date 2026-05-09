@@ -1,0 +1,15 @@
+{
+  "_comment": "Skopiuj do config.json i dostosuj do projektu. Pola są opcjonalne — bez nich działa autodetekcja stacku.",
+
+  "_stacks_autodected": ["node (package.json)", "php (composer.json)", "python (requirements.txt / pyproject.toml)", "ruby (Gemfile)", "go (go.mod)"],
+
+  "lint": "composer lint",
+  "test": "composer test",
+
+  "_adr_patterns_comment": "Dodatkowe wzorce plików sugerujące decyzję architektoniczną (regex, opis).",
+  "adr_patterns": [
+    ["migrations/", "migracja bazy danych"],
+    ["config/routes", "zmiana routingu"],
+    ["wp-content/plugins/", "nowa wtyczka WordPress"]
+  ]
+}

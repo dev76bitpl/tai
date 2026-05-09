@@ -1,0 +1,35 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/pre-commit.py"
+          },
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/guard-docs-tests.py"
+          },
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/guard-adr.py"
+          },
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/guard-ai-template.py"
+          },
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/guard-pr.py"
+          },
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/guard-template-sync.py"
+          }
+        ]
+      }
+    ]
+  }
+}
