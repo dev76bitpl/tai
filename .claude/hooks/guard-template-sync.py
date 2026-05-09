@@ -22,7 +22,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from stack import chdir_to_project_root, load_config, is_foreign_repo
+from stack import chdir_to_project_root, get_staged_files, load_config, is_foreign_repo
 
 
 def get_command() -> str:
@@ -69,9 +69,7 @@ def main():
         print(f"⚠️  [WARN] ai_template_path nie istnieje: {template_path}", file=sys.stderr)
         sys.exit(0)
 
-    staged = subprocess.run(
-        ["git", "diff", "--cached", "--name-only"], capture_output=True, text=True
-    ).stdout.splitlines()
+    staged = get_staged_files(command)
 
     if not any(f.endswith(".md") for f in staged):
         sys.exit(0)

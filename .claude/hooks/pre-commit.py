@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from stack import chdir_to_project_root, cmd_exists, detect_stack, get_lint_cmd, get_test_cmd, run_cmd, is_foreign_repo
+from stack import chdir_to_project_root, cmd_exists, detect_stack, get_lint_cmd, get_staged_files, get_test_cmd, run_cmd, is_foreign_repo
 
 
 def get_command() -> str:
@@ -93,9 +93,7 @@ def main():
 
     # 4. Testy (tylko gdy pliki źródłowe w staged)
     if test_cmd:
-        staged = subprocess.run(
-            ["git", "diff", "--cached", "--name-only"], capture_output=True, text=True
-        ).stdout.splitlines()
+        staged = get_staged_files(command)
         src_ext = (".ts", ".tsx", ".php", ".py", ".rb", ".go", ".js", ".jsx")
         if any(f.endswith(src_ext) for f in staged):
             if not cmd_exists(test_cmd):

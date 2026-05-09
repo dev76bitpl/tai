@@ -183,3 +183,36 @@ def run_cmd(cmd: list[str]) -> tuple[int, str]:
     result = subprocess.run(cmd, capture_output=True, text=True)
     output = (result.stdout + result.stderr)[-3000:]
     return result.returncode, output
+
+
+def get_staged_files(command: str = "") -> list[str]:
+    """
+    Returns currently staged files. If `command` is provided, also includes
+    files about to be staged by `git add <files>` in the same chained command
+    (e.g. `git add X && git commit Y`). PreToolUse hooks fire before the
+    chain executes, so without this the hook would not see X as staged.
+
+    Skips flag-only adds (-A, -u, --all) and wildcards (., *) — those would
+    require ls-files lookup which is out of scope.
+    """
+    import re
+    result = subprocess.run(
+        ["git", "diff", "--cached", "--name-only"], capture_output=True, text=True
+    )
+    staged = result.stdout.splitlines() if result.returncode == 0 else []
+
+    if not command:
+        return staged
+
+    pending_adds: list[str] = []
+    for m in re.finditer(r"git\s+add\s+([^&|;]+)", command):
+        args = m.group(1).strip()
+        for token in args.split():
+            if token.startswith("-"):
+                continue
+            if token in (".", "*"):
+                continue
+            pending_adds.append(token)
+
+    # Dedup while preserving order
+    return list(dict.fromkeys(staged + pending_adds))

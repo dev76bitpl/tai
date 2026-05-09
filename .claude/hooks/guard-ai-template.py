@@ -13,7 +13,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from stack import chdir_to_project_root, is_foreign_repo
+from stack import chdir_to_project_root, get_staged_files, is_foreign_repo
 
 TEMPLATE_PATTERNS: list[str] = [
     r"^\.claude/",
@@ -62,9 +62,7 @@ def main():
     if extract_commit_type(command) not in TRIGGER_TYPES:
         sys.exit(0)
 
-    staged = subprocess.run(
-        ["git", "diff", "--cached", "--name-only"], capture_output=True, text=True
-    ).stdout.splitlines()
+    staged = get_staged_files(command)
 
     template_hits = [f for f in staged if any(re.search(p, f) for p in TEMPLATE_PATTERNS)]
 

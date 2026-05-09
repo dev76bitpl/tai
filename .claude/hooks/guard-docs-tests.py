@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from stack import chdir_to_project_root, is_foreign_repo
+from stack import chdir_to_project_root, get_staged_files, is_foreign_repo
 
 
 def get_command() -> str:
@@ -38,9 +38,7 @@ def main():
     if "[skip-docs]" in command:
         sys.exit(0)
 
-    staged = subprocess.run(
-        ["git", "diff", "--cached", "--name-only"], capture_output=True, text=True
-    ).stdout.splitlines()
+    staged = get_staged_files(command)
 
     issues = []
 
