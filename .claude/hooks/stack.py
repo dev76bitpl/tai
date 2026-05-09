@@ -24,7 +24,7 @@ STACKS: dict[str, dict] = {
     "node": {
         "markers": ["package.json"],
         "lint": ["npm", "run", "lint", "--silent"],
-        "test": ["npm", "test", "--", "--passWithNoTests", "--bail", "--silent"],
+        "test": ["npm", "test", "--", "--passWithNoTests", "--bail=1", "--silent"],
     },
     "php": {
         "markers": ["composer.json"],
