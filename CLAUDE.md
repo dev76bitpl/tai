@@ -221,6 +221,22 @@ Ostateczna decyzja należy do usera. AI nie blokuje, ale nie milczy.
 
 ---
 
+### 12a. Reakcja na sygnały od narzędzi (guard, lint, test, type-check)
+
+Gdy narzędzie zwraca błąd lub blok (PreToolUse hook `❌ [BLOCK]`, lint error, failing test, TypeScript error, pre-commit guard, CI failure):
+
+1. **Przeczytaj komunikat** — narzędzie mówi konkretnie co jest nie tak
+2. **Oceń czy ma rację** — w 90% przypadków ma; flagi bypass / `--no-verify` / `eslint-disable` / `@ts-ignore` są dla wyjątków, nie dla "nie chce mi się"
+3. **Jeśli ma rację** → napraw to co zgłasza
+4. **Jeśli nie ma racji albo to świadomy wyjątek** → bypass z **jawnym uzasadnieniem w body commita / komentarzu** (nie tylko w subject)
+5. **Nie zmieniaj składni komendy** żeby narzędzie nie zauważyło problemu (np. `git commit -F file` zamiast `-m` żeby ukryć brak flag w komendzie, `// @ts-nocheck` żeby uciszyć błąd zamiast naprawić typ)
+
+Bypass flagi (`[skip-sync]`, `[skip-docs]`, `--no-verify`, `eslint-disable-next-line`, `@ts-expect-error` itd.) traktuj jak `git push --force` — narzędzie ostatniej szansy, nie domyślne wyjście.
+
+Ten sam wzorzec dotyczy errorów runtime'u: pierwsza reakcja to **zrozumienie co się stało**, nie "spróbujmy inaczej, może zadziała".
+
+---
+
 ### 13a. AI repo template
 
 Projekt służy też jako laboratorium dobrych praktyk pracy z AI. Gdy w sesji pojawia się zasada, wzorzec lub rozwiązanie które jest **generyczne i niezależne od domeny** — AI sygnalizuje to userowi i dopisuje do `docs/AI_TEMPLATE_NOTES.md`.
