@@ -1,151 +1,128 @@
 # Zakres systemu
 
+Ten plik opisuje **co budujemy, dla kogo i po co**. Wypełnij dla swojego projektu — sekcje są scaffoldem, nie dogmatem (możesz dodać/usunąć).
+
+PROJECT_SCOPE jest source of truth dla logiki biznesowej. Gdy pojawia się konflikt między tym co AI "wie" a tym co tu jest — wygrywa ten plik.
+
+---
+
 ## 🎯 Cel systemu
 
-System SaaS do zarządzania zajęciami, obecnościami oraz podstawową obsługą operacyjną organizacji prowadzących zajęcia.
+Jedno-dwa zdania: co system robi i dla kogo.
+
+> Przykład: *"System X dla branży Y, rozwiązuje problem Z. Pilotaż: konkretny klient. Docelowo: Y."*
 
 ---
 
 ## 🧠 Główna koncepcja
 
-System oparty jest na:
+Krótko opisz fundamentalne założenie systemu (jedna rzecz, wokół której wszystko się kręci):
 
-- zajęciach jako jednostce operacyjnej
-- obecności jako zdarzeniu (event-based)
-- QR jako mechanizmie identyfikacji użytkownika
+- jednostka operacyjna (np. zlecenie, zamówienie, wizyta, sesja)
+- kluczowe zdarzenie (np. transakcja, rejestracja, dostarczenie)
+- mechanizm identyfikacji / autoryzacji użytkownika
 
-Każda operacja odnosi się do:
-
-lesson_instance
-
-Obecność:
-
-- attendance_events (raw)
-- attendance_records (aggregated)
+Wskaż core entity wokół których budowany jest system — to pomoże AI utrzymać spójność modelu danych przez kolejne fazy.
 
 ---
 
-## 🔁 Obsługa obecności
+## 👥 Persony
 
-Check-in:
+Lista ról / typów użytkownika z krótkim opisem co robią w systemie:
 
-- QR scan
-- zapis event
+- **Rola A** — co robi, kiedy, dlaczego
+- **Rola B** — j.w.
 
-Check-out:
-
-- drugi scan
+Persony powinny mieć odzwierciedlenie w autoryzacji (role, permissions). Każda persona = inny use case → inny widok / panel.
 
 ---
 
 ## 🧩 Moduły
 
-### Uczniowie
-- dane
-- grupy
-- historia
+Lista głównych obszarów funkcjonalnych. Trzymaj się core domain — nie wymyślaj modułów "może się przyda".
 
-### Nauczyciele
-- dane
-- przypisania
+### Moduł A
+- co zawiera
+- jakie operacje
+- jakie powiązania z innymi modułami
 
-### Grupy
-- uczniowie
-- nauczyciele
-
-### Harmonogram
-- lessons
-- lesson_instances
-- przypisania
-
-### Lista obecności
-- lista uczniów
-- status obecności
-
-### Integracje
-- Google Calendar
-- Outlook Calendar
-
-### Dokumenty
-- umowy nauczycieli
-- umowy uczniów
-
-### KP
-- wystawianie
-- przypisanie do ucznia
+### Moduł B
+- j.w.
 
 ---
 
 ## ⚖️ Priorytety
 
-CORE:
-- attendance
-- lesson_instances
-- QR flow
+Podziel moduły na warstwy priorytetowe — to porządkuje fazy ROADMAP:
 
-OPERACYJNE:
-- uczniowie
-- nauczyciele
-- grupy
-- harmonogram
+**CORE** (MVP — bez tego system nie ma sensu):
+- moduł 1
+- moduł 2
 
-ADMIN:
-- dokumenty
-- KP
+**OPERACYJNE** (niezbędne dla codziennej pracy):
+- moduł 3
+- moduł 4
 
-INTEGRACJE:
-- kalendarze
+**ADMIN** (dla osoby zarządzającej, niski wolumen):
+- moduł 5
+
+**INTEGRACJE** (zewnętrzne systemy — odłożone do późniejszej fazy):
+- integracja A
+- integracja B
 
 ---
 
 ## 🗄️ Baza danych
 
-Relacyjny model danych.
+Wysokopoziomowe założenia (konkretny wybór technologii → ADR-001):
 
-Założenia:
+- model danych: relacyjny / dokumentowy / event-sourced
+- vendor lock: tak / nie
+- multi-tenancy: jeśli tak — jak izolowane (DB per tenant / schema per tenant / row-level)
 
-- brak vendor lock
-- kompatybilność SQL
-- decyzja o technologii → ADR
+Wybór konkretnej bazy uzasadnij w ADR.
 
 ---
 
 ## 🧠 Architektura
 
-- API-based
-- modularna
-- separacja warstw
+Wysokopoziomowe założenia (konkretny stack → ADR-001):
 
-Technologie → decyzje ADR
+- styl: API-based / monolith / microservices / event-driven
+- separacja warstw: tak / nie (i jak)
+- frontend: SPA / SSR / hybrid
+
+Stack technologiczny i konkretne biblioteki uzasadnij w ADR.
 
 ---
 
 ## 🚫 Zakres wykluczony
 
-- księgowość
-- podatki
-- płatności online
-- CRM
+Lista funkcjonalności które **świadomie** NIE wchodzą w zakres tego systemu — chroni przed scope creep i pomaga AI sygnalizować gdy ktoś prosi o coś poza scope:
+
+- funkcja 1 (powód: realizowane przez inny system / niepotrzebne)
+- funkcja 2
 
 ---
 
 ## 🧠 Wymagane decyzje (ADR)
 
-- model attendance
-- lesson_instances strategy
-- integracje kalendarzy
-- dokumenty
-- wybór technologii
+Lista głównych decyzji architektonicznych do podjęcia przed lub w trakcie fazy 1:
+
+- ADR-001: kierunek techniczny systemu (stack, architektura)
+- ADR-002: ...
+- ADR-003: ...
+
+W miarę jak decyzje są podejmowane, dopisuj numer ADR i tytuł.
 
 ---
 
 ## 🎯 Cel końcowy
 
-System do:
+Co znaczy "system gotowy do realnego użycia" w fazie 1:
 
-- zarządzania zajęciami
-- rejestracji obecności
-- obsługi uczestników
-- generowania dokumentów
+- użytkownik X może...
+- użytkownik Y może...
+- minimalny zestaw funkcjonalny pokrywa scenariusz biznesowy Z
 
-Gotowy do realnego użycia.
+To NIE jest pełna roadmapa (od tego jest `docs/ROADMAP.md`) — tylko definicja "MVP done".
