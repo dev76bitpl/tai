@@ -328,6 +328,34 @@ Definicja "done" dla modułu: kod + testy (biznesowe i integracyjne dla flow kry
 
 ---
 
+### 16b. Module closure protocol – kolejność z hard-stopem (obowiązkowe)
+
+Reguły 16 i 16a mówią **co** ma być zrobione. Ta reguła mówi **w jakiej kolejności** i **gdzie AI musi się zatrzymać**.
+
+Każdy moduł / krok / feature przechodzi przez ten flow w **dokładnie tej kolejności**:
+
+1. **Kod** – implementacja
+2. **Testy automatyczne** – jednostkowe + integracyjne dla flow krytycznych (reguła 16)
+3. **Checklist testów manualnych** – dopisany do `docs/TESTING.md` (nie tylko w czacie)
+4. **🛑 HARD STOP** – AI komunikuje: *"gotowe, możesz testować — czekam na feedback"* i **nie idzie dalej**
+5. **User testuje manualnie** wg checklisty z punktu 3
+6. **User zgłasza błędy** (jeśli są) → AI poprawia → powrót do punktu 4
+7. **User akceptuje** ("ok / działa / zatwierdzam / merge / commit")
+8. **Dopiero teraz** AI proponuje commit message + aktualizację dokumentów (reguła 16a)
+9. **Commit** – AI dodaje flagę `[user-tested]` do wiadomości (potwierdzenie że user przeszedł krok 7); guard pre-commit blokuje commit bez tej flagi na branchach `feat/*` i `fix/*`
+10. **Pre-commit guard** wykonuje swoje (lint + testy + format) → koniec
+
+Twarde zasady:
+
+- AI **nie wolno** pominąć kroku 4 — nawet gdy testy automatyczne przeszły, nawet gdy zmiana wygląda trywialnie, nawet gdy user pisze "leć dalej" wcześniej w sesji
+- AI **nie wolno** samodzielnie dodać flagi `[user-tested]` zanim user explicite nie potwierdził w punkcie 7 — dodanie flagi bez potwierdzenia to świadome złamanie zasady
+- Bypass (`[skip-test-check]`) — tylko dla zmian czysto dokumentacyjnych (`docs/`, `README.md`), drobnych literówek lub konfiguracji nie dotykającej runtime; AI proponuje bypass z uzasadnieniem, user akceptuje
+- Dla branchy innych niż `feat/*` / `fix/*` (np. `docs/*`, `chore/*`) flaga nie jest wymagana, ale checklist manualny w `docs/TESTING.md` nadal obowiązkowy jeśli zmiana dotyka UI lub runtime'u
+
+Po co to: kompensuje obserwowany pattern "AI pisze kod → proponuje commit → user nigdy nie zdążył przetestować → błąd w produkcji". Hard stop po kroku 4 daje userowi czas na sparingowanie z gotowym artefaktem zanim wpadnie do historii.
+
+---
+
 ### 17. Zakres MVP – ocena maszynowa
 
 Przed implementacją AI zadaje sobie pytania:
