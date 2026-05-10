@@ -54,6 +54,15 @@ def main():
     if is_foreign_repo(command):
         sys.exit(0)
 
+    # 0. Branch check — block commits directly on main/master
+    result = subprocess.run(["git", "branch", "--show-current"], capture_output=True, text=True)
+    current_branch = result.stdout.strip()
+    if current_branch in ("main", "master"):
+        block(
+            "❌ [BLOCK] Jesteś na branchu 'main' — nie commituj bezpośrednio.\n"
+            "   Utwórz branch: git checkout -b feat/nazwa  lub  fix/nazwa"
+        )
+
     # 1. Format commita
     msg = extract_commit_message(command)
     if not msg:
