@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-PostToolUse: suggest PR after git commit on feat/* or fix/* branch.
-Prints a reminder — does not block.
+PostToolUse: PR workflow reminders.
+- After git commit on feat/* or fix/*: suggest gh pr create
+- After git pull / git checkout main: warn about merged branches not yet deleted
 """
 import json
 import subprocess
@@ -25,18 +26,48 @@ def current_branch() -> str:
     return result.stdout.strip()
 
 
+def merged_feature_branches() -> list[str]:
+    result = subprocess.run(
+        ["git", "branch", "--merged", "main"],
+        capture_output=True, text=True
+    )
+    branches = []
+    for line in result.stdout.splitlines():
+        b = line.strip().lstrip("* ")
+        if b.startswith("feat/") or b.startswith("fix/"):
+            branches.append(b)
+    return branches
+
+
+def is_pull_or_checkout_main(command: str) -> bool:
+    c = command.strip()
+    if "git pull" in c:
+        return True
+    if "git checkout main" in c or "git checkout master" in c:
+        return True
+    if "git switch main" in c or "git switch master" in c:
+        return True
+    return False
+
+
 def main():
     chdir_to_project_root()
     command = get_command()
 
-    if not is_git_commit_command(command):
+    if is_git_commit_command(command):
+        branch = current_branch()
+        if branch.startswith("feat/") or branch.startswith("fix/"):
+            print(f"💡 Branch '{branch}' — otwórz PR: gh pr create")
         sys.exit(0)
 
-    branch = current_branch()
-    if not (branch.startswith("feat/") or branch.startswith("fix/")):
+    if is_pull_or_checkout_main(command):
+        stale = merged_feature_branches()
+        if stale:
+            print("⚠️  Zmergowane branche do usunięcia:")
+            for b in stale:
+                print(f"   git branch -d {b} && git push origin --delete {b}")
         sys.exit(0)
 
-    print(f"💡 Branch '{branch}' — otwórz PR: gh pr create")
     sys.exit(0)
 
 
