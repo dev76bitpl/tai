@@ -54,6 +54,10 @@ type(scope): short description
 Dla małych zmian (literówka, rename) – sam subject, bez body.
 Dla dużych – body obowiązkowe.
 
+Po commicie zamykającym branch AI proponuje PR — nie czeka aż user zapyta. PR zawiera:
+- tytuł = subject commita (lub krótsze podsumowanie jeśli było kilka commitów)
+- body: summary (bullet points co zmieniono) + test plan (checklist co sprawdzić)
+
 ---
 
 ### 4. Aktualizacja dokumentacji po ukończeniu kroku
