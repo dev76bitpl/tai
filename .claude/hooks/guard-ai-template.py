@@ -13,7 +13,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from stack import chdir_to_project_root, get_staged_files, is_foreign_repo
+from stack import chdir_to_project_root, get_staged_files, load_config, is_foreign_repo
 
 TEMPLATE_PATTERNS: list[str] = [
     r"^\.claude/",
@@ -66,15 +66,18 @@ def main():
 
     template_hits = [f for f in staged if any(re.search(p, f) for p in TEMPLATE_PATTERNS)]
 
-    msg = "❌ [BLOCK] Ocena AI template repo (github.com/dev76bitpl/ai):\n\n"
+    config = load_config()
+    template_path = config.get("ai_template_path", "<ai_template_path not set in .claude/hooks/config.json>")
+
+    msg = "❌ [BLOCK] Ocena AI template repo:\n\n"
     if template_hits:
         msg += "  Pliki potencjalnie generyczne w staged:\n"
         msg += "".join(f"  → {f}\n" for f in template_hits[:10])
-        msg += "\n  Czy powinny trafić do /home/sabor/Projekty/ai ?\n"
+        msg += f"\n  Czy powinny trafić do template ({template_path}) ?\n"
     else:
         commit_type = extract_commit_type(command)
         msg += f"  Commit typu '{commit_type}' — czy coś z tej zmiany jest generyczne\n"
-        msg += "  i powinno trafić do repo template AI?\n"
+        msg += "  i powinno trafić do template AI?\n"
 
     msg += "\n  Tak  → zsynchronizuj, potem dodaj [template-done] i commituj."
     msg += "\n  Nie  → dodaj [no-template] do wiadomości commita."

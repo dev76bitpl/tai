@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
 Guard 6: Synchronizacja z AI template repo.
-Blokuje (exit 2 + stderr) git commit jeśli w bieżącym projekcie (skolaro)
-istnieje sekcja (## lub ###) której brakuje w odpowiadającym pliku w template AI.
+Blokuje (exit 2 + stderr) git commit jeśli w bieżącym projekcie istnieje
+sekcja (## lub ###) której brakuje w odpowiadającym pliku w template repo.
 
-Zasada: projekt ⊆ template. To co ląduje w projekcie musi trafić do template.
-Projekt może mieć sekcje projektowe (nie trafiają do template — oznaczaj je
-nagłówkiem z [projekt] lub [skolaro] żeby guard je pomijał).
+Zasada: każdy uniwersalny wzorzec wymyślony w projekcie musi trafić do template.
+Sekcje project-specific zostają w projekcie — przy commicie świadoma decyzja
+przez bypass [skip-sync] (po obopólnym ustaleniu user + AI co jest universal).
 
 Konfiguracja w .claude/hooks/config.json:
-{ "ai_template_path": "/home/sabor/Projekty/ai" }
+{ "ai_template_path": "<absolute-path-to-template-repo>" }
 
 Bez klucza ai_template_path: guard pomija się cicho.
 Trigger: tylko gdy staged pliki zawierają *.md.
@@ -34,14 +34,11 @@ def get_command() -> str:
 
 
 def get_section_headers(text: str) -> set[str]:
-    """Zwraca nagłówki ## i ### z pominięciem sekcji oznaczonych [projekt] lub [skolaro]."""
+    """Zwraca wszystkie nagłówki ## i ### z tekstu."""
     headers = set()
     for line in text.splitlines():
         stripped = line.strip()
         if re.match(r"^#{2,3}\s+.+", stripped):
-            lower = stripped.lower()
-            if "[projekt]" in lower or "[skolaro]" in lower:
-                continue
             headers.add(stripped)
     return headers
 
@@ -105,9 +102,8 @@ def main():
         msg = "❌ [BLOCK] Desync z AI template repo:\n\n"
         msg += "\n".join(issues)
         msg += "\n\n  Opcje:"
-        msg += "\n  1. Dodaj brakujące sekcje do template: /home/sabor/Projekty/ai"
-        msg += "\n  2. Oznacz sekcję jako projektową: ## Nazwa [skolaro]"
-        msg += "\n  3. Bypass jednorazowy: dodaj [skip-sync] do wiadomości commita."
+        msg += f"\n  1. Universal? → dodaj brakujące sekcje do template ({template_path}), zsynchronizuj, commit z [template-done]"
+        msg += "\n  2. Project-specific? → bypass [skip-sync] w commicie (z notą w body — co i dlaczego zostaje w projekcie)"
         print(msg, file=sys.stderr)
         sys.exit(2)
 
