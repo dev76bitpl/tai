@@ -34,6 +34,17 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/suggest-pr.py"
+          }
+        ]
+      }
     ]
   }
 }
