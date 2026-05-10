@@ -45,6 +45,8 @@ def main():
     if not any("docs/TASKS.md" in f for f in staged):
         issues.append("📋 docs/TASKS.md nie jest w staged — zaktualizuj zadanie przed commitem.")
 
+    # Next.js RSC pages/layouts have no unit tests by convention
+    NEXT_PAGE_PATTERN = re.compile(r"src/app/.*/(page|layout|loading|error|not-found)\.(tsx|ts|jsx|js)$")
     src_files = [
         f for f in staged
         if re.search(r"src/.*\.(ts|tsx|js|jsx|php|py|rb|go)$", f)
@@ -52,6 +54,7 @@ def main():
         and "__tests__" not in f
         and ".d.ts" not in f
         and ".spec." not in f
+        and not NEXT_PAGE_PATTERN.search(f)
     ]
     test_files = [f for f in staged if ".test." in f or "__tests__" in f or ".spec." in f]
 

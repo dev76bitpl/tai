@@ -239,6 +239,8 @@ Gdy narzędzie zwraca błąd lub blok (PreToolUse hook `❌ [BLOCK]`, lint error
 
 Bypass flagi (`[skip-sync]`, `[skip-docs]`, `--no-verify`, `eslint-disable-next-line`, `@ts-expect-error` itd.) traktuj jak `git push --force` — narzędzie ostatniej szansy, nie domyślne wyjście.
 
+**AI nigdy nie dodaje flag bypass samodzielnie.** Gdy guard blokuje: AI wyjaśnia dlaczego bypass może być uzasadniony i czeka na decyzję usera. User mówi "ok, dodaj `[no-template]`" (lub inną flagę) — dopiero wtedy AI ją wpisuje.
+
 Ten sam wzorzec dotyczy errorów runtime'u: pierwsza reakcja to **zrozumienie co się stało**, nie "spróbujmy inaczej, może zadziała".
 
 ---
