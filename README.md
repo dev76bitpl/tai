@@ -42,3 +42,16 @@ docs/adr/             = dlaczego tak, a nie inaczej
 ```
 
 AI czyta te pliki na początku każdej sesji. Im lepiej wypełnione, tym mniej wyjaśniania — więcej robienia.
+
+---
+
+## Jak ten template ewoluuje
+
+Template jest żywy — rośnie razem z projektami które z niego korzystają.
+
+Gdy w projekcie pojawia się zasada, wzorzec lub rozwiązanie które wygląda na uniwersalne:
+1. AI wykrywa to w trakcie sesji i proponuje userowi sync do template
+2. User + AI wspólnie decydują czy to faktycznie uniwersalne (nie domenowe)
+3. Jeśli tak — AI edytuje pliki template w tej samej sesji i commituje
+
+Zasada: wzorzec trafia tu bez nazwy projektu źródłowego. Template jest czysty — zero referencji do konkretnych domen.
