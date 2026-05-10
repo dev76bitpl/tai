@@ -84,3 +84,4 @@ npm run db:studio  # GUI bazy
 | Problem | Przyczyna | Rozwiązanie |
 |---|---|---|
 | ... | ... | ... |
+| Aplikacja na innym urządzeniu w LAN (telefon, kiosk) zwraca błąd / formularz nie reaguje, na `localhost` działa | Next 15 dev blokuje cross-origin requesty z hostów spoza `localhost` (asset/HMR/server actions wyciszane lub zwracają błędy) | dodaj host LAN do `allowedDevOrigins` w `next.config` — najlepiej przez env (np. `ALLOWED_DEV_ORIGINS=192.168.1.10`, parsowane jako CSV w configu), nie hardkoduj IP. Restart `npm run dev` po zmianie. |
