@@ -20,7 +20,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from stack import chdir_to_project_root, is_foreign_repo
+from stack import chdir_to_project_root, is_foreign_repo, is_git_commit_command
 
 
 ENFORCED_BRANCH_PREFIXES = ("feat/", "fix/")
@@ -65,7 +65,7 @@ def main():
     chdir_to_project_root()
     command = get_command()
 
-    if "git commit" not in command:
+    if not is_git_commit_command(command):
         sys.exit(0)
 
     if is_foreign_repo(command):

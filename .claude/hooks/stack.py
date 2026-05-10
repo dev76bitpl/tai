@@ -185,6 +185,31 @@ def run_cmd(cmd: list[str]) -> tuple[int, str]:
     return result.returncode, output
 
 
+def is_git_commit_command(command: str) -> bool:
+    """
+    Returns True if `command` actually invokes `git commit` (not just contains
+    'git commit' as substring inside an argument string — e.g. `gh pr create
+    --body "...git commit..."` should NOT match).
+
+    Acceptable forms:
+    - `git commit ...`
+    - `git -C /path commit ...`
+    - `cd /path && git commit ...`
+    - `git add X && git commit ...`
+    - heredoc forms starting with `git commit`
+
+    Non-acceptable: anything starting with `gh`, `npm`, `echo`, etc., even
+    if their arguments contain the literal text `git commit`.
+    """
+    import re
+    stripped = command.strip()
+    # First gate: command must start with `git` or `cd ... && git` (chained)
+    if not re.match(r"^(?:cd\s+\S+\s*&&\s*)?git\b", stripped):
+        return False
+    # Second gate: a `git ... commit` invocation must appear (allows `git -C /path commit`)
+    return bool(re.search(r"\bgit\s+(?:-C\s+\S+\s+)?commit\b", command))
+
+
 def get_staged_files(command: str = "") -> list[str]:
     """
     Returns currently staged files. If `command` is provided, also includes

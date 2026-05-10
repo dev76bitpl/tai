@@ -22,7 +22,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from stack import chdir_to_project_root, get_staged_files, load_config, is_foreign_repo
+from stack import chdir_to_project_root, get_staged_files, is_foreign_repo, is_git_commit_command, load_config
 
 
 def get_command() -> str:
@@ -47,7 +47,7 @@ def main():
     chdir_to_project_root()
     command = get_command()
 
-    if "git commit" not in command:
+    if not is_git_commit_command(command):
         sys.exit(0)
 
     if is_foreign_repo(command):
