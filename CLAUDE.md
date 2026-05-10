@@ -58,6 +58,8 @@ Po commicie zamykającym branch AI proponuje PR — nie czeka aż user zapyta. P
 - tytuł = subject commita (lub krótsze podsumowanie jeśli było kilka commitów)
 - body: summary (bullet points co zmieniono) + test plan (checklist co sprawdzić)
 
+Po utworzeniu PR AI sugeruje merge i **nie przechodzi do kolejnego zadania** dopóki user nie potwierdzi merge'a. Merge należy wyłącznie do usera — AI nigdy nie merguje samodzielnie.
+
 ---
 
 ### 4. Aktualizacja dokumentacji po ukończeniu kroku
