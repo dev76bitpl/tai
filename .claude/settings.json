@@ -1,5 +1,20 @@
 {
+  "_readme": [
+    "Skopiuj jako .claude/settings.json w katalogu monorepo",
+    "Zamień ścieżki na absolutne: /abs/path/to/.claude/hooks/<script>.py",
+    "Ścieżki absolutne wymagane gdy CWD sesji != root monorepo"
+  ],
   "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/session-context.py"
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "matcher": "Bash",

@@ -12,11 +12,12 @@ config.json (wymagane pola):
 """
 import json
 import sys
+import tempfile
 from pathlib import Path
 
 HOOKS_DIR = Path(__file__).resolve().parent
 MONOREPO_ROOT = HOOKS_DIR.parent.parent
-SESSION_DIR = Path("/tmp/gv-claude-sessions")
+SESSION_DIR = Path(tempfile.gettempdir()) / "gv-claude-sessions"
 
 
 def load_config() -> dict:
