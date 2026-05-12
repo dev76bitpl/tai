@@ -15,6 +15,9 @@ import sys
 import tempfile
 from pathlib import Path
 
+sys.stdout.reconfigure(encoding="utf-8")
+sys.stderr.reconfigure(encoding="utf-8")
+
 HOOKS_DIR = Path(__file__).resolve().parent
 MONOREPO_ROOT = HOOKS_DIR.parent.parent
 SESSION_DIR = Path(tempfile.gettempdir()) / "gv-claude-sessions"
