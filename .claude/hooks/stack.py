@@ -282,7 +282,7 @@ def get_staged_files(command: str = "") -> list[str]:
                 continue
             if token in (".", "*"):
                 continue
-            pending_adds.append(token)
+            pending_adds.append(token.strip("\"'"))
 
     # Dedup while preserving order
     return list(dict.fromkeys(staged + pending_adds))
