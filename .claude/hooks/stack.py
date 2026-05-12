@@ -17,6 +17,8 @@ config.json przykład:
 }
 """
 import json
+import platform
+import re
 import subprocess
 from pathlib import Path
 
@@ -67,6 +69,15 @@ BASE_ADR_PATTERNS: list[tuple[str, str]] = [
 ]
 
 
+def _normalize_git_path(path: str) -> str:
+    """Convert /c/foo/bar style paths (Git for Windows) to C:/foo/bar."""
+    if platform.system() == "Windows":
+        m = re.match(r"^/([a-zA-Z])/(.+)$", path)
+        if m:
+            return f"{m.group(1).upper()}:/{m.group(2)}"
+    return path
+
+
 def get_project_root() -> str:
     """Returns absolute path to git project root."""
     result = subprocess.run(
@@ -74,7 +85,7 @@ def get_project_root() -> str:
         capture_output=True,
         text=True,
     )
-    return result.stdout.strip() if result.returncode == 0 else ""
+    return _normalize_git_path(result.stdout.strip()) if result.returncode == 0 else ""
 
 
 def get_command_git_cwd(command: str) -> str | None:
