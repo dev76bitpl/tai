@@ -43,12 +43,16 @@ def extract_open_tasks(content: str, max_detail_lines: int = 3) -> str:
     current_section = ""
     last_section_added = ""
     i = 0
+    checkbox_found = False
+
+    # Mode 1: checkbox format (- [ ])
     while i < len(lines):
         line = lines[i]
         stripped = line.strip()
         if stripped.startswith("#"):
             current_section = stripped.lstrip("#").strip()
         if stripped.startswith("- [ ]"):
+            checkbox_found = True
             if current_section != last_section_added:
                 parts.append(f"\n**{current_section}**")
                 last_section_added = current_section
@@ -66,6 +70,42 @@ def extract_open_tasks(content: str, max_detail_lines: int = 3) -> str:
                 j += 1
             parts.append("\n".join(task_lines))
         i += 1
+
+    if checkbox_found:
+        return "\n".join(parts).strip()
+
+    # Mode 2: ### heading + **Status:** format (fallback dla BE-style TASKS.md)
+    parts = []
+    current_section = ""
+    last_section_added = ""
+    i = 0
+    completed_statuses = {"Completed", "Done"}
+    while i < len(lines):
+        line = lines[i]
+        stripped = line.strip()
+        if stripped.startswith("## ") and not stripped.startswith("### "):
+            current_section = stripped.lstrip("#").strip()
+        elif stripped.startswith("### "):
+            task_name = stripped.lstrip("#").strip()
+            if task_name.startswith("✅"):
+                i += 1
+                continue
+            status = ""
+            for j in range(i + 1, min(i + 6, len(lines))):
+                next_stripped = lines[j].strip()
+                if next_stripped.startswith("**Status:**"):
+                    status = next_stripped.replace("**Status:**", "").strip()
+                    break
+            if status and any(s in status for s in completed_statuses):
+                i += 1
+                continue
+            if current_section != last_section_added:
+                parts.append(f"\n**{current_section}**")
+                last_section_added = current_section
+            suffix = f" ({status})" if status else ""
+            parts.append(f"- [ ] {task_name}{suffix}")
+        i += 1
+
     return "\n".join(parts).strip()
 
 

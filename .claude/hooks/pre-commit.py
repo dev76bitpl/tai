@@ -27,15 +27,19 @@ def get_command() -> str:
 
 
 def extract_commit_message(command: str) -> str:
+    # $(cat <<'EOF'...) must be checked before -m "..." to avoid capturing the subshell wrapper
+    m = re.search(r'\$\(cat\s+<<[\'"]?EOF[\'"]?\s*\n(.*?)\nEOF', command, re.DOTALL)
+    if m:
+        return m.group(1).strip()
+    m = re.search(r"<<['\"]?EOF['\"]?\s*\n(.*?)\nEOF", command, re.DOTALL)
+    if m:
+        return m.group(1).strip()
     m = re.search(r'-m\s+"([^"]+)"', command)
     if m:
         return m.group(1)
     m = re.search(r"-m\s+'([^']+)'", command)
     if m:
         return m.group(1)
-    m = re.search(r"<<['\"]?EOF['\"]?\s*\n(.*?)\nEOF", command, re.DOTALL)
-    if m:
-        return m.group(1).strip()
     return ""
 
 
@@ -88,6 +92,13 @@ def main():
             "   Skonfiguruj .claude/hooks/config.json\n"
             '   Przykład: { "lint": "composer lint", "test": "composer test" }'
         )
+        sys.exit(0)
+
+    # 2b. Docs-only commit — skip lint & tests
+    staged = get_staged_files(command)
+    src_ext = (".ts", ".tsx", ".php", ".py", ".rb", ".go", ".js", ".jsx")
+    if staged and all(not f.endswith(src_ext) for f in staged):
+        print("✅ pre-commit OK [docs-only]: format ✓  lint skipped  testy skipped")
         sys.exit(0)
 
     # 3. Lint
