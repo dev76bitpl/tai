@@ -37,6 +37,38 @@ def get_session_id() -> str:
         return ""
 
 
+def extract_open_tasks(content: str, max_detail_lines: int = 3) -> str:
+    lines = content.splitlines()
+    parts: list[str] = []
+    current_section = ""
+    last_section_added = ""
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        stripped = line.strip()
+        if stripped.startswith("#"):
+            current_section = stripped.lstrip("#").strip()
+        if stripped.startswith("- [ ]"):
+            if current_section != last_section_added:
+                parts.append(f"\n**{current_section}**")
+                last_section_added = current_section
+            task_lines = [line]
+            j = i + 1
+            detail_count = 0
+            while j < len(lines) and detail_count < max_detail_lines:
+                next_line = lines[j]
+                if not next_line.strip():
+                    break
+                if next_line.lstrip().startswith("- ["):
+                    break
+                task_lines.append(next_line)
+                detail_count += 1
+                j += 1
+            parts.append("\n".join(task_lines))
+        i += 1
+    return "\n".join(parts).strip()
+
+
 def read_tasks(config: dict) -> list[tuple[str, str]]:
     result = []
     for repo in config.get("repos", []):
@@ -46,7 +78,10 @@ def read_tasks(config: dict) -> list[tuple[str, str]]:
             continue
         path = MONOREPO_ROOT / tasks_rel
         if path.exists():
-            result.append((name, path.read_text(encoding="utf-8").strip()))
+            content = path.read_text(encoding="utf-8").strip()
+            open_tasks = extract_open_tasks(content)
+            if open_tasks:
+                result.append((name, open_tasks))
     return result
 
 
