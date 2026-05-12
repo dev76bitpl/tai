@@ -44,8 +44,8 @@ def get_section_headers(text: str) -> set[str]:
 
 
 def main():
-    chdir_to_project_root()
     command = get_command()
+    chdir_to_project_root(command)
 
     if not is_git_commit_command(command):
         sys.exit(0)

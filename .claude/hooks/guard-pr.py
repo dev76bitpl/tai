@@ -35,8 +35,8 @@ def get_branch_changed_files() -> list[str]:
 
 
 def main():
-    chdir_to_project_root()
     command = get_command()
+    chdir_to_project_root(command)
 
     if "gh pr create" not in command:
         sys.exit(0)

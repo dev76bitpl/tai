@@ -45,8 +45,8 @@ def block(msg: str) -> None:
 
 
 def main():
-    chdir_to_project_root()
     command = get_command()
+    chdir_to_project_root(command)
 
     if not is_git_commit_command(command):
         sys.exit(0)

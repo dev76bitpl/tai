@@ -51,8 +51,8 @@ def is_pull_or_checkout_main(command: str) -> bool:
 
 
 def main():
-    chdir_to_project_root()
     command = get_command()
+    chdir_to_project_root(command)
 
     if is_git_commit_command(command):
         branch = current_branch()

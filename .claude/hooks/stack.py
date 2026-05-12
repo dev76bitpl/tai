@@ -102,21 +102,32 @@ def is_foreign_repo(command: str) -> bool:
         return False
 
 
-def chdir_to_project_root() -> None:
-    """CD to project root so all relative paths work regardless of CWD."""
+def chdir_to_project_root(command: str = "") -> None:
+    """CD to project root so all relative paths work regardless of CWD.
+
+    When invoked from a monorepo root that is not itself a git repo,
+    falls back to extracting the target repo path from the tool command
+    (git -C <path> or cd <path> &&).
+    """
     import os
     import sys
     root = get_project_root()
+    if not root and command:
+        git_cwd = get_command_git_cwd(command)
+        if git_cwd:
+            candidate = subprocess.run(
+                ["git", "-C", git_cwd, "rev-parse", "--show-toplevel"],
+                capture_output=True,
+                text=True,
+            )
+            if candidate.returncode == 0:
+                root = candidate.stdout.strip()
     if root:
         os.chdir(root)
-        # Ensure hooks dir is on path for imports
-        hooks_dir = os.path.join(root, ".claude", "hooks")
-        if hooks_dir not in sys.path:
-            sys.path.insert(0, hooks_dir)
 
 
 def load_config() -> dict:
-    config_path = Path(".claude/hooks/config.json")
+    config_path = Path(__file__).resolve().parent / "config.json"
     if config_path.is_file():
         try:
             return json.loads(config_path.read_text(encoding="utf-8"))

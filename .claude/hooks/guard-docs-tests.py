@@ -5,6 +5,10 @@ Blokuje (exit 2 + stderr) git commit jeśli:
 - docs/TASKS.md nie jest w staged
 - zmodyfikowano pliki źródłowe bez plików testowych
 
+Jeśli brakuje testów: komunikat instruuje Claude żeby zaproponował
+stworzenie plików testowych przed kontynuacją commita.
+Dotyczy też istniejących plików modyfikowanych bez pokrycia testowego.
+
 Bypass: [skip-docs] w wiadomości commita.
 """
 import json
@@ -26,8 +30,8 @@ def get_command() -> str:
 
 
 def main():
-    chdir_to_project_root()
     command = get_command()
+    chdir_to_project_root(command)
 
     if not is_git_commit_command(command):
         sys.exit(0)
@@ -45,7 +49,6 @@ def main():
     if not any("docs/TASKS.md" in f for f in staged):
         issues.append("📋 docs/TASKS.md nie jest w staged — zaktualizuj zadanie przed commitem.")
 
-    # Next.js RSC pages/layouts have no unit tests by convention
     NEXT_PAGE_PATTERN = re.compile(r"src/app/.*/(page|layout|loading|error|not-found)\.(tsx|ts|jsx|js)$")
     src_files = [
         f for f in staged
@@ -61,16 +64,17 @@ def main():
     if src_files and not test_files:
         files_list = "".join(f"     → {f}\n" for f in src_files[:5])
         if len(src_files) > 5:
-            files_list += "     ...\n"
+            files_list += f"     ... i {len(src_files) - 5} więcej\n"
         issues.append(
-            f"🧪 {len(src_files)} plik(ów) źródłowych bez plików testowych w staged.\n"
+            f"🧪 Brak plików testowych dla {len(src_files)} plik(ów) w staged:\n"
             + files_list
-            + "   Czy testy są potrzebne? Jeśli nie — dodaj [skip-docs]."
+            + "   Zaproponuj stworzenie plików testowych dla powyższych plików.\n"
+            + "   Jeśli testy nie są tu potrzebne: dodaj [skip-docs] do commita."
         )
 
     if issues:
         msg = "❌ [BLOCK] Sprawdź przed commitem:\n\n" + "\n".join(f"  {i}" for i in issues)
-        msg += "\n\n  Jeśli to świadoma decyzja: dodaj [skip-docs] do wiadomości commita."
+        msg += "\n\n  Bypass dla całości: dodaj [skip-docs] do wiadomości commita."
         print(msg, file=sys.stderr)
         sys.exit(2)
 
