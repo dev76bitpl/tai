@@ -40,6 +40,10 @@ def extract_commit_message(command: str) -> str:
     m = re.search(r"-m\s+'([^']+)'", command)
     if m:
         return m.group(1)
+    # PowerShell here-string: git commit -m @'...'@
+    m = re.search(r"-m\s+@['\"]?\n(.*?)\n['\"]?@", command, re.DOTALL)
+    if m:
+        return m.group(1).strip()
     return ""
 
 
