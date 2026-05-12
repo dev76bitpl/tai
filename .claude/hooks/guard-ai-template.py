@@ -39,6 +39,9 @@ def extract_commit_type(command: str) -> str:
     m = re.search(r'-m\s+["\']([^"\']+)', command)
     if not m:
         m = re.search(r"<<['\"]?EOF['\"]?\s*\n([^\n]+)", command)
+    if not m:
+        # PowerShell heredoc: git commit -m @'\n<first line>\n'@
+        m = re.search(r"-m\s+@['\"]?\n([^\n]+)", command)
     if m:
         t = re.match(r"^(feat|fix|docs|refactor|test|chore|style|perf|ci|build)", m.group(1).strip())
         if t:

@@ -11,12 +11,11 @@ Bypass: [no-adr] w wiadomości commita.
 """
 import json
 import re
-import subprocess
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from stack import chdir_to_project_root, get_adr_patterns, is_foreign_repo, is_git_commit_command
+from stack import chdir_to_project_root, get_adr_patterns, get_staged_files, is_foreign_repo, is_git_commit_command
 
 
 def get_command() -> str:
@@ -40,9 +39,7 @@ def main():
     if "[no-adr]" in command:
         sys.exit(0)
 
-    staged = subprocess.run(
-        ["git", "diff", "--cached", "--name-only"], capture_output=True, text=True
-    ).stdout.splitlines()
+    staged = get_staged_files(command)
 
     if any(re.search(r"docs/adr/", f) for f in staged):
         sys.exit(0)
