@@ -141,7 +141,7 @@ def main():
         sections = [f"## {name} — docs/TASKS.md\n\n{content}" for name, content in tasks]
         output += "Aktualne zadania z repozytoriów:\n\n"
         output += "\n\n---\n\n".join(sections)
-        output += "\n\n---\n\nZapytaj użytkownika nad czym dziś pracuje i wskaż pasujące zadania z powyższego kontekstu."
+        output += "\n\n---\n\nWYŚWIETL użytkownikowi powyższą listę otwartych zadań dosłownie, zanim odpiszesz na jego wiadomość."
 
     print(output)
     sys.exit(0)
