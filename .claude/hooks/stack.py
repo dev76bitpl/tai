@@ -102,19 +102,31 @@ def is_foreign_repo(command: str) -> bool:
         return False
 
 
+def get_hooks_root() -> Path:
+    """Returns the monorepo root — the directory that contains .claude/."""
+    return Path(__file__).resolve().parent.parent.parent
+
+
 def chdir_to_project_root(command: str = "") -> None:
     """CD to project root so all relative paths work regardless of CWD.
 
     When invoked from a monorepo root that is not itself a git repo,
     falls back to extracting the target repo path from the tool command
     (git -C <path> or cd <path> &&).
+    Only follows paths that are inside the monorepo root — commands
+    targeting external repos are left as-is so is_foreign_repo() catches them.
     """
     import os
-    import sys
     root = get_project_root()
     if not root and command:
         git_cwd = get_command_git_cwd(command)
         if git_cwd:
+            hooks_root = get_hooks_root()
+            try:
+                if not Path(git_cwd).resolve().is_relative_to(hooks_root):
+                    return
+            except Exception:
+                return
             candidate = subprocess.run(
                 ["git", "-C", git_cwd, "rev-parse", "--show-toplevel"],
                 capture_output=True,
