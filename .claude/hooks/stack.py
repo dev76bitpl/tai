@@ -93,14 +93,15 @@ def get_project_root() -> str:
 
 
 def get_command_git_cwd(command: str) -> str | None:
-    """Extract target directory from git -C /path or cd /path && patterns."""
+    """Extract target directory from git -C /path or cd /path && / cd /path; patterns."""
     import re
     m = re.search(r"git\s+-C\s+([^\s]+)", command)
     if m:
         return m.group(1)
-    m = re.search(r"cd\s+([^\s\"']+)\s+&&", command)
+    # Handle both && and ; separators; strip surrounding quotes from path
+    m = re.search(r"cd\s+([^\s\"']+|\"[^\"]+\"|'[^']+')\s*(?:&&|;)", command)
     if m:
-        return m.group(1)
+        return m.group(1).strip("\"'")
     return None
 
 
@@ -233,19 +234,25 @@ def is_git_commit_command(command: str) -> bool:
     - `git commit ...`
     - `git -C /path commit ...`
     - `cd /path && git commit ...`
+    - `cd /path; git commit ...`          ← PowerShell uses ; not &&
     - `git add X && git commit ...`
-    - heredoc forms starting with `git commit`
+    - `git add X; git commit ...`         ← PowerShell chained
+    - `cd /path; git add X; git commit`   ← PowerShell multi-step
 
     Non-acceptable: anything starting with `gh`, `npm`, `echo`, etc., even
     if their arguments contain the literal text `git commit`.
     """
     import re
-    stripped = command.strip()
-    # First gate: command must start with `git` or `cd ... && git` (chained)
-    if not re.match(r"^(?:cd\s+\S+\s*&&\s*)?git\b", stripped):
+    # Fast path: must contain git commit at all
+    if not re.search(r"\bgit\s+(?:-C\s+\S+\s+)?commit\b", command):
         return False
-    # Second gate: a `git ... commit` invocation must appear (allows `git -C /path commit`)
-    return bool(re.search(r"\bgit\s+(?:-C\s+\S+\s+)?commit\b", command))
+    # git commit must appear as a top-level shell token — after ^, &&, ;, or |
+    # (not buried inside a string argument of another command like gh/npm/echo)
+    return bool(re.search(
+        r"(?:^|&&|;|\|)\s*(?:cd\s+\S+\s*(?:&&|;)\s*)?git\s+(?:-C\s+\S+\s+)?commit\b",
+        command,
+        re.MULTILINE,
+    ))
 
 
 def get_staged_files(command: str = "") -> list[str]:
