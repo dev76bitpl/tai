@@ -11,5 +11,11 @@
     ["migrations/", "migracja bazy danych"],
     ["config/routes", "zmiana routingu"],
     ["wp-content/plugins/", "nowa wtyczka WordPress"]
-  ]
+  ],
+
+  "_session_context_comment": "Używane przez session-context.py (UserPromptSubmit hook).",
+  "repos": [
+    {"name": "my-project", "tasks": "docs/TASKS.md"}
+  ],
+  "ai_template_path": "/abs/path/to/ai-template-repo"
 }
