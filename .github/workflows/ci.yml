@@ -39,14 +39,20 @@ jobs:
           # native build/test job that runs after this one with full toolchain.
           SKIP: guard-lint,guard-tests
 
-      # Commit-msg hooks against each commit in the PR (or last commit on push).
+      # Commit-msg hooks against each commit in the PR. Only format + language
+      # enforcement here — guards that need staging context (tasks-staged,
+      # tests-with-src, adr, user-tested) were enforced locally at commit time
+      # and cannot be replayed in CI without re-staging historical state.
       - name: Lint commit messages
         if: github.event_name == 'pull_request'
         run: |
+          git config user.name "ci-bot"
+          git config user.email "ci@example.com"
           git fetch origin ${{ github.base_ref }}
           for sha in $(git rev-list origin/${{ github.base_ref }}..HEAD); do
             git log -1 --format=%B "$sha" > /tmp/commit-msg
-            pre-commit run --hook-stage commit-msg --commit-msg-filename /tmp/commit-msg || exit 1
+            pre-commit run gitlint --hook-stage commit-msg --commit-msg-filename /tmp/commit-msg || exit 1
+            pre-commit run guard-commit-lang --hook-stage commit-msg --commit-msg-filename /tmp/commit-msg || exit 1
           done
 
   # Project-specific build/test job — adapt to your stack (node/python/php/etc.).
