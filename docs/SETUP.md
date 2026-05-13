@@ -116,12 +116,41 @@ Otwórz `config.json` i ustaw `ai_template_path` na lokalną ścieżkę. Plik `c
 
 ---
 
+## Required GitHub repo settings (one-time, per repo)
+
+Niektóre workflowy wymagają ustawień których nie można skonfigurować plikami w repo. Sprawdź / włącz po pierwszym klonie:
+
+**Settings → Actions → General → Workflow permissions**:
+- ☑ `Read and write permissions` — workflows mogą tworzyć commity i pushować (potrzebne dla `release-please` żeby utworzyć Release PR)
+- ☑ `Allow GitHub Actions to create and approve pull requests` — `release-please-action` tworzy Release PR; bez tego workflow failuje z `GitHub Actions is not permitted to create or approve pull requests`
+
+Alternatywnie (premium security): wygenerować fine-grained PAT scoped na to repo, dodać jako secret `RELEASE_PLEASE_TOKEN`, zmienić workflow żeby używał `token: ${{ secrets.RELEASE_PLEASE_TOKEN }}`. Wymagane w org-ach gdzie powyższe checkboxy są wyłączone na poziomie organizacji.
+
+Sprawdzenie obecnych ustawień (CLI):
+
+```bash
+gh api repos/<owner>/<repo>/actions/permissions/workflow
+```
+
+Oczekiwane: `default_workflow_permissions: "write"`, `can_approve_pull_request_reviews: true`.
+
+Ustawienie przez CLI (zamiast UI):
+
+```bash
+gh api -X PUT repos/<owner>/<repo>/actions/permissions/workflow \
+  -F default_workflow_permissions=write \
+  -F can_approve_pull_request_reviews=true
+```
+
+---
+
 ## Done when
 
 - aplikacja działa na `http://localhost:3000`
 - logowanie działa
 - `npm run doctor` → wszystkie required checks zielone
 - `pre-commit run --all-files` → wszystkie hooki zielone (lub naprawialne problemy formatowania)
+- GitHub repo settings powyżej ustawione (`gh api ...` zwraca `write` + `true`)
 
 ---
 
