@@ -105,3 +105,10 @@ repos:
         entry: python scripts/dev-guards/guard_user_tested.py
         language: system
         stages: [commit-msg]
+
+      - id: guard-release-tag
+        name: "[release-please] manifest version must have a matching git tag"
+        entry: python scripts/dev-guards/guard_release_tag.py
+        language: system
+        stages: [commit-msg]
+        pass_filenames: false
