@@ -37,7 +37,9 @@ jobs:
         env:
           # Skip stack-aware lint/tests here — projects should add their own
           # native build/test job that runs after this one with full toolchain.
-          SKIP: guard-lint,guard-tests
+          # Skip no-commit-to-branch — CI runs on main but isn't creating commits;
+          # the hook is for blocking local commits only.
+          SKIP: guard-lint,guard-tests,no-commit-to-branch
 
       # Commit-msg hooks against each commit in the PR. Only format + language
       # enforcement here — guards that need staging context (tasks-staged,
