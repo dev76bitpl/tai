@@ -1,8 +1,9 @@
 {
   "_readme": [
-    "Skopiuj jako .claude/settings.json w katalogu monorepo",
-    "Zamień ścieżki na absolutne: /abs/path/to/.claude/hooks/<script>.py",
-    "Ścieżki absolutne wymagane gdy CWD sesji != root monorepo"
+    "Claude Code hooks — AI-specific layer.",
+    "Git workflow guards (lint, tests, ADR, user-tested, etc.) live in .pre-commit-config.yaml at repo root.",
+    "These hooks cover what pre-commit cannot: session context + AI template repo sync.",
+    "Windows users: replace 'python3' with 'py' in command entries."
   ],
   "hooks": {
     "UserPromptSubmit": [
@@ -10,7 +11,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 .claude/hooks/session-context.py"
+            "command": "python3 ${CLAUDE_PROJECT_DIR}/.claude/hooks/session-context.py"
           }
         ]
       }
@@ -21,31 +22,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 .claude/hooks/pre-commit.py"
+            "command": "python3 ${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-ai-template.py"
           },
           {
             "type": "command",
-            "command": "python3 .claude/hooks/guard-docs-tests.py"
-          },
-          {
-            "type": "command",
-            "command": "python3 .claude/hooks/guard-adr.py"
-          },
-          {
-            "type": "command",
-            "command": "python3 .claude/hooks/guard-ai-template.py"
-          },
-          {
-            "type": "command",
-            "command": "python3 .claude/hooks/guard-pr.py"
-          },
-          {
-            "type": "command",
-            "command": "python3 .claude/hooks/guard-template-sync.py"
-          },
-          {
-            "type": "command",
-            "command": "python3 .claude/hooks/guard-user-tested.py"
+            "command": "python3 ${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-template-sync.py"
           }
         ]
       }
@@ -56,7 +37,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 .claude/hooks/suggest-pr.py"
+            "command": "python3 ${CLAUDE_PROJECT_DIR}/.claude/hooks/suggest-pr.py"
           }
         ]
       }

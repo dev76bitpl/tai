@@ -1,0 +1,44 @@
+# gitlint config — Conventional Commits enforcement (CLAUDE.md rule 2).
+# Docs: https://jorisroovers.com/gitlint/configuration/
+#
+# Mirrors the regex from .claude/hooks/pre-commit.py:
+#   ^(feat|fix|docs|refactor|test|chore|style|perf|ci|build)(\(scope\))?!?: <description>
+
+[general]
+# Stop on first violation in a rule — clearer error output.
+verbosity = 3
+# Ignore merge, fixup, squash commits — git generates them.
+ignore-merge-commits = true
+ignore-fixup-commits = true
+ignore-squash-commits = true
+ignore-revert-commits = true
+# Project owns its own contrib rules.
+contrib =
+# B6 (body missing) — body is optional per CLAUDE.md rule 3; small changes ship subject-only.
+ignore = B6
+
+# ── Title structure ──────────────────────────────────────────────────────
+[title-max-length]
+line-length = 72
+
+[title-min-length]
+min-length = 10
+
+[title-match-regex]
+# type(scope)?!: description    (description >= 3 chars)
+regex = ^(feat|fix|docs|refactor|test|chore|style|perf|ci|build)(\([a-zA-Z0-9_/.-]+\))?!?: .{3,}$
+
+[title-trailing-punctuation]
+
+[title-trailing-whitespace]
+
+[title-leading-whitespace]
+
+# ── Body rules ───────────────────────────────────────────────────────────
+[body-max-line-length]
+line-length = 100
+
+[body-trailing-whitespace]
+
+# Blank line between subject and body — Conventional Commits standard.
+[body-first-line-empty]
