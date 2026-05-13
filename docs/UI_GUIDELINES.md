@@ -93,6 +93,17 @@ Każdy nowy token: zdefiniowany w obu motywach (`:root` + `.dark`) i udostępnio
 
 ---
 
+## Formularze — UX flow
+
+1. User otwiera formularz (strona `/new` lub `/edit`)
+2. Pola generowane przez system są pre-wypełnione
+3. HTML5 walidacja blokuje submit przy błędach klienta
+4. Po submit — loading state na przycisku (`disabled` + etykieta "Zapisywanie...")
+5. Błąd serwera — wyświetlony pod formularzem, formularz pozostaje wypełniony
+6. Sukces — redirect na listę lub widok szczegółowy
+
+---
+
 ## Nawigacja
 
 - breadcrumbs na każdym widoku szczegółowym
