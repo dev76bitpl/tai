@@ -40,6 +40,8 @@ docker compose up -d
 npm install
 ```
 
+> ℹ️ `npm install` automatycznie uruchomi `prepare` → `scripts/setup-hooks.mjs`, który zainstaluje `pre-commit` (jeśli `pip`/`pipx` dostępny) i podpnie git hooki. Wymagany Python 3.9+ w PATH. Jeśli automat nie znajdzie pip — patrz krok "Guard system" niżej. Po instalacji uruchom `npm run doctor` żeby zweryfikować stan setupu.
+
 ### 5. Migracje
 
 ```bash
@@ -60,10 +62,66 @@ npm run dev
 
 ---
 
+## Guard system (pre-commit framework)
+
+System guardów pilnuje commitów: format, lint, testy, sekrety, ADR, `[user-tested]`, język tytułu. Działa tak samo dla commitów z terminala (developer) i przez Claude — to jest source of truth.
+
+**Instalacja jest zautomatyzowana** (krok 4: `npm install` → `prepare` script → bootstrap). Ten krok wykonujesz tylko gdy automat nie znalazł `pip`/`pipx`, albo gdy chcesz zweryfikować ręcznie.
+
+**Wymaganie**: Python 3.9+ w PATH.
+
+```bash
+python -m pip install --user pre-commit
+python -m pre_commit install --hook-type pre-commit --hook-type commit-msg
+```
+
+> ℹ️ Używamy `python -m pip` zamiast `pip` i `python -m pre_commit` zamiast `pre-commit` — to działa cross-platform niezależnie od tego czy `Scripts/` jest w PATH (typowy problem na Windows po `pip install --user`). Standalone `pre-commit` (np. z `pipx`) też działa.
+
+Weryfikacja:
+
+```bash
+npm run doctor
+```
+
+Doctor raportuje stan setupu: Python, Node, pre-commit, hooki, `.pre-commit-config.yaml`, aktualny branch.
+
+Pełny przebieg hooków na całym repo:
+
+```bash
+pre-commit run --all-files
+```
+
+**Bypass flagi** (tylko z dokumentowanym powodem w body commita):
+- `[skip-docs]` — pomiń sprawdzanie `docs/TASKS.md` i testów do nowych źródeł
+- `[no-adr]` — zmiana architektoniczna bez ADR (świadoma decyzja)
+- `[skip-test-check]` — commit bez `[user-tested]` (tylko dla zmian docs/chore)
+- `[skip-sync]` — sekcja project-specific, nie idzie do AI template
+- `SKIP=guard-lint,guard-tests git commit ...` — env var, nie ląduje w historii
+
+CI (`.github/workflows/ci.yml`) uruchamia te same hooki server-side przez `pre-commit run --all-files`. Branch protection rule na `main` powinno wymagać zielonego CI przed merge — `--no-verify` lokalnie nie obejdzie tej warstwy.
+
+---
+
+## Claude Code hooks (opcjonalne, per-maszyna)
+
+Hooki AI-specific w `.claude/hooks/` (sync do template, session context) wymagają ścieżki do lokalnego klonu repo AI template.
+
+Konfiguracja (jednorazowo na każdej maszynie):
+
+```bash
+cp .claude/hooks/config.json.example .claude/hooks/config.json
+```
+
+Otwórz `config.json` i ustaw `ai_template_path` na lokalną ścieżkę. Plik `config.json` powinien być w `.gitignore` — nie jest commitowany. Każda maszyna ma swoją wersję.
+
+---
+
 ## Done when
 
 - aplikacja działa na `http://localhost:3000`
 - logowanie działa
+- `npm run doctor` → wszystkie required checks zielone
+- `pre-commit run --all-files` → wszystkie hooki zielone (lub naprawialne problemy formatowania)
 
 ---
 

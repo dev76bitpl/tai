@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # Server-side mirror of local .pre-commit-config.yaml — un-bypassable.
+  # Branch protection rule should require this job to pass before merge.
+  guards:
+    name: Guards (pre-commit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # gitlint needs full history to inspect PR commits
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Cache pre-commit envs
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: Install pre-commit
+        run: pip install pre-commit
+
+      # File-level hooks (whitespace, secrets, etc.) across whole tree.
+      - name: Run pre-commit hooks on all files
+        run: pre-commit run --all-files --show-diff-on-failure
+        env:
+          # Skip stack-aware lint/tests here — projects should add their own
+          # native build/test job that runs after this one with full toolchain.
+          SKIP: guard-lint,guard-tests
+
+      # Commit-msg hooks against each commit in the PR (or last commit on push).
+      - name: Lint commit messages
+        if: github.event_name == 'pull_request'
+        run: |
+          git fetch origin ${{ github.base_ref }}
+          for sha in $(git rev-list origin/${{ github.base_ref }}..HEAD); do
+            git log -1 --format=%B "$sha" > /tmp/commit-msg
+            pre-commit run --hook-stage commit-msg --commit-msg-filename /tmp/commit-msg || exit 1
+          done
+
+  # Project-specific build/test job — adapt to your stack (node/python/php/etc.).
+  # ci:
+  #   needs: guards
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - run: npm ci
+  #     - run: npm run lint
+  #     - run: npm test
+  #     - run: npm run build

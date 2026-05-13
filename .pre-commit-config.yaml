@@ -1,0 +1,107 @@
+# Guard system — pre-commit framework substrate.
+#
+# Install (once per clone):
+#   pip install pre-commit
+#   pre-commit install --hook-type pre-commit --hook-type commit-msg
+#
+# Update hook versions:
+#   pre-commit autoupdate
+#
+# Run all hooks on entire repo (CI mirror):
+#   pre-commit run --all-files
+#
+# Bypass a specific hook (premium pattern — doesn't leak to commit history):
+#   SKIP=guard-lint git commit -m "..."
+#
+# Bypass via commit body flag (audit trail — committed alongside change):
+#   [no-adr], [skip-docs], [skip-test-check], [skip-sync]   (CLAUDE.md rule 12a)
+#
+# Bypass entire system (forbidden by CLAUDE.md unless emergency):
+#   git commit --no-verify
+
+default_install_hook_types: [pre-commit, commit-msg]
+default_stages: [pre-commit]
+fail_fast: false
+
+repos:
+  # ── Built-in safety net ──────────────────────────────────────────────────
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=1000]
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: no-commit-to-branch
+        args: [--branch, main, --branch, master]
+
+  # ── Conventional Commits format ──────────────────────────────────────────
+  - repo: https://github.com/jorisroovers/gitlint
+    rev: v0.19.1
+    hooks:
+      - id: gitlint
+        stages: [commit-msg]
+
+  # ── Secrets scanning ─────────────────────────────────────────────────────
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.21.2
+    hooks:
+      - id: gitleaks
+
+  # ── Stack-aware lint & tests (pre-commit stage — fail fast) ──────────────
+  - repo: local
+    hooks:
+      - id: guard-lint
+        name: "Stack-aware lint (auto-detected)"
+        entry: python scripts/dev-guards/guard_lint.py
+        language: system
+        stages: [pre-commit]
+        always_run: true
+        pass_filenames: false
+
+      - id: guard-tests
+        name: "Stack-aware tests (auto-detected, skipped for docs-only)"
+        entry: python scripts/dev-guards/guard_tests.py
+        language: system
+        stages: [pre-commit]
+        always_run: true
+        pass_filenames: false
+
+  # ── CLAUDE.md enforcement (commit-msg stage — supports bypass body flags) ─
+  - repo: local
+    hooks:
+      - id: guard-tasks-staged
+        name: "[CLAUDE.md 4] docs/TASKS.md must be in staged ([skip-docs] bypass)"
+        entry: python scripts/dev-guards/guard_tasks_staged.py
+        language: system
+        stages: [commit-msg]
+
+      - id: guard-tests-with-src
+        name: "[CLAUDE.md 16] source files require tests ([skip-docs] bypass)"
+        entry: python scripts/dev-guards/guard_tests_with_src.py
+        language: system
+        stages: [commit-msg]
+
+      - id: guard-adr
+        name: "[CLAUDE.md ADR] architectural changes require ADR ([no-adr] bypass)"
+        entry: python scripts/dev-guards/guard_adr.py
+        language: system
+        stages: [commit-msg]
+
+      - id: guard-commit-lang
+        name: "[CLAUDE.md 2] commit message subject must be in English"
+        entry: python scripts/dev-guards/guard_commit_lang.py
+        language: system
+        stages: [commit-msg]
+
+      - id: guard-user-tested
+        name: "[CLAUDE.md 16b] [user-tested] required on feat/* and fix/* ([skip-test-check] bypass)"
+        entry: python scripts/dev-guards/guard_user_tested.py
+        language: system
+        stages: [commit-msg]
