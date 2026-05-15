@@ -79,6 +79,27 @@ Co aktualizować:
 
 Kolejność: kod + dokumentacja razem w jednym commicie na końcu kroku.
 
+**Język dokumentacji — zasada dwóch warstw:**
+
+Każde zadanie w `docs/TASKS.md` i `docs/ROADMAP.md` musi mieć dwie warstwy opisu:
+
+1. **Warstwa techniczna** — konkretne pliki, tabele, akcje (dla AI i dewelopera)
+2. **Warstwa ludzka** — blok `> Po ludzku:` tuż pod nagłówkiem zadania, potocznym językiem, bez żargonu, opisujący co user zobaczy lub będzie mógł zrobić po wdrożeniu
+
+Przykład:
+
+```
+**Krok 2 — różne godziny per dzień:**
+
+> Po ludzku: dziś wszystkie zajęcia w tygodniu zaczynają się o tej samej godzinie.
+> Po tej zmianie każdy dzień może mieć własną godzinę, np. Pon 10:00 / Śr 15:30.
+
+- [ ] Migracja schematu...
+- [ ] Update formularza...
+```
+
+Zasada: jeśli user po tygodniu nie rozumie co miał na myśli — opis jest zły. Pisz tak żeby rozumiał właściciel firmy, nie programista.
+
 Po każdym domkniętym kroku AI proponuje też checklistę testów manualnych — nie czeka aż user zapyta. Format: krótka lista punktów "co sprawdzić" dla danego flow (happy path + główne edge case'y). Jeśli flow jest krytyczny i lista jest dłuższa — proponuje dopisanie do docs/TESTING.md.
 
 **Weryfikacja mechaniczna przed edycją dokumentacji** (obowiązkowe, nie z pamięci):
