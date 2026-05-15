@@ -73,6 +73,14 @@ repos:
         always_run: true
         pass_filenames: false
 
+      - id: guard-typecheck
+        name: "TypeScript type check (tsc --noEmit)"
+        entry: python scripts/dev-guards/guard_typecheck.py
+        language: system
+        stages: [pre-commit]
+        always_run: true
+        pass_filenames: false
+
   # ── CLAUDE.md enforcement (commit-msg stage — supports bypass body flags) ─
   - repo: local
     hooks:
