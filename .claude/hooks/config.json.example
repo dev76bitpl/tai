@@ -6,11 +6,29 @@
   "lint": "composer lint",
   "test": "composer test",
 
-  "_adr_patterns_comment": "Dodatkowe wzorce plików sugerujące decyzję architektoniczną (regex, opis).",
+  "_adr_patterns_comment": "Dodatkowe wzorce plików sugerujące decyzję architektoniczną (regex, opis). Zostaw pasujące do projektu, resztę usuń.",
+  "_adr_patterns_categories": "Baza/schemat | Infrastruktura | Architektura | WordPress | PrestaShop | Magento",
   "adr_patterns": [
-    ["migrations/", "migracja bazy danych"],
+    ["migrations/", "migracja bazy danych — zmiana schematu"],
+    ["schema\\.(prisma|graphql|sql)", "zmiana schematu danych"],
+    ["docker-compose", "zmiana konfiguracji kontenerów"],
+    ["infrastructure/", "zmiana infrastruktury"],
+    ["terraform/", "zmiana infrastruktury (IaC)"],
+    ["kubernetes/", "zmiana konfiguracji klastra"],
     ["config/routes", "zmiana routingu"],
-    ["wp-content/plugins/", "nowa wtyczka WordPress"]
+    ["middleware/", "nowy middleware / zmiana warstwy pośredniej"],
+    ["auth/", "zmiana mechanizmu uwierzytelniania"],
+    ["api/v[0-9]", "wersjonowanie API"],
+    ["queue/", "zmiana systemu kolejkowania"],
+    ["cache/", "zmiana strategii cachowania"],
+    ["wp-content/plugins/", "nowy plugin WordPress"],
+    ["wp-content/themes/", "nowy motyw WordPress"],
+    ["wp-config", "zmiana konfiguracji WordPress"],
+    ["modules/", "nowy moduł PrestaShop"],
+    ["override/", "override klasy PrestaShop"],
+    ["themes/", "zmiana motywu PrestaShop"],
+    ["app/code/", "nowy moduł Magento"],
+    ["app/design/", "zmiana motywu Magento"]
   ],
 
   "_session_context_comment": "Używane przez session-context.py (UserPromptSubmit hook).",
