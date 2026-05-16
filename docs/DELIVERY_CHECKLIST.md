@@ -21,18 +21,12 @@ npm run lint
 npm run test
 ```
 
-Dodatkowo (gdy zmienial sie model danych / Prisma):
+Dodatkowo (gdy zmienił się schemat danych — zależne od ORM/stacku):
+- np. Prisma: `npx prisma validate && npx prisma generate`
+- np. Django: `python manage.py migrate --check`
 
-```bash
-npx prisma validate
-npx prisma generate
-```
-
-Przy zmianach DB wymagajacych migracji:
-
-```bash
-npm run db:migrate
-```
+Przy zmianach DB wymagających migracji:
+- np. `npm run db:migrate` / `php artisan migrate` / `python manage.py migrate`
 
 ---
 

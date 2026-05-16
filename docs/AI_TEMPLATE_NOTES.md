@@ -18,7 +18,7 @@ Dobre praktyki zebrane w trakcie pracy z AI. Aktualizowane na bieżąco — każ
 
 ## Architektura / struktura projektu
 
-- **Konfigurowalność przez JSON settings** — opcje formularzy (listy wyboru, parametry operacyjne) żyją w tabeli tenant/config jako JSON, nie w hardcoded tablicach; zmienialne bez migracji schematu.
+- **Konfigurowalność przez JSON settings** — opcje formularzy (listy wyboru, parametry operacyjne) żyją w tabeli konfiguracyjnej jako JSON, nie w hardcoded tablicach; zmienialne bez migracji schematu.
 - **Seed idempotentny z merge defaultów** — `upsert` + post-merge brakujących kluczy; nowe defaults trafiają do istniejących rekordów bez nadpisywania customizacji użytkownika.
 - **`.env` vs `.env.local`** — narzędzia infrastrukturalne (Docker Compose) czytają `.env`, framework aplikacyjny (Next.js, Prisma) czyta `.env.local`; osobne pliki, osobne odpowiedzialności.
 

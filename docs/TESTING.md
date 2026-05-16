@@ -28,7 +28,7 @@ Checklisty testów manualnych dla krytycznych flow.
 
 ## Guard system — pre-commit framework
 
-**Setup**: `npm install` (auto-bootstrap) lub `python -m pip install --user pre-commit && python -m pre_commit install --hook-type pre-commit --hook-type commit-msg`. Wymagany Python 3.9+.
+**Setup**: `npm install` (auto-bootstrap) lub ręcznie: `pipx install pre-commit` (Ubuntu 24.04+ — PEP 668 blokuje `pip install --user`) / `pip install pre-commit` (inne systemy), następnie `pre-commit install --hook-type pre-commit --hook-type commit-msg`. Wymagany Python 3.9+.
 
 ### Scenariusz 1 — installation works
 

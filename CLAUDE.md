@@ -89,13 +89,13 @@ Każde zadanie w `docs/TASKS.md` i `docs/ROADMAP.md` musi mieć dwie warstwy opi
 Przykład:
 
 ```
-**Krok 2 — różne godziny per dzień:**
+**Krok 2 — filtry w liście zamówień:**
 
-> Po ludzku: dziś wszystkie zajęcia w tygodniu zaczynają się o tej samej godzinie.
-> Po tej zmianie każdy dzień może mieć własną godzinę, np. Pon 10:00 / Śr 15:30.
+> Po ludzku: dziś żeby znaleźć zamówienie trzeba przewijać całą listę.
+> Po tej zmianie można filtrować po statusie i dacie — wyniki od razu się zawężają.
 
-- [ ] Migracja schematu...
-- [ ] Update formularza...
+- [ ] Dodaj parametry query do endpointu...
+- [ ] Update widoku listy...
 ```
 
 Zasada: jeśli user po tygodniu nie rozumie co miał na myśli — opis jest zły. Pisz tak żeby rozumiał właściciel firmy, nie programista.
@@ -467,7 +467,7 @@ Pytanie: czy taki flow jest ok?
 - docs/ROADMAP.md – kolejność prac
 - docs/TASKS.md – bieżące zadania
 - docs/SETUP.md – instrukcja środowiska deweloperskiego (wymagania, instalacja, komendy)
-- docs/TESTING.md – checklisty testów manualnych dla krytycznych flow (pairing, QR scanner, ...)
+- docs/TESTING.md – checklisty testów manualnych dla krytycznych flow
 - docs/DELIVERY_CHECKLIST.md – standard domknięcia kroku (testy auto/manualne, regresja, docs, commit)
 - README.md – wizytówka projektu (stack, struktura, komendy, linki do docs)
 
@@ -622,7 +622,6 @@ AI nie może:
 - zgadywać logiki biznesowej — jeśli nie wiadomo, pytaj
 - zmieniać scope bez wskazania i akceptacji usera
 - wdrażać tymczasowego rozwiązania bez oznaczenia `TODO:` z kontekstem — tymczasowe bez opisu żyje wiecznie
-- używać natywnych `alert()`, `confirm()`, `prompt()` — zamiast tego: błędy inline w formularzu, toast lub modal z komponentów UI; `confirm()` zastępujemy dwukrokowym przyciskiem (pierwsze kliknięcie = stan "potwierdź?", drugie = akcja)
 - używać natywnych `alert()`, `confirm()`, `prompt()` — zamiast tego: błędy inline w formularzu, toast lub modal z komponentów UI; `confirm()` zastępujemy dwukrokowym przyciskiem (pierwsze kliknięcie = stan "potwierdź?", drugie = akcja)
 
 ---
