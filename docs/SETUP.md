@@ -115,9 +115,19 @@ CI (`.github/workflows/ci.yml`) uruchamia te same hooki server-side przez `pre-c
 
 ## Claude Code hooks (opcjonalne, per-maszyna)
 
-Hooki AI-specific w `.claude/hooks/` (sync do template, session context) wymagają ścieżki do lokalnego klonu repo AI template.
+Hooki AI-specific w `.claude/hooks/` (sync do template, session context) wymagają dwóch plików per-maszyna (oba w `.gitignore`):
 
-Konfiguracja (jednorazowo na każdej maszynie):
+**Krok 1 — interpreter Python:**
+
+```bash
+cp .claude/settings.local.json.example .claude/settings.local.json
+```
+
+Otwórz `settings.local.json` i zamień `INTERPRETER` na właściwy:
+- Ubuntu/macOS: `python3`
+- Windows: `py`
+
+**Krok 2 — ścieżka do AI template repo:**
 
 ```bash
 cp .claude/hooks/config.json.example .claude/hooks/config.json
