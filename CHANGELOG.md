@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.4](https://github.com/dev76bitpl/ai/compare/v0.1.3...v0.1.4) (2026-05-16)
+
+
+### Features
+
+* **guards:** Add guard-testing-checklist — enforce docs/TESTING.md on feat/fix commits ([9471b2c](https://github.com/dev76bitpl/ai/commit/9471b2c8d604369ea8002f1ad11a073bde287772))
+* **rules:** Add rules 19 and 20 — component size limit and UI check ([97b81c6](https://github.com/dev76bitpl/ai/commit/97b81c62ebee16cebc5461c8d579d459e86b3f49))
+
+
+### Bug Fixes
+
+* **guards:** Python3 in pre-commit entries + Windows alias docs ([6f8fffc](https://github.com/dev76bitpl/ai/commit/6f8fffc7475bee3cedc57d78a2b2de034da97257))
+
 ## [0.1.3](https://github.com/dev76bitpl/ai/compare/v0.1.2...v0.1.3) (2026-05-16)
 
 
