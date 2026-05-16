@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.1.2](https://github.com/dev76bitpl/ai/compare/v0.1.1...v0.1.2) (2026-05-16)
+
+
+### Features
+
+* **guard:** Add guard_typecheck — tsc --noEmit as pre-commit hook ([7e613bc](https://github.com/dev76bitpl/ai/commit/7e613bcb5c76c84e33bfabd7c288feb34d05d77f))
+* **guard:** Extend guard-template-sync to check scripts/dev-guards/*.py content ([7264959](https://github.com/dev76bitpl/ai/commit/7264959bce16c20211325a767cf28eefb48e2f25))
+* **guards:** Add guard-release-tag to detect missing release tags ([14e77a9](https://github.com/dev76bitpl/ai/commit/14e77a93996d8c300f7b65c6b6b3fb01c2304939))
+* **guards:** Add guard-release-tag to detect missing release tags ([15fb515](https://github.com/dev76bitpl/ai/commit/15fb515b22829ca0e0cc09270b44cc2c1e22bd2b))
+
+
+### Bug Fixes
+
+* **ci:** Add pull-request-title-pattern to release-please config ([cfac58a](https://github.com/dev76bitpl/ai/commit/cfac58a623aebfe52763dd89948c11efbc89bbf7))
+* **guards:** Use GitHub Release instead of git tag in guard-release-tag ([#7](https://github.com/dev76bitpl/ai/issues/7)) ([9bf9597](https://github.com/dev76bitpl/ai/commit/9bf959743afc15aeee7260381ab5537b974eada4))
+* **hooks:** Move hook commands to settings.local.json (cross-platform) ([#13](https://github.com/dev76bitpl/ai/issues/13)) ([78ce873](https://github.com/dev76bitpl/ai/commit/78ce873cda0c345d0b6267fd1a5c9c98fe49b8cc))
+
 ## [0.1.1](https://github.com/dev76bitpl/ai/compare/v0.1.0...v0.1.1) (2026-05-13)
 
 
