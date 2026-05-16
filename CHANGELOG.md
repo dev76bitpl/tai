@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.3](https://github.com/dev76bitpl/ai/compare/v0.1.2...v0.1.3) (2026-05-16)
+
+
+### Bug Fixes
+
+* **scripts:** Add package.json with doctor and prepare scripts ([#15](https://github.com/dev76bitpl/ai/issues/15)) ([3c56673](https://github.com/dev76bitpl/ai/commit/3c5667396f5f55d623e1fb11011dbbbaf1923d83))
+
 ## [0.1.2](https://github.com/dev76bitpl/ai/compare/v0.1.1...v0.1.2) (2026-05-16)
 
 
