@@ -1,0 +1,6 @@
+{
+  "scripts": {
+    "doctor": "python3 scripts/doctor.py || py scripts/doctor.py",
+    "prepare": "node scripts/setup-hooks.mjs"
+  }
+}
