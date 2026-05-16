@@ -455,6 +455,54 @@ Pytanie: czy taki flow jest ok?
 
 ---
 
+### 19. Przed nowym komponentem UI — najpierw sprawdź co już istnieje
+
+Nowy plik = czysta karta = styl "tego dnia" zamiast stylu projektu. Żeby temu zapobiec, przed napisaniem jakiegokolwiek nowego komponentu UI obowiązują dwa kroki:
+
+**Krok 1 — sprawdź `src/components/ui/`**
+
+```
+ls src/components/ui/
+```
+
+Jeśli potrzebny komponent już tam jest (np. `tooltip.tsx`, `badge.tsx`, `dialog.tsx`) — użyj go. Nie wymyślaj własnego rozwiązania.
+
+**Krok 2 — grep po podobnym wzorcu w kodzie**
+
+Przed użyciem jakiegokolwiek wzorca UI (tooltip, cursor, spacing, kolor statusu, format daty) znajdź jedno miejsce w projekcie gdzie to już jest zrobione i naśladuj:
+
+```
+grep -r "cursor-pointer" src/app --include="*.tsx" -l   # jak projekt robi cursor
+grep -r "Tooltip" src/ --include="*.tsx" -l              # czy tooltip jest już używany
+grep -r "title=" src/app --include="*.tsx" | head -5     # czy jest natywny title
+```
+
+**Dlaczego**: CLAUDE.md opisuje reguły, ale nie pokazuje wzorców kodu. Wzorzec to działający kod w projekcie — nie opis. Czytanie reguł bez czytania kodu prowadzi do niespójności mimo dobrej dokumentacji.
+
+**Twarde zasady**:
+- `title=""` na elementach HTML → nigdy; zawsze `<Tooltip>` z design systemu
+- `cursor-pointer` → zawsze na `<button>`, `<a>`, `<Link>` i innych klikalnych elementach (Tailwind tego nie dodaje automatycznie)
+- Nowy pakiet npm do UI → najpierw sprawdź czy biblioteka komponentów (Radix UI, shadcn itp.) już to rozwiązuje w projekcie
+
+---
+
+### 20. Rozmiar komponentów i plików logiki
+
+**Komponent UI: max 300 linii.** Powyżej — wyciągnij:
+- sub-komponenty do osobnych plików (np. `ListView.tsx`, `DetailDialog.tsx`)
+- niestandardowe hooki do `hooks/useXxx.ts`
+- helpery i stałe do osobnego pliku (np. `feature.config.ts`, `feature.helpers.ts`)
+
+**Plik logiki (server action, mutations, queries): max 400 linii.** Powyżej — podziel po domenie lub flow.
+
+**Wyjątek:** pliki danych — stałe, szablony HTML/PDF, mapowania enum — bez limitu, rozmiar jest tam naturalny.
+
+**Twarde zasady:**
+- Przed napisaniem nowego komponentu który będzie duży — zaplanuj podział na pliki z góry, nie refaktoruj po fakcie
+- Istniejące pliki przekraczające limit: przy każdej modyfikacji AI sygnalizuje dług i proponuje wydzielenie, nawet jeśli nie jest to główny cel sesji
+
+---
+
 ## 🗂️ Zarządzanie artefaktami projektu
 
 ### Główne artefakty
