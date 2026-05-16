@@ -1,0 +1,41 @@
+{
+  "_readme": "Per-machine hook commands. Copy to settings.local.json and set correct interpreter: 'python3' on Ubuntu/macOS, 'py' on Windows.",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "INTERPRETER ${CLAUDE_PROJECT_DIR}/.claude/hooks/session-context.py"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "INTERPRETER ${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-ai-template.py"
+          },
+          {
+            "type": "command",
+            "command": "INTERPRETER ${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-template-sync.py"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "INTERPRETER ${CLAUDE_PROJECT_DIR}/.claude/hooks/suggest-pr.py"
+          }
+        ]
+      }
+    ]
+  }
+}
