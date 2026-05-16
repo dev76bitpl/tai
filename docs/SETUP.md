@@ -1,26 +1,58 @@
 # SETUP — Developer Environment
 
+Instrukcja dla nowego developera lub nowej maszyny. Przejdź kroki po kolei — nie pomijaj weryfikacji.
+
 ---
 
 ## Wymagania
 
 | Narzędzie | Wersja | Uwaga |
 |---|---|---|
-| Node.js | ... | |
-| Docker | ... | |
+| Runtime (Node / PHP / Python / Go / ...) | ... | uzupełnij per projekt |
+| Baza danych | ... | uzupełnij per projekt |
+| Docker | ... | jeśli projekt używa |
+| Python | 3.9+ | wymagany przez guard system (pre-commit) |
+| Git | dowolna | |
 
 ---
 
-## Kroki instalacji
+## Krok 1 – Init repo na GitHub (BLOKER)
 
-### 1. Sklonuj repo
+> ⚠️ Bez tych ustawień release-please nie tworzy tagów ani GitHub Releases automatycznie, a branche trzeba sprzątać ręcznie po każdym merge. Ustaw zaraz po stworzeniu repo — przed pierwszym commitem.
+
+**Settings → General → Pull Requests**:
+- ☑ `Automatically delete head branches` — branche usuwane automatycznie po merge
+
+**Settings → Actions → General → Workflow permissions**:
+- ☑ `Read and write permissions`
+- ☑ `Allow GitHub Actions to create and approve pull requests`
+
+Weryfikacja i ustawienie przez CLI:
+
+```bash
+gh api repos/<owner>/<repo>/actions/permissions/workflow
+# oczekiwane: "default_workflow_permissions": "write", "can_approve_pull_request_reviews": true
+
+# jeśli nie — ustaw:
+gh api -X PUT repos/<owner>/<repo>/actions/permissions/workflow \
+  -F default_workflow_permissions=write \
+  -F can_approve_pull_request_reviews=true
+```
+
+Alternatywnie (org z ograniczeniami): wygeneruj fine-grained PAT scoped na repo, dodaj jako secret `RELEASE_PLEASE_TOKEN`, zmień workflow żeby używał `token: ${{ secrets.RELEASE_PLEASE_TOKEN }}`.
+
+---
+
+## Krok 2 – Sklonuj repo
 
 ```bash
 git clone ...
 cd ...
 ```
 
-### 2. Zmienne środowiskowe
+---
+
+## Krok 3 – Zmienne środowiskowe
 
 ```bash
 cp .env.example .env
@@ -28,47 +60,38 @@ cp .env.example .env
 
 Uzupełnij `.env`.
 
-### 3. Uruchom bazę
+---
+
+## Krok 4 – Uruchom infrastrukturę (baza, cache, itp.)
 
 ```bash
 docker compose up -d
 ```
 
-### 4. Zainstaluj zależności
+---
+
+## Krok 5 – Zainstaluj zależności
 
 ```bash
-npm install
+npm install   # lub: composer install / pip install / go mod download
 ```
 
-> ℹ️ `npm install` automatycznie uruchomi `prepare` → `scripts/setup-hooks.mjs`, który zainstaluje `pre-commit` (jeśli `pip`/`pipx` dostępny) i podpnie git hooki. Wymagany Python 3.9+ w PATH. Jeśli automat nie znajdzie pip — patrz krok "Guard system" niżej. Po instalacji uruchom `npm run doctor` żeby zweryfikować stan setupu.
+> ℹ️ `npm install` automatycznie uruchomi `prepare` → `scripts/setup-hooks.mjs`, który zainstaluje `pre-commit` i podepnie git hooki. Jeśli automat zawiedzie — patrz Krok 7.
 
-### 5. Migracje
+---
+
+## Krok 6 – Migracje i seed
 
 ```bash
 npm run db:migrate
-```
-
-### 6. Seed
-
-```bash
 npm run db:seed
-```
-
-### 7. Uruchom
-
-```bash
-npm run dev
 ```
 
 ---
 
-## Guard system (pre-commit framework)
+## Krok 7 – Guard system (pre-commit)
 
-System guardów pilnuje commitów: format, lint, testy, sekrety, ADR, `[user-tested]`, język tytułu. Działa tak samo dla commitów z terminala (developer) i przez Claude — to jest source of truth.
-
-**Instalacja jest zautomatyzowana** (krok 4: `npm install` → `prepare` script → bootstrap). Ten krok wykonujesz tylko gdy automat nie znalazł `pip`/`pipx`, albo gdy chcesz zweryfikować ręcznie.
-
-**Wymaganie**: Python 3.9+ w PATH.
+Instalacja jest zautomatyzowana przez `npm install`. Ten krok tylko gdy automat zawiedzie.
 
 **Ubuntu 24.04+** (PEP 668 blokuje `pip install --user`):
 
@@ -86,92 +109,60 @@ python -m pip install --user pre-commit
 python -m pre_commit install --hook-type pre-commit --hook-type commit-msg
 ```
 
-> ℹ️ Używamy `python -m pip` zamiast `pip` i `python -m pre_commit` zamiast `pre-commit` — to działa cross-platform niezależnie od tego czy `Scripts/` jest w PATH (typowy problem na Windows po `pip install --user`). Standalone `pre-commit` (np. z `pipx`) też działa.
-
 Weryfikacja:
 
 ```bash
 npm run doctor
-```
-
-Doctor raportuje stan setupu: Python, Node, pre-commit, hooki, `.pre-commit-config.yaml`, aktualny branch.
-
-Pełny przebieg hooków na całym repo:
-
-```bash
 pre-commit run --all-files
 ```
 
 **Bypass flagi** (tylko z dokumentowanym powodem w body commita):
-- `[skip-docs]` — pomiń sprawdzanie `docs/TASKS.md` i testów do nowych źródeł
+- `[skip-docs]` — pomiń sprawdzanie TASKS.md i testów
 - `[no-adr]` — zmiana architektoniczna bez ADR (świadoma decyzja)
-- `[skip-test-check]` — commit bez `[user-tested]` (tylko dla zmian docs/chore)
+- `[skip-test-check]` — commit bez `[user-tested]` (tylko docs/chore)
 - `[skip-sync]` — sekcja project-specific, nie idzie do AI template
 - `SKIP=guard-lint,guard-tests git commit ...` — env var, nie ląduje w historii
 
-CI (`.github/workflows/ci.yml`) uruchamia te same hooki server-side przez `pre-commit run --all-files`. Branch protection rule na `main` powinno wymagać zielonego CI przed merge — `--no-verify` lokalnie nie obejdzie tej warstwy.
-
 ---
 
-## Claude Code hooks (opcjonalne, per-maszyna)
+## Krok 8 – Claude Code hooks (per-maszyna)
 
-Hooki AI-specific w `.claude/hooks/` (sync do template, session context) wymagają dwóch plików per-maszyna (oba w `.gitignore`):
-
-**Krok 1 — interpreter Python:**
+**Krok 8a — interpreter Python:**
 
 ```bash
 cp .claude/settings.local.json.example .claude/settings.local.json
 ```
 
-Otwórz `settings.local.json` i zamień `INTERPRETER` na właściwy:
-- Ubuntu/macOS: `python3`
-- Windows: `py`
+Zamień `INTERPRETER` na właściwy: `python3` (Ubuntu/macOS) lub `py` (Windows).
 
-**Krok 2 — ścieżka do AI template repo:**
+**Krok 8b — ścieżka do AI template repo:**
 
 ```bash
 cp .claude/hooks/config.json.example .claude/hooks/config.json
 ```
 
-Otwórz `config.json` i ustaw `ai_template_path` na lokalną ścieżkę. Plik `config.json` powinien być w `.gitignore` — nie jest commitowany. Każda maszyna ma swoją wersję.
+Ustaw `ai_template_path` na lokalną ścieżkę klonu AI template repo. Plik jest w `.gitignore` — każda maszyna ma swoją wersję.
 
 ---
 
-## Required GitHub repo settings (one-time, per repo)
-
-Niektóre workflowy wymagają ustawień których nie można skonfigurować plikami w repo. Sprawdź / włącz po pierwszym klonie:
-
-**Settings → Actions → General → Workflow permissions**:
-- ☑ `Read and write permissions` — workflows mogą tworzyć commity i pushować (potrzebne dla `release-please` żeby utworzyć Release PR)
-- ☑ `Allow GitHub Actions to create and approve pull requests` — `release-please-action` tworzy Release PR; bez tego workflow failuje z `GitHub Actions is not permitted to create or approve pull requests`
-
-Alternatywnie (premium security): wygenerować fine-grained PAT scoped na to repo, dodać jako secret `RELEASE_PLEASE_TOKEN`, zmienić workflow żeby używał `token: ${{ secrets.RELEASE_PLEASE_TOKEN }}`. Wymagane w org-ach gdzie powyższe checkboxy są wyłączone na poziomie organizacji.
-
-Sprawdzenie obecnych ustawień (CLI):
+## Krok 9 – Uruchom aplikację
 
 ```bash
-gh api repos/<owner>/<repo>/actions/permissions/workflow
+npm run dev
 ```
 
-Oczekiwane: `default_workflow_permissions: "write"`, `can_approve_pull_request_reviews: true`.
-
-Ustawienie przez CLI (zamiast UI):
-
-```bash
-gh api -X PUT repos/<owner>/<repo>/actions/permissions/workflow \
-  -F default_workflow_permissions=write \
-  -F can_approve_pull_request_reviews=true
-```
+Otwórz http://localhost:3000.
 
 ---
 
 ## Done when
 
-- aplikacja działa na `http://localhost:3000`
-- logowanie działa
-- `npm run doctor` → wszystkie required checks zielone
-- `pre-commit run --all-files` → wszystkie hooki zielone (lub naprawialne problemy formatowania)
-- GitHub repo settings powyżej ustawione (`gh api ...` zwraca `write` + `true`)
+- [ ] Infrastruktura działa (`docker compose ps` → running)
+- [ ] Aplikacja działa na http://localhost:3000
+- [ ] Logowanie działa
+- [ ] `npm run doctor` → wszystkie required checks zielone
+- [ ] `pre-commit run --all-files` → wszystkie hooki zielone
+- [ ] GitHub repo settings ustawione (Krok 1)
 
 ---
 
@@ -183,6 +174,7 @@ npm run build      # build produkcyjny
 npm run test       # testy
 npm run lint       # linting
 npm run db:studio  # GUI bazy
+npm run doctor     # weryfikacja środowiska
 ```
 
 ---
@@ -191,7 +183,7 @@ npm run db:studio  # GUI bazy
 
 | Problem | Przyczyna | Rozwiązanie |
 |---|---|---|
-| `npm warn EBADENGINE` przy `npm install` | zainstalowana za stara wersja Node | `source ~/.nvm/nvm.sh && nvm install 22 && nvm use 22`; sprawdź wymaganie `engines.node` w `package.json` |
-| `npm install` → `pre-commit install failed (exit 2)` z `/usr/bin/py` | Ubuntu 24.04: `/usr/bin/py` to nie Python launcher (jak na Windows); `pip install --user` zablokowany przez PEP 668 | `sudo apt install pipx -y && pipx install pre-commit && pipx ensurepath`, nowa sesja terminala, retry `npm install` |
-| `error: externally-managed-environment` przy `pip install` | Ubuntu 24.04+ blokuje globalne pip (PEP 668) | użyj `pipx install pre-commit` zamiast `pip install --user pre-commit` |
-| Aplikacja na innym urządzeniu w LAN (telefon, kiosk) zwraca błąd / formularz nie reaguje, na `localhost` działa | Next 15 dev blokuje cross-origin requesty z hostów spoza `localhost` (asset/HMR/server actions wyciszane lub zwracają błędy) | dodaj host LAN do `allowedDevOrigins` w `next.config` — najlepiej przez env (np. `ALLOWED_DEV_ORIGINS=192.168.1.10`, parsowane jako CSV w configu), nie hardkoduj IP. Restart `npm run dev` po zmianie. |
+| `npm warn EBADENGINE` przy `npm install` | za stara wersja Node | `source ~/.nvm/nvm.sh && nvm install 22 && nvm use 22`; sprawdź `engines.node` w `package.json` |
+| `npm install` → `pre-commit install failed (exit 2)` z `/usr/bin/py` | Ubuntu 24.04: `/usr/bin/py` to nie Python launcher; `pip install --user` zablokowany przez PEP 668 | `sudo apt install pipx -y && pipx install pre-commit && pipx ensurepath`, nowa sesja, retry `npm install` |
+| `error: externally-managed-environment` przy `pip install` | Ubuntu 24.04+ blokuje pip globalnie (PEP 668) | `pipx install pre-commit` |
+| Aplikacja na innym urządzeniu w LAN nie reaguje | Next 15 blokuje cross-origin z hostów spoza localhost | dodaj host LAN do `allowedDevOrigins` w `next.config` przez env (`ALLOWED_DEV_ORIGINS=IP`), restart `npm run dev` |
