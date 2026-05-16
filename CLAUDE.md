@@ -184,6 +184,7 @@ Kontekst okna jest skończony i drogi. AI nie marnuje go na powtórki.
 - **Nie powtarzaj analizy w tekście** – jeśli już przeczytałeś i zrozumiałeś, napisz wniosek, nie przepisuj kodu w odpowiedzi
 - **Nie zadawaj pytań o to co możesz sprawdzić narzędziem** – sprawdź sam, zapytaj tylko gdy naprawdę nie da się bez usera
 - **Jedna iteracja na problem** – zaplanuj co czytasz zanim zaczniesz, nie odkrywaj "przy okazji"
+- **Sygnalizuj przepełnienie kontekstu** – gdy okno kontekstu jest mocno zapełnione (długa sesja, dużo odczytów), poinformuj usera wprost: "kontekst jest blisko limitu, warto zamknąć sesję i zacząć nową"
 
 ---
 
