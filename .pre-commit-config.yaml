@@ -1,8 +1,11 @@
 # Guard system — pre-commit framework substrate.
 #
 # Install (once per clone):
-#   pip install pre-commit
+#   pipx install pre-commit          # Ubuntu 24.04+ / macOS
+#   pip install pre-commit           # other systems
 #   pre-commit install --hook-type pre-commit --hook-type commit-msg
+#
+# Requires python3 in PATH. Windows: create alias if needed — see docs/SETUP.md.
 #
 # Update hook versions:
 #   pre-commit autoupdate
@@ -59,7 +62,7 @@ repos:
     hooks:
       - id: guard-lint
         name: "Stack-aware lint (auto-detected)"
-        entry: python scripts/dev-guards/guard_lint.py
+        entry: python3 scripts/dev-guards/guard_lint.py
         language: system
         stages: [pre-commit]
         always_run: true
@@ -67,7 +70,7 @@ repos:
 
       - id: guard-tests
         name: "Stack-aware tests (auto-detected, skipped for docs-only)"
-        entry: python scripts/dev-guards/guard_tests.py
+        entry: python3 scripts/dev-guards/guard_tests.py
         language: system
         stages: [pre-commit]
         always_run: true
@@ -75,7 +78,7 @@ repos:
 
       - id: guard-typecheck
         name: "TypeScript type check (tsc --noEmit)"
-        entry: python scripts/dev-guards/guard_typecheck.py
+        entry: python3 scripts/dev-guards/guard_typecheck.py
         language: system
         stages: [pre-commit]
         always_run: true
@@ -86,37 +89,37 @@ repos:
     hooks:
       - id: guard-tasks-staged
         name: "[CLAUDE.md 4] docs/TASKS.md must be in staged ([skip-docs] bypass)"
-        entry: python scripts/dev-guards/guard_tasks_staged.py
+        entry: python3 scripts/dev-guards/guard_tasks_staged.py
         language: system
         stages: [commit-msg]
 
       - id: guard-tests-with-src
         name: "[CLAUDE.md 16] source files require tests ([skip-docs] bypass)"
-        entry: python scripts/dev-guards/guard_tests_with_src.py
+        entry: python3 scripts/dev-guards/guard_tests_with_src.py
         language: system
         stages: [commit-msg]
 
       - id: guard-adr
         name: "[CLAUDE.md ADR] architectural changes require ADR ([no-adr] bypass)"
-        entry: python scripts/dev-guards/guard_adr.py
+        entry: python3 scripts/dev-guards/guard_adr.py
         language: system
         stages: [commit-msg]
 
       - id: guard-commit-lang
         name: "[CLAUDE.md 2] commit message subject must be in English"
-        entry: python scripts/dev-guards/guard_commit_lang.py
+        entry: python3 scripts/dev-guards/guard_commit_lang.py
         language: system
         stages: [commit-msg]
 
       - id: guard-user-tested
         name: "[CLAUDE.md 16b] [user-tested] required on feat/* and fix/* ([skip-test-check] bypass)"
-        entry: python scripts/dev-guards/guard_user_tested.py
+        entry: python3 scripts/dev-guards/guard_user_tested.py
         language: system
         stages: [commit-msg]
 
       - id: guard-release-tag
         name: "[release-please] manifest version must have a matching git tag"
-        entry: python scripts/dev-guards/guard_release_tag.py
+        entry: python3 scripts/dev-guards/guard_release_tag.py
         language: system
         stages: [commit-msg]
         pass_filenames: false

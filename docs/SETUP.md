@@ -102,11 +102,27 @@ pipx ensurepath
 # nowa sesja terminala lub: source ~/.bashrc
 ```
 
-**Windows / starszy Linux**:
+**Windows**:
 
 ```bash
-python -m pip install --user pre-commit
-python -m pre_commit install --hook-type pre-commit --hook-type commit-msg
+pip install pre-commit
+pre-commit install --hook-type pre-commit --hook-type commit-msg
+```
+
+> ⚠️ Guard hooki wymagają `python3` w PATH. Na Windows domyślnie jest tylko `python`.
+> Utwórz alias raz (PowerShell jako Administrator):
+>
+> ```powershell
+> New-Item -ItemType HardLink -Path "C:\Python3X\python3.exe" -Target "C:\Python3X\python.exe"
+> ```
+>
+> Zamień `C:\Python3X` na katalog instalacji Pythona (sprawdź: `where python`).
+
+**Starszy Linux**:
+
+```bash
+pip install --user pre-commit
+pre-commit install --hook-type pre-commit --hook-type commit-msg
 ```
 
 Weryfikacja:
@@ -186,4 +202,5 @@ npm run doctor     # weryfikacja środowiska
 | `npm warn EBADENGINE` przy `npm install` | za stara wersja Node | `source ~/.nvm/nvm.sh && nvm install 22 && nvm use 22`; sprawdź `engines.node` w `package.json` |
 | `npm install` → `pre-commit install failed (exit 2)` z `/usr/bin/py` | Ubuntu 24.04: `/usr/bin/py` to nie Python launcher; `pip install --user` zablokowany przez PEP 668 | `sudo apt install pipx -y && pipx install pre-commit && pipx ensurepath`, nowa sesja, retry `npm install` |
 | `error: externally-managed-environment` przy `pip install` | Ubuntu 24.04+ blokuje pip globalnie (PEP 668) | `pipx install pre-commit` |
+| Guard hooki → `python3: not found` (Windows) | Guard hooki wymagają `python3` w PATH | utwórz alias — patrz Krok 7 |
 | Aplikacja na innym urządzeniu w LAN nie reaguje | Next 15 blokuje cross-origin z hostów spoza localhost | dodaj host LAN do `allowedDevOrigins` w `next.config` przez env (`ALLOWED_DEV_ORIGINS=IP`), restart `npm run dev` |
