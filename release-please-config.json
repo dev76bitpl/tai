@@ -4,7 +4,6 @@
   "pull-request-title-pattern": "chore: release ${version}",
   "packages": {
     ".": {
-      "package-name": "skolaro",
       "include-component-in-tag": false,
       "include-v-in-tag": true,
       "draft": false,
