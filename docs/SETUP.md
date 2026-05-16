@@ -70,6 +70,17 @@ System guardów pilnuje commitów: format, lint, testy, sekrety, ADR, `[user-tes
 
 **Wymaganie**: Python 3.9+ w PATH.
 
+**Ubuntu 24.04+** (PEP 668 blokuje `pip install --user`):
+
+```bash
+sudo apt install pipx -y
+pipx install pre-commit
+pipx ensurepath
+# nowa sesja terminala lub: source ~/.bashrc
+```
+
+**Windows / starszy Linux**:
+
 ```bash
 python -m pip install --user pre-commit
 python -m pre_commit install --hook-type pre-commit --hook-type commit-msg
