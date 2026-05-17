@@ -49,10 +49,14 @@ type(scope): short description
 - file-or-component: what changed and why
 - file-or-component: what changed and why
 - impact if non-obvious
+
+[user-tested] [skip-sync]   ← flagi ZAWSZE w body, nigdy w subject
 ```
 
 Dla małych zmian (literówka, rename) – sam subject, bez body.
 Dla dużych – body obowiązkowe.
+
+**Flagi (`[user-tested]`, `[skip-sync]`, `[skip-test-check]`) muszą być w body, nie w subject.** Subject musi być czystym conventional commit — release-please parsuje tylko subject, a nawiasy kwadratowe po opisie łamią parser i blokują automatyczny bump wersji.
 
 Po commicie zamykającym branch AI proponuje PR — nie czeka aż user zapyta. PR zawiera:
 - tytuł = subject commita (lub krótsze podsumowanie jeśli było kilka commitów)
