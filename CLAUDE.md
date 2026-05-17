@@ -439,6 +439,35 @@ Jeśli AI stwierdza że coś wykracza poza MVP – mówi o tym wprost zamiast po
 
 ---
 
+### 17a. Zamykaj wątki, nie odkładaj — w obrębie aktualnego zakresu
+
+Odkładanie pracy w obrębie aktualnego scope'u to dług który rośnie. AI **nie proponuje "zrobimy to w następnym kroku"** jeśli zadanie:
+
+- jest częścią aktualnie otwartego feature'u (ten sam branch, ta sama sesja)
+- jest małe — dałoby się domknąć w tej samej sesji
+- jest potrzebne żeby feature był kompletny (nie edge-case, nie optymalizacja)
+
+W takim przypadku AI proponuje zamknięcie wątku w bieżącej sesji, nie odkłada:
+
+```
+To zadanie jest małe i wchodzi w scope tej sesji.
+Sugeruję domknąć teraz — jeśli chcesz to odłożyć, powiedz wprost.
+```
+
+**Kiedy odkładanie jest ok:**
+- feature wyraźnie wykracza poza scope bieżącej sesji/brancha
+- user sam decyduje "odkładamy"
+- zadanie zależy od czegoś co jeszcze nie istnieje
+
+**Kiedy nie jest ok:**
+- AI widzi małe powiązane zadanie i "żeby nie przedłużać" milczy lub proponuje "zrobimy później"
+- user pyta o dynamiczne dane, AI odpowiada "logo można dodać w kolejnym kroku"
+- sesja ma otwarty branch z powiązanym kodem i AI nie zaproponuje domknięcia
+
+Odkładanie w obrębie scope'u = tworzenie długu bez uzasadnienia. Jeśli coś jest małe — zrób teraz.
+
+---
+
 ### 18. Review designu przed implementacją UI
 
 Przed napisaniem kodu każdego nowego ekranu lub flow UI, AI najpierw opisuje proponowany flow (skrócony opis: skąd użytkownik wchodzi, co widzi, co robi, dokąd trafia) i czeka na akceptację usera.
@@ -579,6 +608,8 @@ AI:
 
 ### Kiedy pisać ADR
 
+ADR dokumentuje **każdą decyzję której uzasadnienie nie jest oczywiste z kodu** — techniczną, architektoniczną i biznesową. Za rok ani user ani AI nie będą pamiętać "dlaczego tak", jeśli tego nie ma w ADR.
+
 Jeśli pojawia się:
 
 - wybór modelu danych lub struktury systemu
@@ -586,8 +617,16 @@ Jeśli pojawia się:
 - zmiana głównego flow lub kontraktu API
 - decyzja o bezpieczeństwie, auth lub architekturze dostępu do danych
 - cokolwiek trudnego do odwrócenia bez dużego kosztu
+- **decyzja biznesowa / produktowa** — dlaczego feature działa tak a nie inaczej, jakie edge case'y zostały odrzucone i dlaczego, jakie kompromisy zostały świadomie zaakceptowane
+- **ustalenia z sesji** — gdy user i AI dochodzą do nieoczywistego wniosku w rozmowie — to musi wylądować w ADR, nie tylko w historii czatu
 
-AI musi napisać: "To jest decyzja architektoniczna – proponuję ADR"
+AI musi napisać: "To jest decyzja architektoniczna/biznesowa – proponuję ADR"
+
+**Zasada:** jeśli AI musi wyjaśniać userowi w kolejnej sesji "dlaczego tak zrobiliśmy" — znaczy że brakowało ADR-a. Koszt napisania ADR-a jest niższy niż koszt rekonstrukcji kontekstu.
+
+### Backfill starych decyzji
+
+Gdy w sesji pojawia się pytanie "dlaczego X działa tak" i odpowiedź nie jest w ADR — AI **natychmiast proponuje ADR** który to dokumentuje, nawet jeśli decyzja była podjęta dawno. Dług dokumentacyjny spłacamy przy okazji, nie odkładamy.
 
 ### Kiedy NIE pisać ADR
 
@@ -597,12 +636,11 @@ AI musi napisać: "To jest decyzja architektoniczna – proponuję ADR"
 
 ### Struktura ADR
 
-- **Tytuł** – jedna decyzja, jeden ADR
+- **Tytuł** – jedna decyzja lub grupa powiązanych decyzji, jeden ADR
 - **Status** – proposed / accepted / deprecated
 - **Kontekst** – dlaczego decyzja jest potrzebna
-- **Opcje** – co było rozważane
-- **Decyzja** – co wybrano i dlaczego
-- **Konsekwencje** – co to zmienia, czego pilnować
+- **Decyzje i uzasadnienia** – co wybrano i **dlaczego** (co odrzucono i dlaczego też)
+- **Konsekwencje** – co to zmienia, czego pilnować, znane ograniczenia
 
 ---
 
