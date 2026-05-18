@@ -58,6 +58,26 @@ Dla dużych – body obowiązkowe.
 
 **Flagi (`[user-tested]`, `[skip-sync]`, `[skip-test-check]`) muszą być w body, nie w subject.** Subject musi być czystym conventional commit — release-please parsuje tylko subject, a nawiasy kwadratowe po opisie łamią parser i blokują automatyczny bump wersji.
 
+**Protokół przed każdym commitem (obowiązkowy, bez wyjątków):**
+
+1. `git status` → ustal co jest staged
+2. Skomponuj wiadomość commita ZANIM uruchomisz `git commit`:
+   - subject ≤ 72 znaki (gitlint twardy limit)
+   - linie body ≤ 100 znaków
+   - flagi bypass (`[skip-docs]`, `[user-tested]`, `[skip-test-check]`, `[no-adr]`) w body
+3. Dry-run guardów z tą wiadomością — jeśli projekt używa pre-commit guardów:
+   ```
+   echo "subject\n\nbody flags" > /tmp/msg.txt
+   python3 scripts/dev-guards/guard_tasks_staged.py /tmp/msg.txt
+   python3 scripts/dev-guards/guard_tests_with_src.py /tmp/msg.txt
+   python3 scripts/dev-guards/guard_user_tested.py /tmp/msg.txt
+   python3 scripts/dev-guards/guard_adr.py /tmp/msg.txt
+   python3 scripts/dev-guards/guard_commit_lang.py /tmp/msg.txt
+   ```
+4. Jeśli wszystkie `exit: 0` → jeden `git commit`, bez iteracji
+
+**Zakaz**: `git commit` bez wcześniejszego dry-runu guardów. Każda nieudana próba commita to błąd procesu AI, nie pecha.
+
 Po commicie zamykającym branch AI proponuje PR — nie czeka aż user zapyta. PR zawiera:
 - tytuł = subject commita (lub krótsze podsumowanie jeśli było kilka commitów)
 - body: summary (bullet points co zmieniono) + test plan (checklist co sprawdzić)
