@@ -117,6 +117,12 @@ repos:
         language: system
         stages: [commit-msg]
 
+      - id: guard-testing-md
+        name: "[CLAUDE.md 16b] docs/TESTING.md must be touched on branch with src/ changes ([skip-docs] bypass)"
+        entry: python3 scripts/dev-guards/guard_testing_md.py
+        language: system
+        stages: [commit-msg]
+
       - id: guard-release-tag
         name: "[release-please] manifest version must have a matching git tag"
         entry: python3 scripts/dev-guards/guard_release_tag.py
