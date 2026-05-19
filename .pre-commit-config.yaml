@@ -123,6 +123,12 @@ repos:
         language: system
         stages: [commit-msg]
 
+      - id: guard-template-sync
+        name: "[CLAUDE.md 13a] CLAUDE.md changes must be synced to AI template ([skip-sync] bypass)"
+        entry: python3 scripts/dev-guards/guard_template_sync.py
+        language: system
+        stages: [commit-msg]
+
       - id: guard-release-tag
         name: "[release-please] manifest version must have a matching git tag"
         entry: python3 scripts/dev-guards/guard_release_tag.py

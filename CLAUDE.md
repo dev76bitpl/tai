@@ -65,15 +65,17 @@ Dla dużych – body obowiązkowe.
    - subject ≤ 72 znaki (gitlint twardy limit)
    - linie body ≤ 100 znaków
    - flagi bypass (`[skip-docs]`, `[user-tested]`, `[skip-test-check]`, `[no-adr]`) w body
-3. Dry-run guardów z tą wiadomością — jeśli projekt używa pre-commit guardów:
+3. Dry-run guardów z tą wiadomością — jeden command, wszystkie guardy commit-msg naraz:
    ```
-   echo "subject\n\nbody flags" > /tmp/msg.txt
-   python3 scripts/dev-guards/guard_tasks_staged.py /tmp/msg.txt
-   python3 scripts/dev-guards/guard_tests_with_src.py /tmp/msg.txt
-   python3 scripts/dev-guards/guard_user_tested.py /tmp/msg.txt
-   python3 scripts/dev-guards/guard_adr.py /tmp/msg.txt
-   python3 scripts/dev-guards/guard_commit_lang.py /tmp/msg.txt
+   # Windows (PowerShell) — [IO.File] unika BOM który łamie gitlint:
+   [IO.File]::WriteAllText("$env:TEMP\COMMIT_EDITMSG", $msg)
+   python3 -m pre_commit run --hook-stage commit-msg --commit-msg-filename "$env:TEMP\COMMIT_EDITMSG"
+
+   # Linux/macOS:
+   echo "subject\n\nbody flags" > /tmp/COMMIT_EDITMSG
+   COMMIT_EDITMSG=/tmp/COMMIT_EDITMSG pre-commit run --hook-stage commit-msg --commit-msg-filename /tmp/COMMIT_EDITMSG
    ```
+   **Nie używaj ręcznej listy guardów** — lista w `.pre-commit-config.yaml` jest source of truth; ręczna lista w CLAUDE.md będzie zawsze niepełna.
 4. Jeśli wszystkie `exit: 0` → jeden `git commit`, bez iteracji
 
 **Zakaz**: `git commit` bez wcześniejszego dry-runu guardów. Każda nieudana próba commita to błąd procesu AI, nie pecha.
