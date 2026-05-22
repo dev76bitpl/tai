@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.5](https://github.com/dev76bitpl/ai/compare/v0.1.4...v0.1.5) (2026-05-22)
+
+
+### Features
+
+* **guards:** Guard_template_sync, CLAUDE.md dry-run fix ([53e1996](https://github.com/dev76bitpl/ai/commit/53e199680999ea66eae0053b539110613616686e))
+* **guards:** Guard_testing_md — enforce TESTING.md checklist per branch ([e10c1fa](https://github.com/dev76bitpl/ai/commit/e10c1fa5b26f4be8750726cd6ff6ab050a0298f8))
+
 ## [0.1.4](https://github.com/dev76bitpl/ai/compare/v0.1.3...v0.1.4) (2026-05-16)
 
 
