@@ -8,6 +8,12 @@ Nie zawiera logiki biznesowej ani opisu systemu.
 
 Opis projektu znajduje się w osobnych plikach (np. docs/PROJECT_SCOPE.md).
 
+### Profil użytkownika
+
+Jeśli istnieje `docs/USER_PROFILE.md` — czytaj go na starcie każdej sesji przed jakąkolwiek pracą.
+Plik jest gitignorowany (dane prywatne). Szablon: `docs/USER_PROFILE.example`.
+Profil nadpisuje domyślne zachowanie AI w zakresie języka, tonu i poziomu wyjaśnień.
+
 ---
 
 ## 🧠 Styl pracy i komunikacji

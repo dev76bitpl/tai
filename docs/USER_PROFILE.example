@@ -1,0 +1,61 @@
+# User Profile — AI Context
+#
+# Copy to docs/USER_PROFILE.md (gitignored) and fill in your own details.
+# Loaded by AI at session start to calibrate communication and behavior.
+
+## Who I am
+# 2-4 sentences. Role, domain knowledge, relationship to this codebase.
+# AI uses this to understand how much context to give and what to assume.
+[Your role and company]. [Years of experience and career path].
+[Your relationship to this project — owner, contractor, contributor].
+[What you know from the inside — so AI doesn't need to explain it back to you].
+[Optional: career goal or direction].
+
+## Projects
+# List all active projects with priority order.
+# AI uses this to understand context when scope is ambiguous.
+# Mark which project this profile belongs to with "Ten projekt".
+1. **[Project name]** — [one sentence description]. [Stack if relevant]. [Priority note if needed].
+2. **[Project name]** — [one sentence description].
+3. **[This project]** — [one sentence description].
+   **Ten projekt** — AI czyta ten profil w kontekście [this project name].
+
+## Experience level
+# Per area. AI uses this to decide how much to explain.
+# Levels: beginner | intermediate | senior | expert
+Backend ([languages/frameworks]):  [level]
+Frontend ([languages/frameworks]): [level]
+Mobile ([frameworks]):             [level]
+Bazy danych ([databases]):         [level]
+DevOps / Docker:                   [level]
+Architektura systemów:             [level]
+
+## Communication
+# Hard rules for every response. AI treats these as non-negotiable.
+Language:      [polski / English / ...]
+Tone:          [direct / formal / casual]
+Explanations:  [senior-level / explain basics / somewhere in between]
+Openers:       [none / ok to use]
+Summaries:     [none at end of response / ok to use]
+Emojis:        [never / ok]
+Role AI:       [sparring partner / assistant / rubber duck / ...]
+
+## Decisions
+# How AI should present options and recommendations.
+Default:   [one recommendation with reason / list of options / ...]
+Pushback:  [yes, say clearly when something is wrong / no, just do what I ask]
+"Zależy":  [only when a specific fact is missing / ...]
+
+## Never do this
+# Patterns that cause friction. AI treats these as blockers.
+- [e.g. Native alert()/confirm()/prompt()]
+- [e.g. Inline date formatting — use the project's central format lib]
+- [e.g. Guessing business logic — ask when unsure]
+- [e.g. Implementing "for the future" without a current use case]
+
+## Always do this
+# Patterns you've validated and want applied consistently.
+- [e.g. Result<T> for business errors, exceptions for infrastructure errors]
+- [e.g. Tests written alongside code, not after]
+- [e.g. One commit = one closed step (code + docs together)]
+- [e.g. No hardcoded values — env vars or config from day 1]

@@ -19,6 +19,7 @@ Gotowy fundament do pracy z AI w projekcie. Klonujesz, wypełniasz domeną, zacz
 | `docs/DELIVERY_CHECKLIST.md` | Standard domknięcia kroku |
 | `docs/adr/` | Architecture Decision Records |
 | `docs/AI_TEMPLATE_NOTES.md` | Zbierane dobre praktyki pracy z AI |
+| `docs/USER_PROFILE.example` | Szablon profilu użytkownika dla AI (skopiuj do `USER_PROFILE.md`) |
 
 ---
 
@@ -30,6 +31,7 @@ Gotowy fundament do pracy z AI w projekcie. Klonujesz, wypełniasz domeną, zacz
 4. Stwórz `ADR-001` w `docs/adr/` — kierunek techniczny systemu
 5. Uzupełnij `docs/ROADMAP.md` — fazy i kolejność
 6. Zacznij `docs/TASKS.md` od zadań fazy 1
+7. Skopiuj `docs/USER_PROFILE.example` do `docs/USER_PROFILE.md` i uzupełnij swoimi danymi — AI będzie lepiej skrojony pod ciebie (plik jest gitignorowany)
 
 ---
 
