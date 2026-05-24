@@ -27,6 +27,7 @@ krótkie słowo które wpisujesz świadomie. Nie używaj składni `/command` (to
 | `woocommerce` | wp-woocommerce-dev | Rozszerzenia WC, szablony, REST API |
 | `gutenberg` | wp-block-development | Gutenberg blocks, Interactivity API |
 | `prestashop` | prestashop | Moduły PS, hooki, override'y, multistore, PS 1.7/8.x |
+| `shoper` | shoper | Twig, ObjectApi, REST API, webhooks, App Store OAuth2 |
 
 ## Skille zewnętrzne (vendored)
 
@@ -55,6 +56,7 @@ krótkie słowo które wpisujesz świadomie. Nie używaj składni `/command` (to
 | `deploy` | `deploy` | Checklist przed wdrożeniem: kod, env, baza, infrastruktura, rollback, post-deploy |
 | `retro` | `retro` | Retrospektywa sprintu/projektu — 5 pytań → podsumowanie + action items do `TASKS.md` |
 | `prestashop` | `prestashop` | Moduły PS, hooki, override'y, Webservice API, multistore, Smarty, PS 1.7/8.x |
+| `shoper` | `shoper` | Szablony Twig, ObjectApi, layouty, REST API, webhooks, App Store OAuth2 |
 
 ## Pluginy (instalowane per developer, poza repo)
 
