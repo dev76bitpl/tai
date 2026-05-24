@@ -8,7 +8,7 @@ Fundament nowego projektu z AI. Skille, guardy workflow i scaffoldy dokumentacji
 
 ```bash
 # 1. Sklonuj jako nowy projekt
-git clone https://github.com/dev76bitpl/ai.git moj-projekt
+git clone https://github.com/dev76bitpl/tai.git moj-projekt
 cd moj-projekt
 
 # 2. Wyczyść template meta (testy, README, ten skrypt)

@@ -226,6 +226,7 @@ Na początku sesji AI czyta selektywnie — na podstawie tematu, nie wszystko na
 
 - **CLAUDE.md** → zawsze (mały, zasady pracy)
 - **docs/TASKS.md** → zawsze (bieżący kontekst, co jest w toku)
+- **docs/AI_TEMPLATE_NOTES.md** → zawsze (meta-zasady pracy z AI, pułapki narzędzi — uzupełnia CLAUDE.md o wnioski z praktyki)
 - **docs/PROJECT_SCOPE.md** → gdy sesja dotyczy zakresu lub nowej funkcjonalności
 - **docs/ROADMAP.md** → gdy sesja dotyczy planowania lub kolejności prac
 - **docs/adr/** → gdy sesja dotyczy architektury lub konkretnej decyzji technicznej
@@ -236,7 +237,7 @@ Na początku sesji AI czyta selektywnie — na podstawie tematu, nie wszystko na
 - **docs/TESTING.md** → gdy sesja dotyczy testowania lub dodawania nowego krytycznego flow
 
 W toku sesji: nie czytaj ponownie pliku który nie zmienił się — reguła 9.
-Na początku sesji: CLAUDE.md i docs/TASKS.md zawsze, reszta na podstawie tematu.
+Na początku sesji: CLAUDE.md, docs/TASKS.md i docs/AI_TEMPLATE_NOTES.md zawsze, reszta na podstawie tematu.
 
 Przy wątpliwościach podczas implementacji: jeśli AI natrafi na pytanie o scope lub architekturę — zatrzymuje się i sygnalizuje, nie jedzie dalej z założeniem.
 
