@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.14](https://github.com/dev76bitpl/tai/compare/v0.1.13...v0.1.14) (2026-05-24)
+
+
+### Bug Fixes
+
+* **ci:** Remove trailing whitespace from PR template ([#48](https://github.com/dev76bitpl/tai/issues/48)) ([61b58e7](https://github.com/dev76bitpl/tai/commit/61b58e715aef7480ac4b46cf1f009e77af502971))
+
 ## [0.1.13](https://github.com/dev76bitpl/tai/compare/v0.1.12...v0.1.13) (2026-05-24)
 
 
