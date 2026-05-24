@@ -4,23 +4,33 @@ Fundament nowego projektu z AI. Skille, guardy workflow i scaffoldy dokumentacji
 
 ---
 
-## Nowy projekt — 3 kroki
+## Nowy projekt
+
+**Zalecane — przez GitHub template:**
+
+1. Kliknij **"Use this template"** → utwórz nowe repo
+2. Sklonuj i zainicjalizuj:
 
 ```bash
-# 1. Sklonuj jako nowy projekt
-git clone https://github.com/dev76bitpl/ai.git moj-projekt
+git clone git@github.com:<org>/<moj-projekt>.git
 cd moj-projekt
-
-# 2. Wyczyść template meta (testy, README, ten skrypt)
 python3 scripts/new-project.py --init
+python3 scripts/update-skills.py --apply
+claude   # napisz: scope
+```
 
-# 3. Nowy git + scope
+**Alternatywnie — przez git clone:**
+
+```bash
+git clone git@github.com:dev76bitpl/ai.git moj-projekt
+cd moj-projekt
+python3 scripts/new-project.py --init
 rm -rf .git && git init && git remote add origin <url>
 python3 scripts/update-skills.py --apply
 claude   # napisz: scope
 ```
 
-`--init` usuwa pliki template-only (`tests/`, `README.md` → scaffold, sam siebie) i konfiguruje Claude Code hooks. Skille zostają gotowe do pracy.
+`--init` usuwa pliki template-only (`tests/`, `README.md` → scaffold, sam siebie) i konfiguruje Claude Code hooks z automatycznym `ai_template_path`. Skille zostają gotowe do pracy.
 
 ---
 
