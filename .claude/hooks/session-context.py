@@ -11,6 +11,7 @@ config.json (wymagane pola):
   "ai_template_path": "/ścieżka/do/template"  (opcjonalne — bez niego diff pominięty)
 """
 import json
+import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -155,69 +156,114 @@ def check_template_sync(config: dict) -> list[str]:
     return diffs
 
 
-def check_template_skills_sync(config: dict) -> str | None:
-    """Zwraca ostrzeżenie jeśli custom skille lub wpisy manifest różnią się od template."""
-    template_path = config.get("ai_template_path", "")
-    if not template_path:
-        return None
+SYNC_HASH_FILE = HOOKS_DIR / ".sync-hash"
 
-    template_root = Path(template_path)
-    if not template_root.exists():
-        return None
 
+def _is_git_url(value: str) -> bool:
+    return value.startswith(("git@", "https://", "http://"))
+
+
+def _remote_head_hash(url: str) -> str | None:
+    """Returns HEAD hash of remote repo via ls-remote (no clone)."""
+    try:
+        result = subprocess.run(
+            ["git", "ls-remote", url, "HEAD"],
+            capture_output=True, text=True, timeout=6,
+        )
+        if result.returncode == 0 and result.stdout:
+            return result.stdout.split()[0]
+    except Exception:
+        pass
+    return None
+
+
+def _last_sync_hash() -> str:
+    return SYNC_HASH_FILE.read_text().strip() if SYNC_HASH_FILE.exists() else ""
+
+
+def _save_sync_hash(h: str) -> None:
+    try:
+        SYNC_HASH_FILE.write_text(h)
+    except Exception:
+        pass
+
+
+def _local_desynced(template_root: Path) -> tuple[list[str], list[str], list[str]]:
+    """Returns (missing_custom, outdated_custom, missing_vendored) for local template."""
     template_manifest_path = template_root / "skills-manifest.json"
     project_manifest_path = MONOREPO_ROOT / "skills-manifest.json"
 
     if not template_manifest_path.exists() or not project_manifest_path.exists():
-        return None
+        return [], [], []
     try:
-        template_manifest = json.loads(template_manifest_path.read_text(encoding="utf-8"))
-        project_manifest = json.loads(project_manifest_path.read_text(encoding="utf-8"))
+        tmpl = json.loads(template_manifest_path.read_text("utf-8"))
+        proj = json.loads(project_manifest_path.read_text("utf-8"))
     except Exception:
+        return [], [], []
+
+    skills_dir = MONOREPO_ROOT / ".claude" / "skills"
+    tmpl_skills_dir = template_root / ".claude" / "skills"
+
+    missing, outdated = [], []
+    for name in tmpl.get("custom_skills", {}):
+        pf = skills_dir / name / "SKILL.md"
+        tf = tmpl_skills_dir / name / "SKILL.md"
+        if not pf.exists():
+            missing.append(name)
+        elif tf.exists() and pf.read_text("utf-8") != tf.read_text("utf-8"):
+            outdated.append(name)
+
+    missing_v = sorted(set(tmpl.get("skills", {}).keys()) - set(proj.get("skills", {}).keys()))
+    return missing, outdated, missing_v
+
+
+def check_template_skills_sync(config: dict) -> str | None:
+    """Detects desync with t-ai template and auto-syncs if needed."""
+    template_path = config.get("ai_template_path", "")
+    if not template_path:
         return None
-
-    project_skills_dir = MONOREPO_ROOT / ".claude" / "skills"
-    template_skills_dir = template_root / ".claude" / "skills"
-
-    missing_custom: list[str] = []
-    outdated_custom: list[str] = []
-    for name in template_manifest.get("custom_skills", {}):
-        project_file = project_skills_dir / name / "SKILL.md"
-        template_file = template_skills_dir / name / "SKILL.md"
-        if not project_file.exists():
-            missing_custom.append(name)
-        elif template_file.exists() and project_file.read_text("utf-8") != template_file.read_text("utf-8"):
-            outdated_custom.append(name)
-
-    template_vendored = set(template_manifest.get("skills", {}).keys())
-    project_vendored = set(project_manifest.get("skills", {}).keys())
-    missing_vendored = sorted(template_vendored - project_vendored)
-
-    if not missing_custom and not outdated_custom and not missing_vendored:
-        return None
-
-    import subprocess
 
     sync_script = MONOREPO_ROOT / "scripts" / "update-skills.py"
     if not sync_script.exists():
-        return f"⚠️  [t-ai] Są zmiany w template, ale brak scripts/update-skills.py — zsynchronizuj ręcznie."
+        return None
+
+    # ── Remote URL path ───────────────────────────────────────────────────────
+    if _is_git_url(template_path):
+        remote_hash = _remote_head_hash(template_path)
+        if not remote_hash or remote_hash == _last_sync_hash():
+            return None
+        result = subprocess.run(
+            [sys.executable, str(sync_script), "--sync", "--apply"],
+            capture_output=True, text=True, encoding="utf-8",
+        )
+        if result.returncode == 0:
+            _save_sync_hash(remote_hash)
+            return f"📦 [t-ai] Pobrano zmiany z template (remote)"
+        err = result.stderr.strip()[:200]
+        return f"⚠️  [t-ai] Auto-sync nie powiódł się: {err}"
+
+    # ── Local path ────────────────────────────────────────────────────────────
+    template_root = Path(template_path)
+    if not template_root.exists():
+        return None
+
+    missing, outdated, missing_v = _local_desynced(template_root)
+    if not missing and not outdated and not missing_v:
+        return None
 
     result = subprocess.run(
         [sys.executable, str(sync_script), "--sync", "--apply"],
         capture_output=True, text=True, encoding="utf-8",
     )
-
     if result.returncode == 0:
         details = []
-        if missing_custom or outdated_custom:
-            details.append(f"custom skille: {', '.join(missing_custom + outdated_custom)}")
-        if missing_vendored:
-            details.append(f"vendored: {', '.join(missing_vendored)}")
-        detail_str = " | ".join(details)
-        return f"📦 [t-ai] Pobrano zmiany z template → {detail_str}"
-    else:
-        err = result.stderr.strip()[:200]
-        return f"⚠️  [t-ai] Auto-sync nie powiódł się: {err}\n  Uruchom: python3 scripts/update-skills.py --sync --apply"
+        if missing or outdated:
+            details.append(f"custom: {', '.join(missing + outdated)}")
+        if missing_v:
+            details.append(f"vendored: {', '.join(missing_v)}")
+        return f"📦 [t-ai] Pobrano zmiany z template → {' | '.join(details)}"
+    err = result.stderr.strip()[:200]
+    return f"⚠️  [t-ai] Auto-sync nie powiódł się: {err}\n  Uruchom: python3 scripts/update-skills.py --sync --apply"
 
 
 def check_skills_staleness() -> str | None:

@@ -72,12 +72,40 @@ claude   # napisz: scope
 ## Zarządzanie skillami
 
 ```bash
-python3 scripts/update-skills.py          # sprawdź aktualizacje
-python3 scripts/update-skills.py --apply  # zastosuj bezpieczne aktualizacje
+# Vendored skille — sprawdź i zaktualizuj z GitHub
+python3 scripts/update-skills.py          # podgląd aktualizacji
+python3 scripts/update-skills.py --apply  # zastosuj
+
+# Istniejący projekt — pobierz zmiany z t-ai
+python3 scripts/update-skills.py --sync          # podgląd
+python3 scripts/update-skills.py --sync --apply  # zastosuj
+python3 scripts/update-skills.py --full-sync     # sync + vendored w jednym kroku
+
+# Walidacja
 python3 scripts/validate-skills.py        # waliduj frontmatter SKILL.md
 ```
 
+**Auto-sync** — na starcie każdej sesji Claude sprawdza czy skille są aktualne z t-ai i synchronizuje automatycznie.
+
 Pełny katalog: [docs/SKILLS.md](docs/SKILLS.md)
+
+---
+
+## Istniejący projekt
+
+Jeśli projekt był założony przed wprowadzeniem t-ai:
+
+```bash
+# 1. Skopiuj skrypt
+cp /sciezka/do/ai/scripts/update-skills.py scripts/update-skills.py
+
+# 2. Ustaw ai_template_path w .claude/hooks/config.json
+#    Lokalnie:  "/home/user/Projekty/ai"
+#    Zdalnie:   "git@github.com:org/ai.git"
+
+# 3. Pobierz wszystko
+python3 scripts/update-skills.py --full-sync
+```
 
 ---
 
