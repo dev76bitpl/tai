@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.11](https://github.com/dev76bitpl/tai/compare/v0.1.10...v0.1.11) (2026-05-24)
+
+
+### Bug Fixes
+
+* **docs:** Move PROJECT_SCOPE.md to docs/ to match CLAUDE.md references ([#35](https://github.com/dev76bitpl/tai/issues/35)) ([032a8eb](https://github.com/dev76bitpl/tai/commit/032a8ebfd55acbe11ee819bf8c0891538b9c2b9b))
+
 ## [0.1.10](https://github.com/dev76bitpl/tai/compare/v0.1.9...v0.1.10) (2026-05-24)
 
 
