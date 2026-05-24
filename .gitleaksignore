@@ -1,0 +1,3 @@
+# False positives in vendored skill documentation
+# java.md contains an intentional bad-practice example (hardcoded API key)
+.claude/skills/review/reference/java.md:generic-api-key:178
