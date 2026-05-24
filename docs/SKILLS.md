@@ -28,6 +28,9 @@ krótkie słowo które wpisujesz świadomie. Nie używaj składni `/command` (to
 | `gutenberg` | wp-block-development | Gutenberg blocks, Interactivity API |
 | `prestashop` | prestashop | Moduły PS, hooki, override'y, multistore, PS 1.7/8.x |
 | `shoper` | shoper | Twig, ObjectApi, REST API, webhooks, App Store OAuth2 |
+| `laravel` | laravel-rules | CQRS, Actions, Queries, Pest, Eloquent, UUIDs, migracje, kolejki |
+| `php modernization` | php-modernization | PHP 8.1–8.5, readonly, enums, DTOs, PHPStan, Rector, PSR/PER |
+| `symfony` | symfony | DDD/CQRS, Messenger, API Platform, Doctrine, DI, Voters |
 
 ## Skille zewnętrzne (vendored)
 
@@ -57,6 +60,9 @@ krótkie słowo które wpisujesz świadomie. Nie używaj składni `/command` (to
 | `retro` | `retro` | Retrospektywa sprintu/projektu — 5 pytań → podsumowanie + action items do `TASKS.md` |
 | `prestashop` | `prestashop` | Moduły PS, hooki, override'y, Webservice API, multistore, Smarty, PS 1.7/8.x |
 | `shoper` | `shoper` | Szablony Twig, ObjectApi, layouty, REST API, webhooks, App Store OAuth2 |
+| `laravel` | `laravel-rules` | CQRS Actions/Queries, Pest, Eloquent UUID, migracje, kolejki, spatie/laravel-data |
+| `php modernization` | `php-modernization` | PHP 8.1–8.5, readonly, enums, DTOs, PHPStan, Rector, PHP-CS-Fixer, PSR/PER |
+| `symfony` | `symfony` | DDD/CQRS, Messenger, API Platform, Doctrine, DI, Voters, best practices |
 
 ## Pluginy (instalowane per developer, poza repo)
 

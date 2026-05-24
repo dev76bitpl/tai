@@ -31,6 +31,9 @@
     },
     "shoper": {
       "reviewed": "2026-05-24"
+    },
+    "symfony": {
+      "reviewed": "2026-05-24"
     }
   },
   "skills": {
@@ -109,6 +112,24 @@
       "local_path": ".claude/skills/wp-block-development",
       "remote_path": "claude-skills/wp-block-development",
       "commit": "840a9a6fb49ad8d0c0e48ff09323378388b14f89",
+      "checked": "2026-05-24"
+    },
+    "laravel-rules": {
+      "repo": "https://github.com/fbarrento/laravel-agent-kit",
+      "local_path": ".claude/skills/laravel-rules",
+      "remote_path": "skills/laravel-rules",
+      "commit": "bdee94abe2de0df953c0b9ccdddc20a82b08d23c",
+      "checked": "2026-05-24"
+    },
+    "php-modernization": {
+      "repo": "https://github.com/netresearch/php-modernization-skill",
+      "local_path": ".claude/skills/php-modernization",
+      "remote_path": "skills/php-modernization",
+      "exclude": [
+        "scripts",
+        "templates"
+      ],
+      "commit": "0f747435af8c293dfc06ba88cf0792e98901b59f",
       "checked": "2026-05-24"
     }
   }

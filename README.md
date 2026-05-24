@@ -25,7 +25,7 @@ Skrypt kopiuje skille, hooki i scaffoldy, a także **automatycznie konfiguruje C
 
 ## Co dostajesz
 
-**19 skillów** — Claude ładuje je automatycznie gdy wykryje pasujący kontekst:
+**22 skille** — Claude ładuje je automatycznie gdy wykryje pasujący kontekst:
 
 | Skill | Jak wywołać |
 |-------|-------------|
@@ -48,6 +48,9 @@ Skrypt kopiuje skille, hooki i scaffoldy, a także **automatycznie konfiguruje C
 | `gutenberg` | Gutenberg blocks, block.json, Interactivity API |
 | `prestashop` | Moduły PS, hooki, override'y, Webservice API, PS 1.7/8.x |
 | `shoper` | Twig, ObjectApi, REST API, webhooks, App Store OAuth2 |
+| `laravel` | CQRS Actions/Queries, Pest, Eloquent UUID, kolejki, spatie/laravel-data |
+| `php modernization` | PHP 8.1–8.5, readonly, enums, DTOs, PHPStan, Rector, PSR/PER |
+| `symfony` | DDD/CQRS, Messenger, API Platform, Doctrine, DI, Voters, best practices |
 
 **Guard system** — pre-commit blokuje złe commity: format, brak testów, brak ADR, brak `[user-tested]`.
 
