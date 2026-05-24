@@ -21,6 +21,8 @@ def _load():
 mod = _load()
 create_config_json = mod.create_config_json
 create_settings_local = mod.create_settings_local
+README_SCAFFOLD = mod.README_SCAFFOLD
+TEMPLATE_META = mod.TEMPLATE_META
 
 
 # ── Fixtures ─────────────────────────────────────────────────────────────────
@@ -135,3 +137,65 @@ class TestMainGuard:
             with pytest.raises(SystemExit) as exc:
                 mod.main()
         assert exc.value.code != 0
+
+    def test_no_args_exits(self):
+        with mock.patch.object(sys, "argv", ["new-project.py"]):
+            with pytest.raises(SystemExit) as exc:
+                mod.main()
+        assert exc.value.code != 0
+
+
+# ── init_in_place ─────────────────────────────────────────────────────────────
+
+class TestInitInPlace:
+    def _setup(self, tmp_path: Path) -> Path:
+        """Create a minimal fake template clone at tmp_path."""
+        (tmp_path / "tests").mkdir()
+        (tmp_path / "tests" / "test_foo.py").write_text("# test")
+        (tmp_path / "README.md").write_text("# AI Template\n")
+        (tmp_path / "CLAUDE.md").write_text("# Project\n")
+        (tmp_path / ".claude" / "hooks").mkdir(parents=True)
+        (tmp_path / "scripts").mkdir()
+        (tmp_path / "scripts" / "update-skills.py").write_text("# update")
+        # Simulate the script itself being there
+        script = tmp_path / "scripts" / "new-project.py"
+        script.write_text("# self")
+        return tmp_path
+
+    def test_removes_template_meta(self, tmp_path):
+        fake_root = self._setup(tmp_path)
+        with mock.patch.object(mod, "create_config_json"):
+            with mock.patch.object(mod, "create_settings_local"):
+                mod.init_in_place(fake_root, dry_run=False)
+        assert not (fake_root / "tests").exists()
+        assert (fake_root / "README.md").read_text() == README_SCAFFOLD
+
+    def test_writes_readme_scaffold(self, tmp_path):
+        fake_root = self._setup(tmp_path)
+        with mock.patch.object(mod, "create_config_json"):
+            with mock.patch.object(mod, "create_settings_local"):
+                mod.init_in_place(fake_root, dry_run=False)
+        assert (fake_root / "README.md").read_text() == README_SCAFFOLD
+
+    def test_self_deletes_script(self, tmp_path):
+        fake_root = self._setup(tmp_path)
+        with mock.patch.object(mod, "create_config_json"):
+            with mock.patch.object(mod, "create_settings_local"):
+                mod.init_in_place(fake_root, dry_run=False)
+        assert not (fake_root / "scripts" / "new-project.py").exists()
+        assert (fake_root / "scripts" / "update-skills.py").exists()
+
+    def test_dry_run_removes_nothing(self, tmp_path):
+        fake_root = self._setup(tmp_path)
+        with mock.patch.object(mod, "create_config_json"):
+            with mock.patch.object(mod, "create_settings_local"):
+                mod.init_in_place(fake_root, dry_run=True)
+        assert (fake_root / "tests").exists()
+        assert (fake_root / "README.md").read_text() == "# AI Template\n"
+        assert (fake_root / "scripts" / "new-project.py").exists()
+
+    def test_init_flag_triggers_init_in_place(self, tmp_path):
+        with mock.patch.object(sys, "argv", ["new-project.py", "--init", "--dry-run"]):
+            with mock.patch.object(mod, "init_in_place") as m:
+                mod.main()
+        m.assert_called_once_with(ROOT, True)

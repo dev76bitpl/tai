@@ -2,10 +2,18 @@
 """
 Bootstrap a new project from the AI template.
 
-Copies skills, hooks, scripts, and doc scaffolds to a new directory.
-Skips: .git/, README.md, and AI template meta content.
+Two modes:
+
+  --init          Initialize THIS cloned repo as a new project in-place.
+                  Removes template meta (tests/, README, this script).
+                  Run once after: git clone ai my-project && cd my-project
+
+  <dest>          Copy template to a separate new directory.
+                  Use when keeping the template repo intact.
 
 Usage:
+    python3 scripts/new-project.py --init
+    python3 scripts/new-project.py --init --dry-run
     python3 scripts/new-project.py /path/to/new-project
     python3 scripts/new-project.py /path/to/new-project --dry-run
 """
@@ -17,20 +25,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 
-# ── What to copy ────────────────────────────────────────────────────────────
+# ── What to copy (copy-to-dir mode) ─────────────────────────────────────────
 
-# Full directories
-COPY_DIRS = [
-    ".claude",
-]
+COPY_DIRS = [".claude"]
 
-# Root-level files
-COPY_FILES = [
-    "CLAUDE.md",
-    "skills-manifest.json",
-]
+COPY_FILES = ["CLAUDE.md", "skills-manifest.json"]
 
-# docs/ — generic, reusable content (copy as-is)
 COPY_DOCS = [
     "CONVENTIONS.md",
     "DELIVERY_CHECKLIST.md",
@@ -41,7 +41,6 @@ COPY_DOCS = [
     "USER_PROFILE.example",
 ]
 
-# docs/ — project-specific scaffolds (overwrite with minimal content)
 SCAFFOLD_DOCS: dict[str, str] = {
     "TASKS.md": """\
 # Tasks
@@ -61,7 +60,7 @@ SCAFFOLD_DOCS: dict[str, str] = {
     "ROADMAP.md": """\
 # Roadmap
 
-<!-- Wygeneruj za pomocą `/new-project-scope` lub wypełnij ręcznie -->
+<!-- Wygeneruj za pomocą `scope` lub wypełnij ręcznie -->
 
 ## Faza 1 — [Nazwa]
 
@@ -75,12 +74,58 @@ SCAFFOLD_DOCS: dict[str, str] = {
 """,
 }
 
+# ── What to remove + replace in --init mode ──────────────────────────────────
 
-# ── Helpers ─────────────────────────────────────────────────────────────────
+README_SCAFFOLD = """\
+# [Nazwa projektu]
+
+> Krótki opis — co to jest i dla kogo.
+
+---
+
+## Uruchomienie
+
+```bash
+# TODO: uzupełnij
+```
+
+## Stack
+
+<!-- TODO: opisz stack -->
+
+## Dokumentacja
+
+- [Scope projektu](docs/PROJECT_SCOPE.md)
+- [Konwencje](docs/CONVENTIONS.md)
+- [Zadania](docs/TASKS.md)
+- [Roadmapa](docs/ROADMAP.md)
+"""
+
+# Paths relative to ROOT that are template-only and removed during --init.
+# The script itself is removed last (it's added in init_in_place after this list).
+TEMPLATE_META: list[str] = [
+    "tests",
+    "README.md",
+]
+
+
+# ── Helpers ──────────────────────────────────────────────────────────────────
 
 def log(label: str, path: str, dry_run: bool) -> None:
     prefix = "  [dry]" if dry_run else "  ✓"
     print(f"{prefix} {label:<12} {path}")
+
+
+def remove(path: Path, root: Path, dry_run: bool) -> None:
+    label = "rmdir" if path.is_dir() else "rm"
+    display = str(path.relative_to(root)) if path.is_relative_to(root) else str(path)
+    log(label, display, dry_run)
+    if dry_run:
+        return
+    if path.is_dir():
+        shutil.rmtree(path)
+    elif path.exists():
+        path.unlink()
 
 
 def copy_dir(src: Path, dst: Path, dry_run: bool) -> None:
@@ -148,20 +193,81 @@ def create_settings_local(dest: Path, template_root: Path, dry_run: bool) -> Non
     out.write_text(content, encoding="utf-8")
 
 
+# ── Init in-place ─────────────────────────────────────────────────────────────
+
+def init_in_place(root: Path, dry_run: bool) -> None:
+    """Remove template meta and turn this clone into a clean project directory."""
+    print("🚀  new-project.py — INIT IN-PLACE")
+    print(f"    Directory: {root}\n")
+
+    print("── Usuwam template meta ────────────────────────────────")
+    for name in TEMPLATE_META:
+        remove(root / name, root, dry_run)
+
+    print("\n── README scaffold ─────────────────────────────────────")
+    log("scaffold", "README.md", dry_run)
+    if not dry_run:
+        (root / "README.md").write_text(README_SCAFFOLD, encoding="utf-8")
+
+    print("\n── Claude Code hooks (auto) ────────────────────────────")
+    create_config_json(root, root, dry_run)
+    create_settings_local(root, root, dry_run)
+
+    if dry_run:
+        print("\n✅  Dry-run complete — no files were written.\n")
+        return
+
+    print(f"\n✅  Gotowe: {root}\n")
+    print("── Następne kroki ──────────────────────────────────────\n")
+    print("  # 1. Nowa historia git (bez historii template)")
+    print("  rm -rf .git && git init && git remote add origin <url>\n")
+    print("  # 2. Zainstaluj vendored skille")
+    print("  python3 scripts/update-skills.py --apply\n")
+    print("  # 3. Zdefiniuj scope projektu")
+    print("  claude   # napisz: scope\n")
+    print("  # 4. (Opcjonalnie) Guard hooki pre-commit")
+    print("  pre-commit install --hook-type pre-commit --hook-type commit-msg\n")
+    print("────────────────────────────────────────────────────────\n")
+
+    # Remove this script last — it's template-only
+    self_path = root / "scripts" / "new-project.py"
+    if self_path.exists():
+        self_path.unlink()
+
+
 # ── Main ─────────────────────────────────────────────────────────────────────
 
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Bootstrap a new project from the AI template.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="Example:\n  python3 scripts/new-project.py ~/Projekty/my-app",
+        epilog=(
+            "In-place (after git clone):\n"
+            "  python3 scripts/new-project.py --init\n\n"
+            "New directory:\n"
+            "  python3 scripts/new-project.py ~/Projekty/my-app"
+        ),
     )
-    parser.add_argument("dest", help="Destination directory for the new project")
+    parser.add_argument(
+        "dest", nargs="?",
+        help="Destination directory (omit when using --init)",
+    )
+    parser.add_argument(
+        "--init", action="store_true",
+        help="Initialize this cloned repo as a project in-place",
+    )
     parser.add_argument(
         "--dry-run", action="store_true",
-        help="Show what would be copied without making changes",
+        help="Show what would happen without making changes",
     )
     args = parser.parse_args()
+
+    if args.init:
+        init_in_place(ROOT, args.dry_run)
+        return
+
+    if not args.dest:
+        parser.error("dest is required (or use --init for in-place initialization)")
 
     dest = Path(args.dest).resolve()
     dry_run = args.dry_run
@@ -177,21 +283,18 @@ def main() -> None:
     print(f"    Template:    {ROOT}")
     print(f"    Destination: {dest}\n")
 
-    # 1. Full directories
     print("── Directories ─────────────────────────────────────────")
     for d in COPY_DIRS:
         src = ROOT / d
         if src.exists():
             copy_dir(src, dest / d, dry_run)
 
-    # 2. Root files
     print("\n── Root files ──────────────────────────────────────────")
     for f in COPY_FILES:
         src = ROOT / f
         if src.exists():
             copy_file(src, dest / f, dry_run)
 
-    # 3. scripts/ — everything (skip __pycache__ and .pyc)
     print("\n── scripts/ ────────────────────────────────────────────")
     scripts_src = ROOT / "scripts"
     scripts_dst = dest / "scripts"
@@ -202,10 +305,11 @@ def main() -> None:
             continue
         if "__pycache__" in item.parts or item.suffix == ".pyc":
             continue
+        if item.name == "new-project.py":
+            continue  # template-only, not needed in new projects
         rel = item.relative_to(scripts_src)
         copy_file(item, scripts_dst / rel, dry_run)
 
-    # 4. docs/ — generic copies
     print("\n── docs/ (generic) ─────────────────────────────────────")
     docs_dst = dest / "docs"
     if not dry_run:
@@ -215,20 +319,15 @@ def main() -> None:
         if src.exists():
             copy_file(src, docs_dst / doc, dry_run)
 
-    # 5. docs/ — scaffolded (project-specific, minimal)
     print("\n── docs/ (scaffolded) ──────────────────────────────────")
     for name, content in SCAFFOLD_DOCS.items():
         scaffold_file(docs_dst / name, dest, content, dry_run)
 
-    # 6. docs/adr/ — empty directory
     mkdir(docs_dst / "adr", dest, dry_run)
 
-    # 7. Auto-configure Claude Code hooks
     print("\n── Claude Code hooks (auto) ────────────────────────────")
     create_config_json(dest, ROOT, dry_run)
     create_settings_local(dest, ROOT, dry_run)
-
-    # ── Done ──────────────────────────────────────────────────────────────
 
     if dry_run:
         print("\n✅  Dry-run complete — no files were written.\n")
@@ -237,17 +336,9 @@ def main() -> None:
     print(f"\n✅  Project created: {dest}\n")
     print("── Następne kroki ──────────────────────────────────────\n")
     print(f"  cd {dest}\n")
-    print("  # 1. Inicjalizuj git")
-    print("  git init")
-    print("  git remote add origin <url-nowego-repo>\n")
-    print("  # 2. Zdefiniuj scope projektu")
-    print("  claude   # → /new-project-scope\n")
-    print("  # 3. (Opcjonalnie) Dostosuj lint/test commands do swojego stacku")
-    print("  # → .claude/hooks/config.json\n")
-    print("  # 4. Zainstaluj vendored skille (UI, security, a11y, perf, review, TS, Next.js...)")
+    print("  git init && git remote add origin <url>\n")
     print("  python3 scripts/update-skills.py --apply\n")
-    print("  # 5. (Opcjonalnie) Zainstaluj guard hooki pre-commit")
-    print("  pre-commit install --hook-type pre-commit --hook-type commit-msg\n")
+    print("  claude   # napisz: scope\n")
     print("────────────────────────────────────────────────────────\n")
 
 
