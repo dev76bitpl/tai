@@ -9,7 +9,7 @@ krótkie słowo które wpisujesz świadomie. Nie używaj składni `/command` (to
 
 | Wpisz | Skill | Co robi |
 |-------|-------|---------|
-| `scope` | new-project-scope | Wywiad 6 pytań → `PROJECT_SCOPE.md` + `ADR-001` |
+| `scope` | new-project-scope | Wywiad 6 pytań → `docs/PROJECT_SCOPE.md` + `ADR-001` |
 | `debug` | debug | Protokół debugowania krok po kroku |
 | `deploy` | deploy | Checklist przed wdrożeniem |
 | `retro` | retro | Retrospektywa → action items |

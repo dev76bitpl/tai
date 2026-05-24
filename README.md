@@ -30,7 +30,7 @@ claude   # napisz: scope
 
 | Skill | Jak wywołać |
 |-------|-------------|
-| `scope` | Wywiad 6 pytań → `PROJECT_SCOPE.md` + `ADR-001` |
+| `scope` | Wywiad 6 pytań → `docs/PROJECT_SCOPE.md` + `ADR-001` |
 | `debug` | Protokół debugowania krok po kroku |
 | `deploy` | Checklist przed wdrożeniem na produkcję |
 | `retro` | Retrospektywa → action items do `TASKS.md` |
@@ -113,7 +113,7 @@ python3 scripts/update-skills.py --full-sync
 
 ```
 CLAUDE.md          = jak pracujemy
-PROJECT_SCOPE.md   = co budujemy
+docs/PROJECT_SCOPE.md = co budujemy
 docs/adr/          = dlaczego tak, a nie inaczej
 ```
 
