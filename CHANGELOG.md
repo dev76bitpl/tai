@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.13](https://github.com/dev76bitpl/tai/compare/v0.1.12...v0.1.13) (2026-05-24)
+
+
+### Bug Fixes
+
+* Add editorconfig and include AI_TEMPLATE_NOTES in copy-to-dir mode ([#45](https://github.com/dev76bitpl/tai/issues/45)) ([135e036](https://github.com/dev76bitpl/tai/commit/135e036882553eabf6248436404fd373a8695693))
+* **docs:** Add PR template and fix DELIVERY_CHECKLIST ([#40](https://github.com/dev76bitpl/tai/issues/40)) ([f00bf9f](https://github.com/dev76bitpl/tai/commit/f00bf9f61632fed77b362e9f0953ce5524800492))
+* **docs:** Make CONVENTIONS.md stack-agnostic ([#43](https://github.com/dev76bitpl/tai/issues/43)) ([c1ba7ea](https://github.com/dev76bitpl/tai/commit/c1ba7eaa78dd4913deaaef3df09642e156a048f8))
+* **docs:** Make UI_GUIDELINES.md stack-agnostic ([#44](https://github.com/dev76bitpl/tai/issues/44)) ([8d3f3aa](https://github.com/dev76bitpl/tai/commit/8d3f3aa1800b0cedcdaf7c550548267ac3ca82ef))
+* **docs:** Remove domain-specific content from AI_TEMPLATE_NOTES ([#42](https://github.com/dev76bitpl/tai/issues/42)) ([217ad02](https://github.com/dev76bitpl/tai/commit/217ad022db5de28c4e63c94e7a4c16255941ba4a))
+* **scripts:** Reconfigure stdout to utf-8 for Windows compat ([#47](https://github.com/dev76bitpl/tai/issues/47)) ([66f4ac6](https://github.com/dev76bitpl/tai/commit/66f4ac606dc52ce1fb10a740a48fa7f0147f52c6))
+* **scripts:** Remove example files during new-project --init ([#41](https://github.com/dev76bitpl/tai/issues/41)) ([c5c9bf2](https://github.com/dev76bitpl/tai/commit/c5c9bf2b0df32ecf0e890d01e61d045afd3b84fb))
+
 ## [0.1.12](https://github.com/dev76bitpl/tai/compare/v0.1.11...v0.1.12) (2026-05-24)
 
 
