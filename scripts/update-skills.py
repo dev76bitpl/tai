@@ -403,7 +403,12 @@ def main() -> None:
     parser.add_argument("--skill", help="Zaktualizuj tylko wskazany skill")
     parser.add_argument("--scan-only", action="store_true", help="Tylko skan bezpieczeństwa, bez diff")
     parser.add_argument("--sync", action="store_true", help="Synchronizuj custom skille z ai_template_path")
+    parser.add_argument("--full-sync", action="store_true", help="--sync --apply + pobierz vendored skille z GitHub")
     args = parser.parse_args()
+
+    if args.full_sync:
+        args.sync = True
+        args.apply = True
 
     if args.sync:
         template_root = find_template_root()
@@ -415,7 +420,10 @@ def main() -> None:
             print(f"❌ Template nie istnieje: {template_root}")
             sys.exit(1)
         sync_from_template(template_root, apply=args.apply)
-        return
+        if not args.full_sync:
+            return
+        print(f"\n{'═' * 50}")
+        print(f"🛠️  Pobieranie vendored skillów z GitHub...\n")
 
     manifest = load_manifest()
     skills = manifest.get("skills", {})
