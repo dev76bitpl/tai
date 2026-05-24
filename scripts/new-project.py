@@ -10,6 +10,7 @@ Usage:
     python3 scripts/new-project.py /path/to/new-project --dry-run
 """
 import argparse
+import json
 import shutil
 import sys
 from pathlib import Path
@@ -117,6 +118,37 @@ def mkdir(path: Path, dest: Path, dry_run: bool) -> None:
     (path / ".gitkeep").touch()
 
 
+def create_config_json(dest: Path, template_root: Path, dry_run: bool) -> None:
+    """Creates .claude/hooks/config.json with ai_template_path pre-filled."""
+    example_src = template_root / ".claude" / "hooks" / "config.json.example"
+    if not example_src.exists():
+        return
+    log("auto-config", ".claude/hooks/config.json  (ai_template_path pre-filled)", dry_run)
+    if dry_run:
+        return
+    config = json.loads(example_src.read_text(encoding="utf-8"))
+    config["ai_template_path"] = str(template_root)
+    if config.get("repos") and isinstance(config["repos"], list):
+        config["repos"][0]["name"] = dest.name
+        config["repos"][0]["tasks"] = "docs/TASKS.md"
+    out = dest / ".claude" / "hooks" / "config.json"
+    out.write_text(json.dumps(config, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
+def create_settings_local(dest: Path, template_root: Path, dry_run: bool) -> None:
+    """Creates .claude/settings.local.json with correct interpreter for current OS."""
+    example_src = template_root / ".claude" / "settings.local.json.example"
+    if not example_src.exists():
+        return
+    interpreter = "py" if sys.platform == "win32" else "python3"
+    log("auto-config", f".claude/settings.local.json  (interpreter: {interpreter})", dry_run)
+    if dry_run:
+        return
+    content = example_src.read_text(encoding="utf-8").replace("INTERPRETER", interpreter)
+    out = dest / ".claude" / "settings.local.json"
+    out.write_text(content, encoding="utf-8")
+
+
 # ── Main ─────────────────────────────────────────────────────────────────────
 
 def main() -> None:
@@ -192,6 +224,11 @@ def main() -> None:
     # 6. docs/adr/ — empty directory
     mkdir(docs_dst / "adr", dest, dry_run)
 
+    # 7. Auto-configure Claude Code hooks
+    print("\n── Claude Code hooks (auto) ────────────────────────────")
+    create_config_json(dest, ROOT, dry_run)
+    create_settings_local(dest, ROOT, dry_run)
+
     # ── Done ──────────────────────────────────────────────────────────────
 
     if dry_run:
@@ -204,15 +241,11 @@ def main() -> None:
     print("  # 1. Inicjalizuj git")
     print("  git init")
     print("  git remote add origin <url-nowego-repo>\n")
-    print("  # 2. Skonfiguruj Claude Code hooks (per-maszyna, gitignorowane)")
-    print("  cp .claude/settings.local.json.example .claude/settings.local.json")
-    print("  cp .claude/hooks/config.json.example   .claude/hooks/config.json")
-    print("  # → Otwórz .claude/hooks/config.json i ustaw ai_template_path\n")
-    print("  # 3. Zdefiniuj scope projektu")
+    print("  # 2. Zdefiniuj scope projektu")
     print("  claude   # → /new-project-scope\n")
-    print("  # 4. Sprawdź i zaktualizuj vendored skille (opcjonalnie)")
-    print("  python3 scripts/update-skills.py\n")
-    print("  # 5. Zainstaluj guard hooki (gdy projekt ma package.json + pre-commit)")
+    print("  # 3. (Opcjonalnie) Dostosuj lint/test commands do swojego stacku")
+    print("  # → .claude/hooks/config.json\n")
+    print("  # 4. (Opcjonalnie) Zainstaluj guard hooki pre-commit")
     print("  pre-commit install --hook-type pre-commit --hook-type commit-msg\n")
     print("────────────────────────────────────────────────────────\n")
 
