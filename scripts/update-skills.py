@@ -365,6 +365,18 @@ def sync_from_template(template_root: Path, apply: bool) -> None:
         else:
             print(f"  ✅ update-skills.py        aktualny")
 
+    # ── .gitleaksignore ──────────────────────────────────────────────────────
+    template_ignore = template_root / ".gitleaksignore"
+    project_ignore = ROOT / ".gitleaksignore"
+    if template_ignore.exists():
+        if not project_ignore.exists() or template_ignore.read_text("utf-8") != project_ignore.read_text("utf-8"):
+            print(f"  ~ .gitleaksignore         {'NOWY' if not project_ignore.exists() else 'zmieniony'}")
+            synced += 1
+            if apply:
+                shutil.copy2(template_ignore, project_ignore)
+        else:
+            print(f"  ✅ .gitleaksignore         aktualny")
+
     # ── Save manifest ─────────────────────────────────────────────────────────
     if apply:
         project_manifest["custom_skills"] = project_custom
