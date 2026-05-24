@@ -16,7 +16,7 @@ python3 ~/ai-template/scripts/new-project.py ~/Projekty/moj-projekt
 # 3. Wejdź i zdefiniuj co budujesz
 cd ~/Projekty/moj-projekt
 git init && git remote add origin <url>
-claude   # napisz: "zacznij nowy projekt" albo "zdefiniuj scope"
+claude   # napisz: scope
 ```
 
 Skrypt kopiuje skille, hooki i scaffoldy, a także **automatycznie konfiguruje Claude Code hooks** (interpreter + ścieżka do template).
@@ -29,18 +29,18 @@ Skrypt kopiuje skille, hooki i scaffoldy, a także **automatycznie konfiguruje C
 
 | Skill | Jak wywołać |
 |-------|-------------|
-| `new-project-scope` | "zacznij nowy projekt" / "zdefiniuj scope" |
-| `git` | "zacznij feature" / "zrób commit" / "otwórz PR" |
-| `debug` | "nie działa" / "szukam buga" / "debug" |
-| `deploy` | "deploy" / "wdrożenie" / "idę na produkcję" |
-| `retro` | "retrospektywa" / "co poszło dobrze" |
-| `adr` | "napisz ADR" / "decyzja architektoniczna" |
-| `api` | "zaprojektuj API" / "nowy endpoint" |
-| `security` | "security review" / "sprawdź bezpieczeństwo" |
-| `a11y` | "dostępność" / "WCAG" / "screen reader" |
-| `perf` | "wolna strona" / "Lighthouse" / "Core Web Vitals" |
-| `review` | "zrób review" / "sprawdź kod" / "review PR" |
-| `ui-ux-pro-max` | "zaprojektuj UI" / "dobierz kolory" / "design system" |
+| `scope` | Wywiad 6 pytań → `PROJECT_SCOPE.md` + `ADR-001` |
+| `debug` | Protokół debugowania krok po kroku |
+| `deploy` | Checklist przed wdrożeniem na produkcję |
+| `retro` | Retrospektywa → action items do `TASKS.md` |
+| `adr` | Generator ADR → `docs/adr/ADR-NNN.md` |
+| `api design` | REST API design review |
+| `git` | Branch strategy, commit format, PR |
+| `security review` | OWASP Top 10:2025, ASVS 5.0 |
+| `a11y` | Audit dostępności WCAG 2.2 AA |
+| `perf` | Core Web Vitals, Lighthouse |
+| `review` | Code review PR |
+| `ui design` | Design intelligence — style, kolory, typografia |
 
 **Guard system** — pre-commit blokuje złe commity: format, brak testów, brak ADR, brak `[user-tested]`.
 

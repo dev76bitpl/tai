@@ -1,69 +1,85 @@
-# Skills Catalog
+# Katalog skillów
 
-All Claude Code skills available in this template.
+Wszystkie skille Claude Code dostępne w tym template.
 
-Skills are triggered automatically — Claude detects the context from keywords in your message.
-You do **not** invoke them with `/command` syntax (that's for built-in Claude Code commands only).
+Skill ładuje się gdy Claude wykryje odpowiednie słowo kluczowe. Każdy skill ma jeden **kanoniczny trigger** —
+krótkie słowo które wpisujesz świadomie. Nie używaj składni `/command` (to dla wbudowanych komend Claude Code).
 
-## Vendored (external sources)
+## Szybka ściągawka — wpisz to żeby wywołać skill
 
-| Skill | Source | Description |
-|-------|--------|-------------|
-| `ui-ux-pro-max` | [nextlevelbuilder/ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) | Design intelligence: 50+ styles, 161 palettes, 57 font pairings, 99 UX guidelines across 10 stacks |
-| `security` | [agamm/claude-code-owasp](https://github.com/agamm/claude-code-owasp) | OWASP Top 10:2025, ASVS 5.0, LLM Top 10 — security review and threat modeling |
-| `a11y` | [fecarrico/A11Y.md](https://github.com/fecarrico/A11Y.md) | Accessibility audit (WCAG 2.2 AA): keyboard nav, screen reader, contrast, ARIA |
-| `perf` | [addyosmani/web-quality-skills](https://github.com/addyosmani/web-quality-skills) | Web performance: Core Web Vitals (LCP/INP/CLS), budgets, Lighthouse optimization |
-| `review` | [awesome-skills/code-review-skill](https://github.com/awesome-skills/code-review-skill) | Code review for 15+ languages: React, Vue, Go, Python, Rust, TypeScript and more |
+| Wpisz | Skill | Co robi |
+|-------|-------|---------|
+| `scope` | new-project-scope | Wywiad 6 pytań → `PROJECT_SCOPE.md` + `ADR-001` |
+| `debug` | debug | Protokół debugowania krok po kroku |
+| `deploy` | deploy | Checklist przed wdrożeniem |
+| `retro` | retro | Retrospektywa → action items |
+| `adr` | adr | Generator ADR → `docs/adr/ADR-NNN.md` |
+| `api design` | api | Przegląd projektu REST API |
+| `git` | git | Branch strategy, commit format, PR |
+| `security review` | security | OWASP Top 10, ASVS 5.0 |
+| `a11y` | a11y | Audit dostępności WCAG 2.2 AA |
+| `perf` | perf | Core Web Vitals, Lighthouse |
+| `review` | review | Code review PR |
+| `ui design` | ui-ux-pro-max | Design intelligence |
 
-## Custom
+## Skille zewnętrzne (vendored)
 
-| Skill | Description |
-|-------|-------------|
-| `git` | Git workflow: branch strategy, commit format (Conventional Commits), PR protocol, conflict resolution |
-| `new-project-scope` | Project intake wizard — 6 questions → `docs/PROJECT_SCOPE.md` + `ADR-001` |
-| `adr` | Architecture Decision Record generator — interview → `docs/adr/ADR-NNN.md` |
-| `api` | REST API design review: naming, HTTP methods, status codes, errors, pagination, versioning |
-| `debug` | Systematic debugging protocol: reproduce → isolate → hypothesize → verify → fix |
-| `deploy` | Pre-deployment checklist: code, env, database, infra, rollback, post-deploy |
-| `retro` | Sprint/project retrospective — 5 questions → structured retro + action items to `docs/TASKS.md` |
+| Skill | Źródło | Opis |
+|-------|--------|------|
+| `ui-ux-pro-max` | [nextlevelbuilder/ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) | Design intelligence: 50+ stylów, 161 palet, 57 zestawień fontów, 99 wytycznych UX na 10 stackach |
+| `security` | [agamm/claude-code-owasp](https://github.com/agamm/claude-code-owasp) | OWASP Top 10:2025, ASVS 5.0, LLM Top 10 — przegląd bezpieczeństwa i threat modeling |
+| `a11y` | [fecarrico/A11Y.md](https://github.com/fecarrico/A11Y.md) | Audit dostępności (WCAG 2.2 AA): nawigacja klawiaturą, screen reader, kontrast, ARIA |
+| `perf` | [addyosmani/web-quality-skills](https://github.com/addyosmani/web-quality-skills) | Wydajność web: Core Web Vitals (LCP/INP/CLS), budżety, optymalizacja Lighthouse |
+| `review` | [awesome-skills/code-review-skill](https://github.com/awesome-skills/code-review-skill) | Code review dla 15+ języków: React, Vue, Go, Python, Rust, TypeScript i innych |
 
-## Plugins (install separately, per developer)
+## Skille własne
 
-Plugins bundle an MCP server + skills in one install. They are **not** vendored into the repo —
-each developer installs them once on their machine. The AI will suggest the relevant plugin
-when it detects you're working in that context.
+| Skill | Trigger | Opis |
+|-------|---------|------|
+| `new-project-scope` | `scope` | Wizard projektu — 6 pytań → `docs/PROJECT_SCOPE.md` + `ADR-001` |
+| `git` | `git` | Workflow git: strategia branchy, format commita (Conventional Commits), protokół PR |
+| `adr` | `adr` | Generator ADR — wywiad → `docs/adr/ADR-NNN.md` |
+| `api` | `api design` | Przegląd projektu REST API: nazewnictwo, metody HTTP, kody statusu, paginacja |
+| `debug` | `debug` | Protokół debugowania: odtwórz → wyizoluj → hipoteza → zweryfikuj → napraw |
+| `deploy` | `deploy` | Checklist przed wdrożeniem: kod, env, baza, infrastruktura, rollback, post-deploy |
+| `retro` | `retro` | Retrospektywa sprintu/projektu — 5 pytań → podsumowanie + action items do `TASKS.md` |
 
-| Plugin | Install | When to use |
-|--------|---------|-------------|
-| **Figma** | `claude plugin install figma@claude-plugins-official` | Working with Figma files — reading components/tokens, generating code from frames, pushing designs back to Figma, Code Connect, FigJam diagrams |
+## Pluginy (instalowane per developer, poza repo)
 
-### Figma plugin — what you get
+Plugin bundluje MCP server + skille w jednej instalacji. Nie trafia do repo —
+każdy developer instaluje raz na swojej maszynie. AI podpowie o pluginie gdy wykryje pasujący kontekst.
 
-After `claude plugin install figma@claude-plugins-official` and authenticating:
+| Plugin | Instalacja | Kiedy używać |
+|--------|-----------|--------------|
+| **Figma** | `claude plugin install figma@claude-plugins-official` | Praca z plikami Figma — odczyt komponentów/tokenów, generowanie kodu z framek, zapis do Figma, Code Connect, diagramy FigJam |
 
-- **MCP tools** — Claude can read/write your Figma files (`use_figma`, `create_new_file`, `generate_diagram`)
-- **8 built-in skills** — loaded automatically when needed:
-  - `/figma-use` — prerequisite for any write action in Figma
-  - `/figma-generate-design` — app page / view → Figma frames using your design system tokens
-  - `/figma-generate-library` — build a full design system in Figma from codebase
-  - `/figma-code-connect` — map Figma components ↔ code (`.figma.ts` / `.figma.js`)
-  - `/figma-generate-diagram` — flowcharts, ERD, architecture diagrams in FigJam
-  - `/figma-create-new-file`, `/figma-use-figjam`, `/figma-use-slides`
+### Figma plugin — co dostajesz
 
-Source: [figma/mcp-server-guide](https://github.com/figma/mcp-server-guide) · [Figma docs](https://help.figma.com/hc/en-us/articles/39888612464151)
+Po `claude plugin install figma@claude-plugins-official` i uwierzytelnieniu:
 
-## Management
+- **Narzędzia MCP** — Claude może czytać/pisać pliki Figma (`use_figma`, `create_new_file`, `generate_diagram`)
+- **8 wbudowanych skillów** — ładowane automatycznie gdy potrzebne:
+  - `figma-use` — wymagany przed każdą akcją zapisu w Figma
+  - `figma-generate-design` — strona/widok aplikacji → framki Figma z tokenami design systemu
+  - `figma-generate-library` — buduje pełny design system w Figma z codebase
+  - `figma-code-connect` — mapuje komponenty Figma ↔ kod (`.figma.ts` / `.figma.js`)
+  - `figma-generate-diagram` — flowcharty, ERD, diagramy architektury w FigJam
+  - `figma-create-new-file`, `figma-use-figjam`, `figma-use-slides`
+
+Źródło: [figma/mcp-server-guide](https://github.com/figma/mcp-server-guide) · [Dokumentacja Figma](https://help.figma.com/hc/en-us/articles/39888612464151)
+
+## Zarządzanie skillami
 
 ```bash
-# Check for updates (dry-run)
+# Sprawdź aktualizacje (dry-run)
 python3 scripts/update-skills.py
 
-# Apply safe updates
+# Zastosuj bezpieczne aktualizacje
 python3 scripts/update-skills.py --apply
 
-# Validate SKILL.md frontmatter
+# Waliduj frontmatter SKILL.md
 python3 scripts/validate-skills.py
 
-# Update single skill
+# Zaktualizuj jeden skill
 python3 scripts/update-skills.py --skill security
 ```
