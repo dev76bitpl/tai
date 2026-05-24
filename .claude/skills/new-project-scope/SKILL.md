@@ -1,6 +1,6 @@
 ---
 name: new-project-scope
-description: "Project intake wizard. Guides user through 6 questions and generates docs/PROJECT_SCOPE.md + proposes ADR-001. Invoke when user types 'scope' or when PROJECT_SCOPE.md does not exist and user wants to start implementation. Actions: scope, zdefiniuj scope, project scope."
+description: "Wizard inicjalizacji projektu. Przeprowadza przez 6 pytań i generuje docs/PROJECT_SCOPE.md + ADR-001. Uruchom gdy użytkownik napisze: scope, zdefiniuj scope, nowy projekt, co budujemy, zacznijmy projekt, zakres projektu, project scope."
 ---
 
 # New Project Scope Wizard

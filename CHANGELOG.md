@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.6](https://github.com/dev76bitpl/ai/compare/v0.1.5...v0.1.6) (2026-05-24)
+
+
+### Features
+
+* **skills:** Add ui-ux-pro-max design intelligence skill ([#21](https://github.com/dev76bitpl/ai/issues/21)) ([ffa28eb](https://github.com/dev76bitpl/ai/commit/ffa28eb1beba92485731b3bb60b32f71e789bce3))
+
 ## [0.1.5](https://github.com/dev76bitpl/ai/compare/v0.1.4...v0.1.5) (2026-05-22)
 
 
