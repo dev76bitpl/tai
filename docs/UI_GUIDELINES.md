@@ -2,103 +2,114 @@
 
 Standardy UI obowiązujące w projekcie.
 
+> **Scaffold** — zasady UX są universalne. Implementacja (nazwy komponentów, klasy CSS,
+> tokeny) zależy od stacku. Dostosuj sekcje implementacyjne do swojego design systemu.
+
 ---
 
-## Komponenty
+## Zasada podstawowa
 
-- używaj komponentów z design systemu — nie pisz surowego HTML tam gdzie jest gotowy komponent
-- `Button`, `Input`, `Select`, `Textarea`, `Label` — zawsze z DS, nigdy `<button>`, `<input>` etc. inline
+Używaj komponentów z design systemu projektu — nie pisz surowego HTML tam gdzie jest gotowy komponent. Spójność wizualna pochodzi z jednego źródła, nie z lokalnych decyzji per-widok.
 
-### Przyciski
+---
+
+## Przyciski
+
+Każdy projekt definiuje warianty przycisku odpowiadające hierarchii akcji:
 
 | Wariant | Zastosowanie |
 |---|---|
-| `default` / `primary` | główna akcja na stronie (Zapisz, Dodaj, Wyślij) |
-| `outline` / `secondary` | akcje drugorzędne (Edytuj, Anuluj, Archiwizuj) |
-| `ghost` / `tertiary` | akcje w nawigacji, mało eksponowane (Wyloguj, link-button) |
-| `destructive` / `danger` | nieodwracalne akcje (usunięcie — tylko gdy naprawdę nieodwracalne) |
+| Primary | główna akcja na stronie (Zapisz, Dodaj, Wyślij) |
+| Secondary / Outline | akcje drugorzędne (Edytuj, Anuluj, Archiwizuj) |
+| Ghost / Tertiary | akcje w nawigacji, mało eksponowane |
+| Destructive / Danger | nieodwracalne akcje (usunięcie — tylko gdy naprawdę nieodwracalne) |
 
-Rozmiar dobierany do kontekstu: `sm` w tabelach i listach, `default` w formularzach i header'ach.
-
-### Formularze
-
-- Każde pole: `<Label>` + `<Input>` w jednym kontenerze z konsekwentnym odstępem
-- Pola w formularzu: jednolity vertical spacing (np. `space-y-4`)
-- Przyciski na dole formularza: w `<div>` z gap, primary po lewej lub prawej (konsekwentnie w całej aplikacji)
-- Błąd walidacji — inline pod polem (nie `alert()`)
-- Błąd serwera — pod całym formularzem, formularz pozostaje wypełniony
-- Pola wymagane: etykieta z ` *` (spacja + gwiazdka)
-- Pola generowane przez system (np. numer rekordu): pre-wypełnione, edytowalne, bez specjalnego oznaczenia
-- Akcje destrukcyjne — dwukrokowy przycisk (stan "potwierdź?" → akcja), nie `confirm()`
-- Loading state — przycisk `disabled` + etykieta typu "Zapisywanie..."
-
-### Tabele
-
-- Zawsze komponent `<Table>` z DS, nie surowy `<table>`
-- Kolumna akcji: stała szerokość, wyrównana do prawej
-- Wartość pusta (brak danych): `—` (em-dash)
-- Akcje w wierszu: przyciski `size="sm" variant="outline"` w kontenerze z gap
-
-### Puste stany
-
-```tsx
-<p className="text-muted-foreground">Brak [encji]. Dodaj [pierwszą/pierwszego].</p>
-```
-
-Lub bardziej rozbudowane: krótki opis + CTA jeśli akcja jest oczywista.
-
-### Stany ładowania
-
-- Przycisk submit: `disabled={loading}` + tekst "Zapisywanie..." / kontekstowa etykieta
-- Skeleton loaders / spinner globalny — opcjonalnie zależnie od fazy projektu (patrz "Decyzje MVP")
-
-### Stany błędu (fetch)
-
-```tsx
-<div className="p-8 text-destructive">{error}</div>
-```
-
-Z opcjonalnym retry. Komunikat user-friendly, bez stack trace.
+Rozmiar dobierany do kontekstu: mniejszy w tabelach i listach, standardowy w formularzach i nagłówkach.
 
 ---
 
-## Kolory i stany
+## Formularze
 
-Używamy wyłącznie zmiennych z design systemu (tokens) — żadnych hardkodowanych kolorów (`text-red-500`, `bg-gray-100`, `#fa3e3e`).
+### Struktura pola
 
-| Kategoria tokenów | Zastosowanie |
-|---|---|
-| `bg-card` / `bg-surface` | tła kart, paneli |
-| `text-muted-foreground` | tekst pomocniczy, puste stany |
-| `text-destructive` / `text-error` | błędy inline |
-| `border` | separatory, ramki tabel |
-| sidebar / nav tokens | tła i tekst nawigacji |
+Każde pole formularza: etykieta + input w jednym kontenerze z konsekwentnym odstępem. Pola wymagane oznaczone (np. ` *` przy etykiecie).
 
-Każdy nowy token: zdefiniowany w obu motywach (`:root` + `.dark`) i udostępniony w warstwie design system.
+### Obsługa błędów
 
-### Motywy (dark/light)
+- Błąd walidacji — inline pod polem, nie alert()
+- Błąd serwera — pod całym formularzem, formularz pozostaje wypełniony
+- Pola generowane przez system: pre-wypełnione i edytowalne, bez specjalnego oznaczenia
 
-- Aplikacja wspiera oba motywy od dnia 1 (nie dodawać dark trybu post-factum)
-- Toggle dostępny w UI (np. w stopce sidebara)
-- Domyślny: `light`; opcjonalnie `enableSystem` (motyw systemowy)
-- Każdy nowy token koloru: definicja w obu sekcjach (`:root` jasny, `.dark` ciemny)
+### Loading state
+
+Przycisk submit: zablokowany + kontekstowa etykieta ("Zapisywanie...") podczas żądania.
+
+### Akcje destrukcyjne
+
+Dwukrokowy przycisk zamiast `confirm()`: pierwsze kliknięcie = stan "potwierdź?", drugie = akcja.
+
+---
+
+## Tabele
+
+- Kolumna akcji: stała szerokość, wyrównana do prawej
+- Wartość pusta (brak danych): `—` (em-dash), nie puste miejsce
+- Akcje w wierszu: małe przyciski z jednolitym odstępem
+
+---
+
+## Stany komponentów
+
+### Pusty stan
+
+Krótki komunikat wyjaśniający brak danych + CTA jeśli akcja jest oczywista.
+
+Przykład: *"Brak zamówień. Dodaj pierwsze zamówienie."*
+
+### Stan ładowania
+
+- Przycisk submit: zablokowany + kontekstowa etykieta
+- Skeleton loaders / spinner globalny — opcjonalnie zależnie od fazy projektu
+
+### Stan błędu (fetch)
+
+Komunikat user-friendly bez stack trace, z opcjonalnym retry. Widoczny w obszarze gdzie dane miały się pojawić.
+
+---
+
+## Kolory i tokeny
+
+Używaj wyłącznie zmiennych z design systemu — żadnych hardkodowanych wartości kolorów (`#fa3e3e`, nazwy kolorów bezpośrednio z biblioteki CSS). Każdy nowy token: zdefiniowany dla wszystkich obsługiwanych motywów.
+
+Kategorie tokenów do zdefiniowania per projekt:
+- tła kart i paneli
+- tekst pomocniczy / placeholder
+- błędy inline
+- separatory i ramki
+- kolory nawigacji
+
+---
+
+## Motywy (dark/light)
+
+Jeśli projekt wspiera wiele motywów — definiuj od dnia 1, nie dodawaj post-factum. Każdy nowy token koloru definiowany w obu motywach jednocześnie.
 
 ---
 
 ## Statusy
 
-- jeden plik z mapowaniem `status → { label, variant }` dla każdej domeny
-- nie duplikować mapowań per-widok
-- warianty badge: `success`, `warning`, `error`, `info`, `secondary`
+- jeden plik z mapowaniem `status → { label, wariant }` dla każdej domeny
+- nie duplikować mapowań per-widok (kalendarz, tabela, modal — wszystkie z tego samego źródła)
+- warianty badge dobrane do design systemu: success, warning, error, info, neutral
 
 ---
 
-## Formularze — UX flow
+## UX flow — formularz
 
-1. User otwiera formularz (strona `/new` lub `/edit`)
+1. User otwiera formularz
 2. Pola generowane przez system są pre-wypełnione
-3. HTML5 walidacja blokuje submit przy błędach klienta
-4. Po submit — loading state na przycisku (`disabled` + etykieta "Zapisywanie...")
+3. Walidacja klienta blokuje submit przy błędach lokalnych
+4. Po submit — loading state na przycisku
 5. Błąd serwera — wyświetlony pod formularzem, formularz pozostaje wypełniony
 6. Sukces — redirect na listę lub widok szczegółowy
 
@@ -113,14 +124,11 @@ Każdy nowy token: zdefiniowany w obu motywach (`:root` + `.dark`) i udostępnio
 
 ## Decyzje MVP (do rewizji w fazie 2+)
 
-Wzorzec: na MVP zostawiamy uproszczenia dla szybkości dostarczenia, ale jawnie odnotowujemy co należy zastąpić w kolejnej fazie. Tabela `Teraz (MVP) | Docelowo` w tym pliku jest źródłem prawdy.
-
-Przykładowe wzorce do typowego MVP (każdy projekt dobiera własny zestaw):
+Wzorzec: na MVP zostawiamy uproszczenia dla szybkości dostarczenia, ale jawnie odnotowujemy co należy zastąpić. Poniżej przykładowe kompromisy — każdy projekt definiuje własne.
 
 | Teraz (MVP) | Docelowo |
 |---|---|
 | Błędy inline pod formularzem | Toasty / snackbary dla akcji globalnych |
-| Osobne strony `/new` i `/[id]/edit` | Modale / slideover dla szybkiej edycji |
+| Osobne strony `/new` i `/edit` | Modale / slideover dla szybkiej edycji |
 | Brak skeleton loaderów | Skeleton / loading states dla lepszego UX |
-| `transition-colors` tylko na hover | Animacje przejść między stronami, micro-interactions |
 | Brak potwierdzenia dla archiwizacji | Dialog potwierdzenia dla nieodwracalnych akcji |

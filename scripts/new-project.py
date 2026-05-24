@@ -108,6 +108,10 @@ README_SCAFFOLD = """\
 TEMPLATE_META: list[str] = [
     "tests",
     "README.md",
+    "docs/adr/ADR-001-example.md",
+    "docs/SETUP.example.md",
+    "docs/TASKS.example.md",
+    "docs/ROADMAP.example.md",
 ]
 
 

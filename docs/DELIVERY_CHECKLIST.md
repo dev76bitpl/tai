@@ -1,24 +1,33 @@
 # DELIVERY CHECKLIST - Feature Closure Standard
 
-Ten dokument jest wywolywany po kazdej domknietej funkcjonalnosci.
-Cel: jeden staly standard domkniecia kroku bez recznego przypominania.
+Ten dokument jest wywoływany po każdej domkniętej funkcjonalności.
+Cel: jeden stały standard domknięcia kroku bez ręcznego przypominania.
 
 ---
 
 ## 1. Scope closure
 
-- Potwierdz, ze zakres funkcjonalnosci z tej sesji jest domkniety (bez "half done").
-- Zanotuj decyzje odlozone (defer) jako jawne TODO lub wpis do `docs/TASKS.md`.
+- Potwierdź, że zakres funkcjonalności z tej sesji jest domknięty (bez "half done").
+- Zanotuj decyzje odłożone (defer) jako jawne TODO lub wpis do `docs/TASKS.md`.
 
 ---
 
 ## 2. Automated validation (minimum)
 
-Uruchom:
+Uruchom testy i linter zgodnie ze stackiem projektu. Przykłady:
 
 ```bash
-npm run lint
-npm run test
+# Node.js
+npm run lint && npm test
+
+# Python
+ruff check . && pytest
+
+# PHP
+composer run lint && composer run test
+
+# Go
+go vet ./... && go test ./...
 ```
 
 Dodatkowo (gdy zmienił się schemat danych — zależne od ORM/stacku):
@@ -34,25 +43,25 @@ Przy zmianach DB wymagających migracji:
 
 - Wykonaj scenariusze z `docs/TESTING.md` dla zmienionych flow.
 - Pokryj co najmniej:
-- happy path
-- glowny blad biznesowy / edge case
-- regresje obszarow dotknietych zmiana
-- Przed merge/PR wykonaj obowiazkowy smoke krytycznego flow (minimum):
-  1. Wejscie do flow i poprawne zaladowanie widoku bez bledow runtime.
-  2. Akcja glowna flow dziala end-to-end na poprawnych danych.
-  3. Negatywny scenariusz pokazuje poprawny komunikat bledu i nie psuje stanu.
-  4. Po zakonczeniu flow dane sa widoczne tam, gdzie powinny (UI/API/DB zaleznie od zakresu).
-  5. Brak regresji w obszarze sasiednim bezposrednio dotknietym zmiana (co najmniej 1 szybki scenariusz).
-  6. Console/network bez nowych krytycznych bledow (5xx, uncaught errors).
+  - happy path
+  - główny błąd biznesowy / edge case
+  - regresje obszarów dotkniętych zmianą
+- Przed merge/PR wykonaj obowiązkowy smoke krytycznego flow (minimum):
+  1. Wejście do flow i poprawne załadowanie widoku bez błędów runtime.
+  2. Akcja główna flow działa end-to-end na poprawnych danych.
+  3. Negatywny scenariusz pokazuje poprawny komunikat błędu i nie psuje stanu.
+  4. Po zakończeniu flow dane są widoczne tam, gdzie powinny (UI/API/DB zależnie od zakresu).
+  5. Brak regresji w obszarze sąsiednim bezpośrednio dotkniętym zmianą (co najmniej 1 szybki scenariusz).
+  6. Console/network bez nowych krytycznych błędów (5xx, uncaught errors).
 
-Jesli pojawil sie nowy krytyczny flow, dopisz go do `docs/TESTING.md`.
+Jeśli pojawił się nowy krytyczny flow, dopisz go do `docs/TESTING.md`.
 
 ---
 
 ## 4. Regression note
 
-- Krotko zapisz wynik regresji: co sprawdzone, co przeszlo, co wymaga follow-up.
-- Jezeli czegos nie dalo sie zweryfikowac, zapisz to jawnie jako ryzyko.
+- Krótko zapisz wynik regresji: co sprawdzone, co przeszło, co wymaga follow-up.
+- Jeżeli czegoś nie dało się zweryfikować, zapisz to jawnie jako ryzyko.
 
 ---
 
@@ -60,13 +69,13 @@ Jesli pojawil sie nowy krytyczny flow, dopisz go do `docs/TESTING.md`.
 
 Zaktualizuj odpowiednie artefakty:
 
-- `docs/TASKS.md` - status krokow + nowe taski wynikajace z sesji
-- `docs/ROADMAP.md` - status faz / kolejnych etapow
+- `docs/TASKS.md` - status kroków + nowe taski wynikające z sesji
+- `docs/ROADMAP.md` - status faz / kolejnych etapów
 - `docs/TESTING.md` - nowe lub zmienione scenariusze
-- `README.md` - gdy zmienia sie flow uzycia, komendy, mapa dokumentacji
-- `docs/SETUP.md` - gdy zmienia sie setup, komendy, pulapki srodowiskowe
-- `CLAUDE.md` - gdy dochodzi nowa trwala zasada pracy
-- `docs/adr/*` - jesli zapadla decyzja architektoniczna
+- `README.md` - gdy zmienia się flow użycia, komendy, mapa dokumentacji
+- `docs/SETUP.md` - gdy zmienia się setup, komendy, pułapki środowiskowe
+- `CLAUDE.md` - gdy dochodzi nowa trwała zasada pracy
+- `docs/adr/*` - jeśli zapadła decyzja architektoniczna
 
 ---
 
@@ -74,7 +83,7 @@ Zaktualizuj odpowiednie artefakty:
 
 Zasada:
 
-- jeden commit = jeden domkniety krok
+- jeden commit = jeden domknięty krok
 - kod + testy + docs razem
 
 Format commit message:
@@ -87,14 +96,14 @@ type(scope): short description
 - impact if non-obvious
 ```
 
-Dla malych zmian dopuszczalny sam subject.
+Dla małych zmian dopuszczalny sam subject.
 
 ---
 
 ## 7. Optional release note (recommended)
 
-Przy wiekszej zmianie dopisz 3-liniowe podsumowanie:
+Przy większej zmianie dopisz 3-liniowe podsumowanie:
 
 - Co zmieniono
 - Jak zweryfikowano
-- Co jest nastepnym krokiem
+- Co jest następnym krokiem
