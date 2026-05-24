@@ -19,10 +19,9 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # ── What to copy ────────────────────────────────────────────────────────────
 
-# Full directories (symlinks preserved — skills point to src/)
+# Full directories
 COPY_DIRS = [
     ".claude",
-    "src",
 ]
 
 # Root-level files
@@ -178,7 +177,7 @@ def main() -> None:
     print(f"    Template:    {ROOT}")
     print(f"    Destination: {dest}\n")
 
-    # 1. Full directories (.claude/ and src/)
+    # 1. Full directories
     print("── Directories ─────────────────────────────────────────")
     for d in COPY_DIRS:
         src = ROOT / d
@@ -245,7 +244,9 @@ def main() -> None:
     print("  claude   # → /new-project-scope\n")
     print("  # 3. (Opcjonalnie) Dostosuj lint/test commands do swojego stacku")
     print("  # → .claude/hooks/config.json\n")
-    print("  # 4. (Opcjonalnie) Zainstaluj guard hooki pre-commit")
+    print("  # 4. Zainstaluj vendored skille (UI, security, a11y, perf, review, TS, Next.js...)")
+    print("  python3 scripts/update-skills.py --apply\n")
+    print("  # 5. (Opcjonalnie) Zainstaluj guard hooki pre-commit")
     print("  pre-commit install --hook-type pre-commit --hook-type commit-msg\n")
     print("────────────────────────────────────────────────────────\n")
 

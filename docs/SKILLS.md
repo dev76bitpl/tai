@@ -31,6 +31,8 @@ krótkie słowo które wpisujesz świadomie. Nie używaj składni `/command` (to
 | `laravel` | laravel-rules | CQRS, Actions, Queries, Pest, Eloquent, UUIDs, migracje, kolejki |
 | `php modernization` | php-modernization | PHP 8.1–8.5, readonly, enums, DTOs, PHPStan, Rector, PSR/PER |
 | `symfony` | symfony | DDD/CQRS, Messenger, API Platform, Doctrine, DI, Voters |
+| `typescript` | mastering-typescript | TypeScript 5.9+, generics, Zod, React, NestJS, Vite |
+| `nextjs` | nextjs-app-router | Next.js App Router, RSC, Server Actions, streaming, caching |
 
 ## Skille zewnętrzne (vendored)
 
@@ -63,6 +65,8 @@ krótkie słowo które wpisujesz świadomie. Nie używaj składni `/command` (to
 | `laravel` | `laravel-rules` | CQRS Actions/Queries, Pest, Eloquent UUID, migracje, kolejki, spatie/laravel-data |
 | `php modernization` | `php-modernization` | PHP 8.1–8.5, readonly, enums, DTOs, PHPStan, Rector, PHP-CS-Fixer, PSR/PER |
 | `symfony` | `symfony` | DDD/CQRS, Messenger, API Platform, Doctrine, DI, Voters, best practices |
+| `typescript` | [SpillwaveSolutions/mastering-typescript-skill](https://github.com/SpillwaveSolutions/mastering-typescript-skill) | TypeScript 5.9+, typy zaawansowane, Zod, React integration, NestJS, Vite |
+| `nextjs` | [mileson/agent-skills](https://github.com/mileson/agent-skills) | Next.js App Router, RSC, Server Actions, streaming, caching, parallel routes |
 
 ## Pluginy (instalowane per developer, poza repo)
 

@@ -25,7 +25,7 @@ Skrypt kopiuje skille, hooki i scaffoldy, a także **automatycznie konfiguruje C
 
 ## Co dostajesz
 
-**22 skille** — Claude ładuje je automatycznie gdy wykryje pasujący kontekst:
+**24 skille** — Claude ładuje je automatycznie gdy wykryje pasujący kontekst:
 
 | Skill | Jak wywołać |
 |-------|-------------|
@@ -51,6 +51,8 @@ Skrypt kopiuje skille, hooki i scaffoldy, a także **automatycznie konfiguruje C
 | `laravel` | CQRS Actions/Queries, Pest, Eloquent UUID, kolejki, spatie/laravel-data |
 | `php modernization` | PHP 8.1–8.5, readonly, enums, DTOs, PHPStan, Rector, PSR/PER |
 | `symfony` | DDD/CQRS, Messenger, API Platform, Doctrine, DI, Voters, best practices |
+| `typescript` | TypeScript 5.9+, generics, Zod, React integration, NestJS, Vite |
+| `nextjs` | Next.js App Router, RSC, Server Actions, streaming, caching |
 
 **Guard system** — pre-commit blokuje złe commity: format, brak testów, brak ADR, brak `[user-tested]`.
 

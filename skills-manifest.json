@@ -39,10 +39,10 @@
   "skills": {
     "ui-ux-pro-max": {
       "repo": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill",
-      "local_path": "src/ui-ux-pro-max",
+      "local_path": ".claude/skills/ui-ux-pro-max",
       "remote_path": "src/ui-ux-pro-max",
-      "commit": "unknown",
-      "checked": "never"
+      "commit": "b7e3af80f6e331f6fb456667b82b12cade7c9d35",
+      "checked": "2026-05-24"
     },
     "security": {
       "repo": "https://github.com/agamm/claude-code-owasp",
@@ -53,21 +53,21 @@
     },
     "a11y": {
       "repo": "https://github.com/fecarrico/A11Y.md",
-      "local_path": "src/a11y",
+      "local_path": ".claude/skills/a11y",
       "remote_path": "docs/en",
-      "commit": "unknown",
-      "checked": "never"
+      "commit": "733dbc899181c0b769b7e9e036606e130dd5f8da",
+      "checked": "2026-05-24"
     },
     "web-quality-skills": {
       "repo": "https://github.com/addyosmani/web-quality-skills",
-      "local_path": "src/web-quality-skills",
+      "local_path": ".claude/skills/perf",
       "remote_path": "skills",
-      "commit": "unknown",
-      "checked": "never"
+      "commit": "7b59d48aaf1f793935002f4998dfccc656f40839",
+      "checked": "2026-05-24"
     },
     "code-review": {
       "repo": "https://github.com/awesome-skills/code-review-skill",
-      "local_path": "src/code-review",
+      "local_path": ".claude/skills/review",
       "remote_path": ".",
       "exclude": [
         ".git",
@@ -76,8 +76,8 @@
         "LICENSE",
         ".gitignore"
       ],
-      "commit": "unknown",
-      "checked": "never"
+      "commit": "eb12fb247ba09fd8a2bce0d1ecafa99df0bf4891",
+      "checked": "2026-05-24"
     },
     "wp-plugin-development": {
       "repo": "https://github.com/jorgerosal/wordpress-skills",
@@ -130,6 +130,24 @@
         "templates"
       ],
       "commit": "0f747435af8c293dfc06ba88cf0792e98901b59f",
+      "checked": "2026-05-24"
+    },
+    "mastering-typescript": {
+      "repo": "https://github.com/SpillwaveSolutions/mastering-typescript-skill",
+      "local_path": ".claude/skills/typescript",
+      "remote_path": "mastering-typescript",
+      "exclude": [
+        "assets",
+        "scripts"
+      ],
+      "commit": "2f74a00f731f2ea4d48f45d852067a7be8efd0d1",
+      "checked": "2026-05-24"
+    },
+    "nextjs-app-router": {
+      "repo": "https://github.com/mileson/agent-skills",
+      "local_path": ".claude/skills/nextjs",
+      "remote_path": "nextjs-app-router-patterns",
+      "commit": "7897700422f2196591457f2ae39c822ed37dc147",
       "checked": "2026-05-24"
     }
   }
