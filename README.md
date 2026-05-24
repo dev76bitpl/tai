@@ -22,7 +22,7 @@ claude   # napisz: scope
 **Alternatywnie — przez git clone:**
 
 ```bash
-git clone git@github.com:dev76bitpl/ai.git moj-projekt
+git clone git@github.com:dev76bitpl/tai.git moj-projekt
 cd moj-projekt
 python3 scripts/new-project.py --init
 rm -rf .git && git init && git remote add origin <url>
