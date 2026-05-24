@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.10](https://github.com/dev76bitpl/tai/compare/v0.1.9...v0.1.10) (2026-05-24)
+
+
+### Features
+
+* **session:** Warn when ai_template_path is missing or invalid ([#33](https://github.com/dev76bitpl/tai/issues/33)) ([20f47c5](https://github.com/dev76bitpl/tai/commit/20f47c5f839a7f5a62f5deac1b3a3eddb8ce2082))
+
 ## [0.1.9](https://github.com/dev76bitpl/ai/compare/v0.1.8...v0.1.9) (2026-05-24)
 
 
