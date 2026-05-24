@@ -323,6 +323,31 @@ Pamięć maszynowa (`~/.claude/...`) = supplement do CLAUDE.md, nie zamiennik.
 
 ---
 
+### 13b. Pluginy — podpowiadaj raz gdy kontekst pasuje
+
+Pluginy Claude Code bundlują MCP server + skille w jednym `claude plugin install`. Są instalowane per-developer, nie trafiają do repo.
+
+Gdy AI wykryje że user pracuje w kontekście pasującym do dostępnego pluginu — wspomina o nim **raz na początku powiązanej pracy**, bez ponownego przypominania w tej samej sesji.
+
+Format podpowiedzi:
+```
+💡 Jeśli używasz [narzędzie] — jest oficjalny plugin:
+   claude plugin install [nazwa]@claude-plugins-official
+   Szczegóły: docs/SKILLS.md → sekcja Plugins
+```
+
+Dostępne pluginy i ich triggery:
+
+| Plugin | Instalacja | Trigger |
+|--------|-----------|---------|
+| **figma** | `claude plugin install figma@claude-plugins-official` | user wspomina Figma, design handoff, Code Connect, `use_figma`, tokeny z Figmy, generowanie kodu z framek |
+
+Kiedy NIE podpowiadać: gdy user już ma plugin zainstalowany, gdy wyraźnie nie używa danego narzędzia, gdy podpowiedź była już w tej sesji.
+
+Katalog pluginów: `docs/SKILLS.md` → sekcja *Plugins*.
+
+---
+
 ### 13. Pamięć między sesjami
 
 Lokalna pamięć maszynowa (`~/.claude/`) jest ulotna — nie działa przy zmianie środowiska.

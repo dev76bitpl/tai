@@ -1,0 +1,154 @@
+{
+  "_readme": "Tracks vendored external skills. Run: python3 scripts/update-skills.py",
+  "stale_after_days": 30,
+  "script_integrity": {
+    "update-skills.py": "3ae6c680bdcbc102dcdb5798a1a9b7f73ea10b510e461d8144e41a03a5ebe5f7"
+  },
+  "custom_skills": {
+    "git": {
+      "reviewed": "2026-05-24"
+    },
+    "new-project-scope": {
+      "reviewed": "2026-05-24"
+    },
+    "adr": {
+      "reviewed": "2026-05-24"
+    },
+    "api": {
+      "reviewed": "2026-05-24"
+    },
+    "debug": {
+      "reviewed": "2026-05-24"
+    },
+    "deploy": {
+      "reviewed": "2026-05-24"
+    },
+    "retro": {
+      "reviewed": "2026-05-24"
+    },
+    "prestashop": {
+      "reviewed": "2026-05-24"
+    },
+    "shoper": {
+      "reviewed": "2026-05-24"
+    },
+    "symfony": {
+      "reviewed": "2026-05-24"
+    }
+  },
+  "skills": {
+    "ui-ux-pro-max": {
+      "repo": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill",
+      "local_path": ".claude/skills/ui-ux-pro-max",
+      "remote_path": "src/ui-ux-pro-max",
+      "commit": "b7e3af80f6e331f6fb456667b82b12cade7c9d35",
+      "checked": "2026-05-24"
+    },
+    "security": {
+      "repo": "https://github.com/agamm/claude-code-owasp",
+      "local_path": ".claude/skills/security",
+      "remote_path": ".claude/skills/owasp-security",
+      "commit": "d0dc44da5d884409ee478258b7c666c84d9dab9e",
+      "checked": "2026-05-24"
+    },
+    "a11y": {
+      "repo": "https://github.com/fecarrico/A11Y.md",
+      "local_path": ".claude/skills/a11y",
+      "remote_path": "docs/en",
+      "commit": "733dbc899181c0b769b7e9e036606e130dd5f8da",
+      "checked": "2026-05-24"
+    },
+    "web-quality-skills": {
+      "repo": "https://github.com/addyosmani/web-quality-skills",
+      "local_path": ".claude/skills/perf",
+      "remote_path": "skills",
+      "commit": "7b59d48aaf1f793935002f4998dfccc656f40839",
+      "checked": "2026-05-24"
+    },
+    "code-review": {
+      "repo": "https://github.com/awesome-skills/code-review-skill",
+      "local_path": ".claude/skills/review",
+      "remote_path": ".",
+      "exclude": [
+        ".git",
+        "README.md",
+        "CONTRIBUTING.md",
+        "LICENSE",
+        ".gitignore"
+      ],
+      "commit": "eb12fb247ba09fd8a2bce0d1ecafa99df0bf4891",
+      "checked": "2026-05-24"
+    },
+    "wp-plugin-development": {
+      "repo": "https://github.com/jorgerosal/wordpress-skills",
+      "local_path": ".claude/skills/wp-plugin-development",
+      "remote_path": "claude-skills/wp-plugin-development",
+      "commit": "840a9a6fb49ad8d0c0e48ff09323378388b14f89",
+      "checked": "2026-05-24"
+    },
+    "wp-theme-development": {
+      "repo": "https://github.com/jorgerosal/wordpress-skills",
+      "local_path": ".claude/skills/wp-theme-development",
+      "remote_path": "claude-skills/wp-theme-development",
+      "commit": "840a9a6fb49ad8d0c0e48ff09323378388b14f89",
+      "checked": "2026-05-24"
+    },
+    "wp-security-review": {
+      "repo": "https://github.com/jorgerosal/wordpress-skills",
+      "local_path": ".claude/skills/wp-security-review",
+      "remote_path": "claude-skills/wp-security-review",
+      "commit": "840a9a6fb49ad8d0c0e48ff09323378388b14f89",
+      "checked": "2026-05-24"
+    },
+    "wp-woocommerce-dev": {
+      "repo": "https://github.com/jorgerosal/wordpress-skills",
+      "local_path": ".claude/skills/wp-woocommerce-dev",
+      "remote_path": "claude-skills/wp-woocommerce-dev",
+      "commit": "840a9a6fb49ad8d0c0e48ff09323378388b14f89",
+      "checked": "2026-05-24"
+    },
+    "wp-block-development": {
+      "repo": "https://github.com/jorgerosal/wordpress-skills",
+      "local_path": ".claude/skills/wp-block-development",
+      "remote_path": "claude-skills/wp-block-development",
+      "commit": "840a9a6fb49ad8d0c0e48ff09323378388b14f89",
+      "checked": "2026-05-24"
+    },
+    "laravel-rules": {
+      "repo": "https://github.com/fbarrento/laravel-agent-kit",
+      "local_path": ".claude/skills/laravel-rules",
+      "remote_path": "skills/laravel-rules",
+      "commit": "bdee94abe2de0df953c0b9ccdddc20a82b08d23c",
+      "checked": "2026-05-24"
+    },
+    "php-modernization": {
+      "repo": "https://github.com/netresearch/php-modernization-skill",
+      "local_path": ".claude/skills/php-modernization",
+      "remote_path": "skills/php-modernization",
+      "exclude": [
+        "scripts",
+        "templates"
+      ],
+      "commit": "0f747435af8c293dfc06ba88cf0792e98901b59f",
+      "checked": "2026-05-24"
+    },
+    "mastering-typescript": {
+      "repo": "https://github.com/SpillwaveSolutions/mastering-typescript-skill",
+      "local_path": ".claude/skills/typescript",
+      "remote_path": "mastering-typescript",
+      "exclude": [
+        "assets",
+        "scripts"
+      ],
+      "commit": "2f74a00f731f2ea4d48f45d852067a7be8efd0d1",
+      "checked": "2026-05-24"
+    },
+    "nextjs-app-router": {
+      "repo": "https://github.com/mileson/agent-skills",
+      "local_path": ".claude/skills/nextjs",
+      "remote_path": "nextjs-app-router-patterns",
+      "commit": "7897700422f2196591457f2ae39c822ed37dc147",
+      "checked": "2026-05-24"
+    }
+  }
+}

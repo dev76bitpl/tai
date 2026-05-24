@@ -155,6 +155,156 @@ def check_template_sync(config: dict) -> list[str]:
     return diffs
 
 
+def check_template_skills_sync(config: dict) -> str | None:
+    """Zwraca ostrzeżenie jeśli custom skille lub wpisy manifest różnią się od template."""
+    template_path = config.get("ai_template_path", "")
+    if not template_path:
+        return None
+
+    template_root = Path(template_path)
+    if not template_root.exists():
+        return None
+
+    template_manifest_path = template_root / "skills-manifest.json"
+    project_manifest_path = MONOREPO_ROOT / "skills-manifest.json"
+
+    if not template_manifest_path.exists() or not project_manifest_path.exists():
+        return None
+    try:
+        template_manifest = json.loads(template_manifest_path.read_text(encoding="utf-8"))
+        project_manifest = json.loads(project_manifest_path.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+
+    project_skills_dir = MONOREPO_ROOT / ".claude" / "skills"
+    template_skills_dir = template_root / ".claude" / "skills"
+
+    missing_custom: list[str] = []
+    outdated_custom: list[str] = []
+    for name in template_manifest.get("custom_skills", {}):
+        project_file = project_skills_dir / name / "SKILL.md"
+        template_file = template_skills_dir / name / "SKILL.md"
+        if not project_file.exists():
+            missing_custom.append(name)
+        elif template_file.exists() and project_file.read_text("utf-8") != template_file.read_text("utf-8"):
+            outdated_custom.append(name)
+
+    template_vendored = set(template_manifest.get("skills", {}).keys())
+    project_vendored = set(project_manifest.get("skills", {}).keys())
+    missing_vendored = sorted(template_vendored - project_vendored)
+
+    if not missing_custom and not outdated_custom and not missing_vendored:
+        return None
+
+    import subprocess
+
+    sync_script = MONOREPO_ROOT / "scripts" / "update-skills.py"
+    if not sync_script.exists():
+        return f"⚠️  [t-ai] Są zmiany w template, ale brak scripts/update-skills.py — zsynchronizuj ręcznie."
+
+    result = subprocess.run(
+        [sys.executable, str(sync_script), "--sync", "--apply"],
+        capture_output=True, text=True, encoding="utf-8",
+    )
+
+    if result.returncode == 0:
+        details = []
+        if missing_custom or outdated_custom:
+            details.append(f"custom skille: {', '.join(missing_custom + outdated_custom)}")
+        if missing_vendored:
+            details.append(f"vendored: {', '.join(missing_vendored)}")
+        detail_str = " | ".join(details)
+        return f"📦 [t-ai] Pobrano zmiany z template → {detail_str}"
+    else:
+        err = result.stderr.strip()[:200]
+        return f"⚠️  [t-ai] Auto-sync nie powiódł się: {err}\n  Uruchom: python3 scripts/update-skills.py --sync --apply"
+
+
+def check_skills_staleness() -> str | None:
+    """Zwraca ostrzeżenie jeśli skills w manifest nie były sprawdzane/przeglądane od X dni."""
+    manifest_path = MONOREPO_ROOT / "skills-manifest.json"
+    if not manifest_path.exists():
+        return None
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+
+    stale_after = manifest.get("stale_after_days", 30)
+    vendored = manifest.get("skills", {})
+    custom = manifest.get("custom_skills", {})
+
+    if not vendored and not custom:
+        return None
+
+    from datetime import date
+    today = date.today()
+
+    # Check vendored skills (checked = last update check date)
+    oldest_vendored = None
+    never_checked_vendored = []
+    for name, skill in vendored.items():
+        checked = skill.get("checked", "never")
+        if checked == "never":
+            never_checked_vendored.append(name)
+        else:
+            try:
+                d = datetime.strptime(checked, "%Y-%m-%d").date()
+                if oldest_vendored is None or d < oldest_vendored:
+                    oldest_vendored = d
+            except ValueError:
+                never_checked_vendored.append(name)
+
+    # Check custom skills (reviewed = last manual review date)
+    oldest_custom = None
+    never_reviewed_custom = []
+    for name, skill in custom.items():
+        reviewed = skill.get("reviewed", "never")
+        if reviewed == "never":
+            never_reviewed_custom.append(name)
+        else:
+            try:
+                d = datetime.strptime(reviewed, "%Y-%m-%d").date()
+                if oldest_custom is None or d < oldest_custom:
+                    oldest_custom = d
+            except ValueError:
+                never_reviewed_custom.append(name)
+
+    warnings = []
+
+    if never_checked_vendored:
+        warnings.append(
+            f"⚠️  [SKILLS] {len(never_checked_vendored)} vendored skill(ów) nigdy nie sprawdzanych: "
+            f"{', '.join(never_checked_vendored)}.\n"
+            f"  Uruchom: python3 scripts/update-skills.py"
+        )
+    elif oldest_vendored:
+        days_ago = (today - oldest_vendored).days
+        if days_ago >= stale_after:
+            warnings.append(
+                f"⚠️  [SKILLS] Vendored skille nie były sprawdzane od {days_ago} dni "
+                f"(próg: {stale_after} dni).\n"
+                f"  Uruchom: python3 scripts/update-skills.py"
+            )
+
+    if never_reviewed_custom:
+        warnings.append(
+            f"⚠️  [SKILLS] {len(never_reviewed_custom)} custom skill(ów) bez daty przeglądu: "
+            f"{', '.join(never_reviewed_custom)}.\n"
+            f"  Zaktualizuj 'reviewed' w skills-manifest.json po przeglądzie."
+        )
+    elif oldest_custom:
+        days_ago = (today - oldest_custom).days
+        if days_ago >= stale_after:
+            warnings.append(
+                f"⚠️  [SKILLS] Custom skille nie były przeglądane od {days_ago} dni "
+                f"(próg: {stale_after} dni).\n"
+                f"  Zaktualizuj 'reviewed' w skills-manifest.json po przeglądzie."
+            )
+
+    return "\n".join(warnings) if warnings else None
+
+
 def main():
     session_id = get_session_id()
     if not session_id:
@@ -169,8 +319,10 @@ def main():
     config = load_config()
     tasks = read_tasks(config)
     sync_diffs = check_template_sync(config)
+    skills_sync_warning = check_template_skills_sync(config)
+    skills_warning = check_skills_staleness()
 
-    if not tasks and not sync_diffs:
+    if not tasks and not sync_diffs and not skills_sync_warning and not skills_warning:
         sys.exit(0)
 
     output = "[SESSION START]\n\n"
@@ -180,6 +332,12 @@ def main():
         output += "\n".join(sync_diffs)
         output += f"\n  Template: {config.get('ai_template_path', '')}\n"
         output += "  Zsynchronizuj zmiany z template przed commitowaniem.\n\n---\n\n"
+
+    if skills_sync_warning:
+        output += skills_sync_warning + "\n\n---\n\n"
+
+    if skills_warning:
+        output += skills_warning + "\n\n---\n\n"
 
     if tasks:
         sections = [f"## {name} — docs/TASKS.md\n\n{content}" for name, content in tasks]
