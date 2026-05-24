@@ -25,6 +25,31 @@ Invoke a skill with `/skill-name` in the conversation.
 | `deploy` | Pre-deployment checklist: code, env, database, infra, rollback, post-deploy |
 | `retro` | Sprint/project retrospective — 5 questions → structured retro + action items to `docs/TASKS.md` |
 
+## Plugins (install separately, per developer)
+
+Plugins bundle an MCP server + skills in one install. They are **not** vendored into the repo —
+each developer installs them once on their machine. The AI will suggest the relevant plugin
+when it detects you're working in that context.
+
+| Plugin | Install | When to use |
+|--------|---------|-------------|
+| **Figma** | `claude plugin install figma@claude-plugins-official` | Working with Figma files — reading components/tokens, generating code from frames, pushing designs back to Figma, Code Connect, FigJam diagrams |
+
+### Figma plugin — what you get
+
+After `claude plugin install figma@claude-plugins-official` and authenticating:
+
+- **MCP tools** — Claude can read/write your Figma files (`use_figma`, `create_new_file`, `generate_diagram`)
+- **8 built-in skills** — loaded automatically when needed:
+  - `/figma-use` — prerequisite for any write action in Figma
+  - `/figma-generate-design` — app page / view → Figma frames using your design system tokens
+  - `/figma-generate-library` — build a full design system in Figma from codebase
+  - `/figma-code-connect` — map Figma components ↔ code (`.figma.ts` / `.figma.js`)
+  - `/figma-generate-diagram` — flowcharts, ERD, architecture diagrams in FigJam
+  - `/figma-create-new-file`, `/figma-use-figjam`, `/figma-use-slides`
+
+Source: [figma/mcp-server-guide](https://github.com/figma/mcp-server-guide) · [Figma docs](https://help.figma.com/hc/en-us/articles/39888612464151)
+
 ## Management
 
 ```bash
