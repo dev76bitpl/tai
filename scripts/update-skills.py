@@ -97,12 +97,29 @@ def collect_files(path: Path, exclude: list[str] | None = None) -> dict[str, str
     return files
 
 
+def strip_md_code_blocks(content: str) -> str:
+    """Removes fenced (```) and inline (`) code from markdown before security scanning.
+
+    Patterns inside code blocks are examples, not executable content — scanning them
+    produces false positives (e.g. <script> in an XSS guide).
+    """
+    # fenced blocks: ```...``` (multiline, non-greedy)
+    content = re.sub(r"```.*?```", "", content, flags=re.DOTALL)
+    # inline code: `...` (single line)
+    content = re.sub(r"`[^`\n]+`", "", content)
+    return content
+
+
 def scan_file(filename: str, content: str) -> list[str]:
     """Skanuje plik w poszukiwaniu podejrzanych wzorców. Zwraca listę ostrzeżeń."""
     warnings = []
     suffix = Path(filename).suffix.lower()
 
-    patterns = SUSPICIOUS_MD_PATTERNS if suffix == ".md" else SUSPICIOUS_SCRIPT_PATTERNS
+    if suffix == ".md":
+        patterns = SUSPICIOUS_MD_PATTERNS
+        content = strip_md_code_blocks(content)
+    else:
+        patterns = SUSPICIOUS_SCRIPT_PATTERNS
 
     for pattern, description in patterns:
         matches = re.findall(pattern, content, re.IGNORECASE)

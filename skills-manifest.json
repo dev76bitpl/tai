@@ -5,13 +5,27 @@
     "update-skills.py": "3ae6c680bdcbc102dcdb5798a1a9b7f73ea10b510e461d8144e41a03a5ebe5f7"
   },
   "custom_skills": {
-    "git": { "reviewed": "2026-05-24" },
-    "new-project-scope": { "reviewed": "2026-05-24" },
-    "adr": { "reviewed": "2026-05-24" },
-    "api": { "reviewed": "2026-05-24" },
-    "debug": { "reviewed": "2026-05-24" },
-    "deploy": { "reviewed": "2026-05-24" },
-    "retro": { "reviewed": "2026-05-24" }
+    "git": {
+      "reviewed": "2026-05-24"
+    },
+    "new-project-scope": {
+      "reviewed": "2026-05-24"
+    },
+    "adr": {
+      "reviewed": "2026-05-24"
+    },
+    "api": {
+      "reviewed": "2026-05-24"
+    },
+    "debug": {
+      "reviewed": "2026-05-24"
+    },
+    "deploy": {
+      "reviewed": "2026-05-24"
+    },
+    "retro": {
+      "reviewed": "2026-05-24"
+    }
   },
   "skills": {
     "ui-ux-pro-max": {
@@ -55,6 +69,41 @@
       ],
       "commit": "unknown",
       "checked": "never"
+    },
+    "wp-plugin-development": {
+      "repo": "https://github.com/jorgerosal/wordpress-skills",
+      "local_path": ".claude/skills/wp-plugin-development",
+      "remote_path": "claude-skills/wp-plugin-development",
+      "commit": "840a9a6fb49ad8d0c0e48ff09323378388b14f89",
+      "checked": "2026-05-24"
+    },
+    "wp-theme-development": {
+      "repo": "https://github.com/jorgerosal/wordpress-skills",
+      "local_path": ".claude/skills/wp-theme-development",
+      "remote_path": "claude-skills/wp-theme-development",
+      "commit": "840a9a6fb49ad8d0c0e48ff09323378388b14f89",
+      "checked": "2026-05-24"
+    },
+    "wp-security-review": {
+      "repo": "https://github.com/jorgerosal/wordpress-skills",
+      "local_path": ".claude/skills/wp-security-review",
+      "remote_path": "claude-skills/wp-security-review",
+      "commit": "840a9a6fb49ad8d0c0e48ff09323378388b14f89",
+      "checked": "2026-05-24"
+    },
+    "wp-woocommerce-dev": {
+      "repo": "https://github.com/jorgerosal/wordpress-skills",
+      "local_path": ".claude/skills/wp-woocommerce-dev",
+      "remote_path": "claude-skills/wp-woocommerce-dev",
+      "commit": "840a9a6fb49ad8d0c0e48ff09323378388b14f89",
+      "checked": "2026-05-24"
+    },
+    "wp-block-development": {
+      "repo": "https://github.com/jorgerosal/wordpress-skills",
+      "local_path": ".claude/skills/wp-block-development",
+      "remote_path": "claude-skills/wp-block-development",
+      "commit": "840a9a6fb49ad8d0c0e48ff09323378388b14f89",
+      "checked": "2026-05-24"
     }
   }
 }
