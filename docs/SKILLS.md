@@ -26,6 +26,7 @@ krótkie słowo które wpisujesz świadomie. Nie używaj składni `/command` (to
 | `wp security` | wp-security-review | Sanitization, escaping, nonces, CSRF |
 | `woocommerce` | wp-woocommerce-dev | Rozszerzenia WC, szablony, REST API |
 | `gutenberg` | wp-block-development | Gutenberg blocks, Interactivity API |
+| `prestashop` | prestashop | Moduły PS, hooki, override'y, multistore, PS 1.7/8.x |
 
 ## Skille zewnętrzne (vendored)
 
@@ -53,6 +54,7 @@ krótkie słowo które wpisujesz świadomie. Nie używaj składni `/command` (to
 | `debug` | `debug` | Protokół debugowania: odtwórz → wyizoluj → hipoteza → zweryfikuj → napraw |
 | `deploy` | `deploy` | Checklist przed wdrożeniem: kod, env, baza, infrastruktura, rollback, post-deploy |
 | `retro` | `retro` | Retrospektywa sprintu/projektu — 5 pytań → podsumowanie + action items do `TASKS.md` |
+| `prestashop` | `prestashop` | Moduły PS, hooki, override'y, Webservice API, multistore, Smarty, PS 1.7/8.x |
 
 ## Pluginy (instalowane per developer, poza repo)
 

@@ -25,7 +25,7 @@ Skrypt kopiuje skille, hooki i scaffoldy, a także **automatycznie konfiguruje C
 
 ## Co dostajesz
 
-**17 skillów** — Claude ładuje je automatycznie gdy wykryje pasujący kontekst:
+**18 skillów** — Claude ładuje je automatycznie gdy wykryje pasujący kontekst:
 
 | Skill | Jak wywołać |
 |-------|-------------|
@@ -46,6 +46,7 @@ Skrypt kopiuje skille, hooki i scaffoldy, a także **automatycznie konfiguruje C
 | `wp security` | Sanitization, escaping, nonces, vulnerability patterns |
 | `woocommerce` | Rozszerzenia WC, szablony, REST API, wydajność |
 | `gutenberg` | Gutenberg blocks, block.json, Interactivity API |
+| `prestashop` | Moduły PS, hooki, override'y, Webservice API, PS 1.7/8.x |
 
 **Guard system** — pre-commit blokuje złe commity: format, brak testów, brak ADR, brak `[user-tested]`.
 
