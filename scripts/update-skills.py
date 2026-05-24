@@ -36,9 +36,16 @@ SUSPICIOUS_SCRIPT_PATTERNS = [
     (r"requests\.(get|post)\s*\(\s*['\"]https?://(?!api\.github\.com)", "request HTTP do nieznanego URL"),
 ]
 
-# Wzorce podejrzane w plikach Markdown (.md)
-SUSPICIOUS_MD_PATTERNS = [
+# Wzorce HTML/kodu w plikach Markdown — skanowane PO usunięciu bloków kodu.
+# <script> w przykładzie kodu to false positive; poza kodem to realne zagrożenie.
+SUSPICIOUS_MD_CODE_PATTERNS = [
     (r"<script", "osadzony tag <script>"),
+]
+
+# Wzorce prompt injection w plikach Markdown — skanowane BEZ usuwania bloków kodu.
+# Claude czyta całą zawartość pliku, łącznie z blokami kodu — ukrycie injection
+# w bloku ``` nie czyni go nieszkodliwym.
+SUSPICIOUS_MD_INJECTION_PATTERNS = [
     (r"ignore\s+(previous|above|all)\s+instructions", "próba prompt injection"),
     (r"disregard\s+(previous|above|all)", "próba prompt injection"),
     (r"you\s+are\s+now\s+a", "próba zmiany roli AI"),
@@ -116,15 +123,19 @@ def scan_file(filename: str, content: str) -> list[str]:
     suffix = Path(filename).suffix.lower()
 
     if suffix == ".md":
-        patterns = SUSPICIOUS_MD_PATTERNS
-        content = strip_md_code_blocks(content)
+        # HTML/code patterns: scan stripped content — <script> in a code example is a false positive
+        stripped = strip_md_code_blocks(content)
+        for pattern, description in SUSPICIOUS_MD_CODE_PATTERNS:
+            if re.search(pattern, stripped, re.IGNORECASE):
+                warnings.append(f"    ⚠️  {filename}: {description}")
+        # Injection patterns: scan raw content — Claude reads code blocks too
+        for pattern, description in SUSPICIOUS_MD_INJECTION_PATTERNS:
+            if re.search(pattern, content, re.IGNORECASE):
+                warnings.append(f"    ⚠️  {filename}: {description}")
     else:
-        patterns = SUSPICIOUS_SCRIPT_PATTERNS
-
-    for pattern, description in patterns:
-        matches = re.findall(pattern, content, re.IGNORECASE)
-        if matches:
-            warnings.append(f"    ⚠️  {filename}: {description}")
+        for pattern, description in SUSPICIOUS_SCRIPT_PATTERNS:
+            if re.search(pattern, content, re.IGNORECASE):
+                warnings.append(f"    ⚠️  {filename}: {description}")
 
     return warnings
 
