@@ -25,7 +25,7 @@ Skrypt kopiuje skille, hooki i scaffoldy, a także **automatycznie konfiguruje C
 
 ## Co dostajesz
 
-**12 skillów** — Claude ładuje je automatycznie gdy wykryje pasujący kontekst:
+**17 skillów** — Claude ładuje je automatycznie gdy wykryje pasujący kontekst:
 
 | Skill | Jak wywołać |
 |-------|-------------|
@@ -41,6 +41,11 @@ Skrypt kopiuje skille, hooki i scaffoldy, a także **automatycznie konfiguruje C
 | `perf` | Core Web Vitals, Lighthouse |
 | `review` | Code review PR |
 | `ui design` | Design intelligence — style, kolory, typografia |
+| `wp plugin` | Architektura pluginu WP, hooks, CPT, WordPress.org |
+| `wp theme` | Motyw WP, template hierarchy, FSE, theme.json |
+| `wp security` | Sanitization, escaping, nonces, vulnerability patterns |
+| `woocommerce` | Rozszerzenia WC, szablony, REST API, wydajność |
+| `gutenberg` | Gutenberg blocks, block.json, Interactivity API |
 
 **Guard system** — pre-commit blokuje złe commity: format, brak testów, brak ADR, brak `[user-tested]`.
 
