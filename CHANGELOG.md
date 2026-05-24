@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.7](https://github.com/dev76bitpl/ai/compare/v0.1.6...v0.1.7) (2026-05-24)
+
+
+### Features
+
+* Skills expansion, new-project --init, --sync, auto-sync hook ([#24](https://github.com/dev76bitpl/ai/issues/24)) ([0a77433](https://github.com/dev76bitpl/ai/commit/0a77433b0600989fed08f7a8202d255d607fe35f))
+
 ## [0.1.6](https://github.com/dev76bitpl/ai/compare/v0.1.5...v0.1.6) (2026-05-24)
 
 
