@@ -53,7 +53,7 @@ SCAFFOLD_DOCS: dict[str, str] = {
 
 ## Backlog
 
-- [ ] Zdefiniuj scope projektu — uruchom `/new-project-scope`
+- [ ] Zdefiniuj scope projektu — napisz Claude'owi "zdefiniuj scope" albo "zacznij nowy projekt"
 
 ## In Progress
 

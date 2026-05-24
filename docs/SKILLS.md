@@ -1,7 +1,9 @@
 # Skills Catalog
 
 All Claude Code skills available in this template.
-Invoke a skill with `/skill-name` in the conversation.
+
+Skills are triggered automatically — Claude detects the context from keywords in your message.
+You do **not** invoke them with `/command` syntax (that's for built-in Claude Code commands only).
 
 ## Vendored (external sources)
 

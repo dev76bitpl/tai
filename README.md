@@ -16,7 +16,7 @@ python3 ~/ai-template/scripts/new-project.py ~/Projekty/moj-projekt
 # 3. Wejdź i zdefiniuj co budujesz
 cd ~/Projekty/moj-projekt
 git init && git remote add origin <url>
-claude   # → /new-project-scope
+claude   # napisz: "zacznij nowy projekt" albo "zdefiniuj scope"
 ```
 
 Skrypt kopiuje skille, hooki i scaffoldy, a także **automatycznie konfiguruje Claude Code hooks** (interpreter + ścieżka do template).
@@ -25,22 +25,22 @@ Skrypt kopiuje skille, hooki i scaffoldy, a także **automatycznie konfiguruje C
 
 ## Co dostajesz
 
-**12 skillów** — wywołaj `/nazwa` w Claude Code:
+**12 skillów** — Claude ładuje je automatycznie gdy wykryje pasujący kontekst:
 
-| Skill | Do czego |
-|-------|---------|
-| `/new-project-scope` | Wywiad → `PROJECT_SCOPE.md` + `ADR-001` |
-| `/git` | Branch strategy, commit format, PR protocol |
-| `/debug` | Systematyczny protokół debugowania |
-| `/deploy` | Checklist przed wdrożeniem |
-| `/retro` | Retrospektywa → action items |
-| `/adr` | Architecture Decision Record |
-| `/api` | REST API design review |
-| `/security` | OWASP Top 10:2025, ASVS 5.0 |
-| `/a11y` | Audit dostępności WCAG 2.2 AA |
-| `/perf` | Core Web Vitals, Lighthouse |
-| `/review` | Code review 15+ języków |
-| `/ui-ux-pro-max` | Design intelligence, 161 palet, 57 font pairings |
+| Skill | Jak wywołać |
+|-------|-------------|
+| `new-project-scope` | "zacznij nowy projekt" / "zdefiniuj scope" |
+| `git` | "zacznij feature" / "zrób commit" / "otwórz PR" |
+| `debug` | "nie działa" / "szukam buga" / "debug" |
+| `deploy` | "deploy" / "wdrożenie" / "idę na produkcję" |
+| `retro` | "retrospektywa" / "co poszło dobrze" |
+| `adr` | "napisz ADR" / "decyzja architektoniczna" |
+| `api` | "zaprojektuj API" / "nowy endpoint" |
+| `security` | "security review" / "sprawdź bezpieczeństwo" |
+| `a11y` | "dostępność" / "WCAG" / "screen reader" |
+| `perf` | "wolna strona" / "Lighthouse" / "Core Web Vitals" |
+| `review` | "zrób review" / "sprawdź kod" / "review PR" |
+| `ui-ux-pro-max` | "zaprojektuj UI" / "dobierz kolory" / "design system" |
 
 **Guard system** — pre-commit blokuje złe commity: format, brak testów, brak ADR, brak `[user-tested]`.
 
