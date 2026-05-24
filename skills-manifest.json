@@ -1,0 +1,60 @@
+{
+  "_readme": "Tracks vendored external skills. Run: python3 scripts/update-skills.py",
+  "stale_after_days": 30,
+  "script_integrity": {
+    "update-skills.py": "3ae6c680bdcbc102dcdb5798a1a9b7f73ea10b510e461d8144e41a03a5ebe5f7"
+  },
+  "custom_skills": {
+    "git": { "reviewed": "2026-05-24" },
+    "new-project-scope": { "reviewed": "2026-05-24" },
+    "adr": { "reviewed": "2026-05-24" },
+    "api": { "reviewed": "2026-05-24" },
+    "debug": { "reviewed": "2026-05-24" },
+    "deploy": { "reviewed": "2026-05-24" },
+    "retro": { "reviewed": "2026-05-24" }
+  },
+  "skills": {
+    "ui-ux-pro-max": {
+      "repo": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill",
+      "local_path": "src/ui-ux-pro-max",
+      "remote_path": "src/ui-ux-pro-max",
+      "commit": "unknown",
+      "checked": "never"
+    },
+    "security": {
+      "repo": "https://github.com/agamm/claude-code-owasp",
+      "local_path": ".claude/skills/security",
+      "remote_path": ".claude/skills/owasp-security",
+      "commit": "d0dc44da5d884409ee478258b7c666c84d9dab9e",
+      "checked": "2026-05-24"
+    },
+    "a11y": {
+      "repo": "https://github.com/fecarrico/A11Y.md",
+      "local_path": "src/a11y",
+      "remote_path": "docs/en",
+      "commit": "unknown",
+      "checked": "never"
+    },
+    "web-quality-skills": {
+      "repo": "https://github.com/addyosmani/web-quality-skills",
+      "local_path": "src/web-quality-skills",
+      "remote_path": "skills",
+      "commit": "unknown",
+      "checked": "never"
+    },
+    "code-review": {
+      "repo": "https://github.com/awesome-skills/code-review-skill",
+      "local_path": "src/code-review",
+      "remote_path": ".",
+      "exclude": [
+        ".git",
+        "README.md",
+        "CONTRIBUTING.md",
+        "LICENSE",
+        ".gitignore"
+      ],
+      "commit": "unknown",
+      "checked": "never"
+    }
+  }
+}
