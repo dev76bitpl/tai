@@ -151,7 +151,7 @@ Docs: [developers.shoper.pl/developers/api](https://developers.shoper.pl/develop
 ```bash
 # 1. Pobierz token (Basic Auth)
 curl -X POST "https://twojsklep.pl/webapi/rest/auth" \
-  -u "login:haslo" \
+  -u "${SHOPER_LOGIN}:${SHOPER_PASSWORD}" \
   -H "Content-Type: application/json"
 # → {"access_token": "TOKEN", "token_type": "Bearer", "expires_in": 3600}
 
