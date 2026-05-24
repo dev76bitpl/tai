@@ -21,6 +21,11 @@ krótkie słowo które wpisujesz świadomie. Nie używaj składni `/command` (to
 | `perf` | perf | Core Web Vitals, Lighthouse |
 | `review` | review | Code review PR |
 | `ui design` | ui-ux-pro-max | Design intelligence |
+| `wp plugin` | wp-plugin-development | Architektura pluginu WP, hooks, CPT |
+| `wp theme` | wp-theme-development | Motyw WP, template hierarchy, FSE |
+| `wp security` | wp-security-review | Sanitization, escaping, nonces, CSRF |
+| `woocommerce` | wp-woocommerce-dev | Rozszerzenia WC, szablony, REST API |
+| `gutenberg` | wp-block-development | Gutenberg blocks, Interactivity API |
 
 ## Skille zewnętrzne (vendored)
 
@@ -31,6 +36,11 @@ krótkie słowo które wpisujesz świadomie. Nie używaj składni `/command` (to
 | `a11y` | [fecarrico/A11Y.md](https://github.com/fecarrico/A11Y.md) | Audit dostępności (WCAG 2.2 AA): nawigacja klawiaturą, screen reader, kontrast, ARIA |
 | `perf` | [addyosmani/web-quality-skills](https://github.com/addyosmani/web-quality-skills) | Wydajność web: Core Web Vitals (LCP/INP/CLS), budżety, optymalizacja Lighthouse |
 | `review` | [awesome-skills/code-review-skill](https://github.com/awesome-skills/code-review-skill) | Code review dla 15+ języków: React, Vue, Go, Python, Rust, TypeScript i innych |
+| `wp-plugin-development` | [jorgerosal/wordpress-skills](https://github.com/jorgerosal/wordpress-skills) | Architektura pluginów WP: hooks, CPT, Settings API, i18n, WordPress.org compliance |
+| `wp-theme-development` | [jorgerosal/wordpress-skills](https://github.com/jorgerosal/wordpress-skills) | Motywy WP: template hierarchy, FSE, theme.json, classic-to-block migration |
+| `wp-security-review` | [jorgerosal/wordpress-skills](https://github.com/jorgerosal/wordpress-skills) | Bezpieczeństwo WP: sanitization, escaping, nonces, capabilities, vulnerability patterns |
+| `wp-woocommerce-dev` | [jorgerosal/wordpress-skills](https://github.com/jorgerosal/wordpress-skills) | WooCommerce: rozszerzenia, szablony, REST API, optymalizacja wydajności |
+| `wp-block-development` | [jorgerosal/wordpress-skills](https://github.com/jorgerosal/wordpress-skills) | Gutenberg: block.json, dynamic blocks, Interactivity API, wzorce edytora |
 
 ## Skille własne
 
