@@ -262,12 +262,144 @@ def check_skill(
         return True, True
 
 
+def find_template_root() -> Path | None:
+    """Reads ai_template_path from .claude/hooks/config.json."""
+    config_path = ROOT / ".claude" / "hooks" / "config.json"
+    if not config_path.exists():
+        return None
+    try:
+        config = json.loads(config_path.read_text(encoding="utf-8"))
+        path = config.get("ai_template_path")
+        return Path(path) if path else None
+    except Exception:
+        return None
+
+
+def sync_from_template(template_root: Path, apply: bool) -> None:
+    """
+    Synchronize custom skills and manifest from the AI template.
+
+    Copies custom skills missing or outdated in the project.
+    Updates skills-manifest.json with any new vendored skill entries.
+    Optionally copies the latest update-skills.py script itself.
+    """
+    template_manifest_path = template_root / "skills-manifest.json"
+    if not template_manifest_path.exists():
+        print(f"❌ Brak skills-manifest.json w template: {template_root}")
+        sys.exit(1)
+
+    template_manifest = json.loads(template_manifest_path.read_text(encoding="utf-8"))
+    project_manifest = load_manifest()
+
+    template_custom = template_manifest.get("custom_skills", {})
+    project_custom = project_manifest.get("custom_skills", {})
+    template_vendored = template_manifest.get("skills", {})
+    project_vendored = project_manifest.get("skills", {})
+
+    mode = "APPLY" if apply else "DRY-RUN"
+    print(f"🔄  update-skills.py --sync — tryb: {mode}")
+    print(f"    Template: {template_root}")
+    print(f"    Projekt:  {ROOT}\n")
+
+    synced = 0
+    skipped = 0
+
+    # ── Custom skills ─────────────────────────────────────────────────────────
+    print("── Custom skills ───────────────────────────────────────")
+    for skill_name in template_custom:
+        src = template_root / ".claude" / "skills" / skill_name
+        dst = ROOT / ".claude" / "skills" / skill_name
+        if not src.exists():
+            continue
+
+        src_files = collect_files(src)
+        dst_files = collect_files(dst) if dst.exists() else {}
+
+        if src_files == dst_files:
+            print(f"  ✅ {skill_name:<25} aktualny")
+            continue
+
+        if not dst_files:
+            print(f"  + {skill_name:<25} NOWY")
+        else:
+            changed = sum(1 for k, v in src_files.items() if dst_files.get(k) != v)
+            added = sum(1 for k in src_files if k not in dst_files)
+            print(f"  ~ {skill_name:<25} zmieniony ({changed} plików, +{added} nowych)")
+
+        synced += 1
+        if apply:
+            if dst.exists():
+                shutil.rmtree(dst)
+            shutil.copytree(src, dst)
+            project_custom[skill_name] = template_custom[skill_name]
+
+    # ── Vendored skill entries (manifest only, no GitHub fetch) ───────────────
+    print("\n── Vendored skills (manifest) ──────────────────────────")
+    new_vendored = 0
+    for skill_name, skill_data in template_vendored.items():
+        if skill_name not in project_vendored:
+            print(f"  + {skill_name:<25} NOWY wpis w manifeście")
+            new_vendored += 1
+            if apply:
+                entry = dict(skill_data)
+                entry["commit"] = "unknown"
+                entry["checked"] = "never"
+                project_vendored[skill_name] = entry
+        else:
+            print(f"  ✅ {skill_name:<25} w manifeście")
+
+    # ── update-skills.py script itself ───────────────────────────────────────
+    print("\n── Scripts ─────────────────────────────────────────────")
+    template_script = template_root / "scripts" / "update-skills.py"
+    project_script = ROOT / "scripts" / "update-skills.py"
+    if template_script.exists() and project_script.exists():
+        if template_script.read_text(encoding="utf-8") != project_script.read_text(encoding="utf-8"):
+            print(f"  ~ update-skills.py        zmieniony")
+            synced += 1
+            if apply:
+                shutil.copy2(template_script, project_script)
+        else:
+            print(f"  ✅ update-skills.py        aktualny")
+
+    # ── Save manifest ─────────────────────────────────────────────────────────
+    if apply:
+        project_manifest["custom_skills"] = project_custom
+        project_manifest["skills"] = project_vendored
+        save_manifest(project_manifest)
+
+    print(f"\n{'═' * 50}")
+    print(f"📊 Podsumowanie:")
+    print(f"   Custom skills do synchronizacji: {synced}")
+    print(f"   Nowe wpisy vendored w manifeście: {new_vendored}")
+    if not apply and (synced > 0 or new_vendored > 0):
+        print(f"\n   Uruchom z --apply żeby zastosować.")
+        if new_vendored > 0:
+            print(f"   Potem: python3 scripts/update-skills.py --apply  (pobierze vendored skille z GitHub)")
+    elif apply:
+        print(f"\n   Manifest zaktualizowany.")
+        if new_vendored > 0:
+            print(f"   Uruchom teraz: python3 scripts/update-skills.py --apply  (pobierze nowe vendored skille)")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Aktualizacja zewnętrznych skillów")
     parser.add_argument("--apply", action="store_true", help="Zastosuj aktualizacje (domyślnie dry-run)")
     parser.add_argument("--skill", help="Zaktualizuj tylko wskazany skill")
     parser.add_argument("--scan-only", action="store_true", help="Tylko skan bezpieczeństwa, bez diff")
+    parser.add_argument("--sync", action="store_true", help="Synchronizuj custom skille z ai_template_path")
     args = parser.parse_args()
+
+    if args.sync:
+        template_root = find_template_root()
+        if not template_root:
+            print("❌ Brak ai_template_path w .claude/hooks/config.json")
+            print("   Ustaw ścieżkę do lokalnego repozytorium AI template.")
+            sys.exit(1)
+        if not template_root.exists():
+            print(f"❌ Template nie istnieje: {template_root}")
+            sys.exit(1)
+        sync_from_template(template_root, apply=args.apply)
+        return
 
     manifest = load_manifest()
     skills = manifest.get("skills", {})
