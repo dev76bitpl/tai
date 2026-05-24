@@ -107,15 +107,16 @@ Jeśli projekt był założony przed wprowadzeniem t-ai:
 
 ```bash
 # 1. Skopiuj skrypt
-cp /sciezka/do/ai/scripts/update-skills.py scripts/update-skills.py
+cp /sciezka/do/tai/scripts/update-skills.py scripts/update-skills.py
 
 # 2. Ustaw ai_template_path w .claude/hooks/config.json
-#    Lokalnie:  "/home/user/Projekty/ai"
-#    Zdalnie:   "git@github.com:org/ai.git"
+"ai_template_path": "git@github.com:dev76bitpl/tai.git"
 
 # 3. Pobierz wszystko
 python3 scripts/update-skills.py --full-sync
 ```
+
+Po zmianie nazwy lub URL repozytorium t-ai — zaktualizuj `ai_template_path` w `.claude/hooks/config.json` każdego projektu.
 
 ---
 
