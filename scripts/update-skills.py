@@ -262,15 +262,36 @@ def check_skill(
         return True, True
 
 
-def find_template_root() -> Path | None:
-    """Reads ai_template_path from .claude/hooks/config.json."""
+def is_git_url(value: str) -> bool:
+    return value.startswith(("git@", "https://", "http://"))
+
+
+def clone_template(url: str) -> Path:
+    """Shallow-clone template repo to a temp dir. Caller must remove it."""
+    tmp = Path(tempfile.mkdtemp(prefix="ai-template-"))
+    print(f"  📥 Klonuję template z {url}...")
+    result = subprocess.run(
+        ["git", "clone", "--depth=1", "--quiet", url, str(tmp)],
+        capture_output=True, text=True,
+    )
+    if result.returncode != 0:
+        shutil.rmtree(tmp, ignore_errors=True)
+        print(f"❌ Nie można pobrać template: {result.stderr.strip()}")
+        sys.exit(1)
+    return tmp
+
+
+def find_template_ref() -> "Path | str | None":
+    """Returns local Path or git URL from .claude/hooks/config.json."""
     config_path = ROOT / ".claude" / "hooks" / "config.json"
     if not config_path.exists():
         return None
     try:
         config = json.loads(config_path.read_text(encoding="utf-8"))
-        path = config.get("ai_template_path")
-        return Path(path) if path else None
+        value = config.get("ai_template_path", "")
+        if not value:
+            return None
+        return value if is_git_url(value) else Path(value)
     except Exception:
         return None
 
@@ -411,15 +432,28 @@ def main() -> None:
         args.apply = True
 
     if args.sync:
-        template_root = find_template_root()
-        if not template_root:
+        template_ref = find_template_ref()
+        if not template_ref:
             print("❌ Brak ai_template_path w .claude/hooks/config.json")
-            print("   Ustaw ścieżkę do lokalnego repozytorium AI template.")
+            print("   Ustaw ścieżkę lokalną lub git URL repozytorium AI template.")
             sys.exit(1)
-        if not template_root.exists():
-            print(f"❌ Template nie istnieje: {template_root}")
-            sys.exit(1)
-        sync_from_template(template_root, apply=args.apply)
+
+        tmp_clone: Path | None = None
+        if isinstance(template_ref, str):
+            tmp_clone = clone_template(template_ref)
+            template_root = tmp_clone
+        else:
+            template_root = template_ref
+            if not template_root.exists():
+                print(f"❌ Template nie istnieje: {template_root}")
+                sys.exit(1)
+
+        try:
+            sync_from_template(template_root, apply=args.apply)
+        finally:
+            if tmp_clone:
+                shutil.rmtree(tmp_clone, ignore_errors=True)
+
         if not args.full_sync:
             return
         print(f"\n{'═' * 50}")

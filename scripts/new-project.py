@@ -20,6 +20,7 @@ Usage:
 import argparse
 import json
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -162,8 +163,21 @@ def mkdir(path: Path, dest: Path, dry_run: bool) -> None:
     (path / ".gitkeep").touch()
 
 
+def _git_remote_url(repo_root: Path) -> str | None:
+    """Returns git remote origin URL, or None if unavailable."""
+    result = subprocess.run(
+        ["git", "-C", str(repo_root), "remote", "get-url", "origin"],
+        capture_output=True, text=True,
+    )
+    url = result.stdout.strip()
+    return url if result.returncode == 0 and url else None
+
+
 def create_config_json(dest: Path, template_root: Path, dry_run: bool) -> None:
-    """Creates .claude/hooks/config.json with ai_template_path pre-filled."""
+    """Creates .claude/hooks/config.json with ai_template_path pre-filled.
+
+    Prefers git remote URL over local path so config works across machines.
+    """
     example_src = template_root / ".claude" / "hooks" / "config.json.example"
     if not example_src.exists():
         return
@@ -171,7 +185,7 @@ def create_config_json(dest: Path, template_root: Path, dry_run: bool) -> None:
     if dry_run:
         return
     config = json.loads(example_src.read_text(encoding="utf-8"))
-    config["ai_template_path"] = str(template_root)
+    config["ai_template_path"] = _git_remote_url(template_root) or str(template_root)
     if config.get("repos") and isinstance(config["repos"], list):
         config["repos"][0]["name"] = dest.name
         config["repos"][0]["tasks"] = "docs/TASKS.md"
