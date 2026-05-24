@@ -351,6 +351,23 @@ def check_skills_staleness() -> str | None:
     return "\n".join(warnings) if warnings else None
 
 
+def check_template_path_configured(config: dict) -> str | None:
+    """Warns if ai_template_path is missing or points to a non-existent local path."""
+    value = config.get("ai_template_path", "")
+    if not value:
+        return (
+            "⚠️  [t-ai] ai_template_path nie jest ustawione w .claude/hooks/config.json.\n"
+            "  Auto-sync i wykrywanie zmian w template nie będą działać.\n"
+            "  Dodaj: \"ai_template_path\": \"git@github.com:dev76bitpl/tai.git\""
+        )
+    if not _is_git_url(value) and not Path(value).exists():
+        return (
+            f"⚠️  [t-ai] ai_template_path wskazuje na nieistniejący katalog: {value}\n"
+            "  Zaktualizuj ścieżkę lub użyj git URL: \"git@github.com:dev76bitpl/tai.git\""
+        )
+    return None
+
+
 def main():
     session_id = get_session_id()
     if not session_id:
@@ -367,11 +384,15 @@ def main():
     sync_diffs = check_template_sync(config)
     skills_sync_warning = check_template_skills_sync(config)
     skills_warning = check_skills_staleness()
+    template_path_warning = check_template_path_configured(config)
 
-    if not tasks and not sync_diffs and not skills_sync_warning and not skills_warning:
+    if not tasks and not sync_diffs and not skills_sync_warning and not skills_warning and not template_path_warning:
         sys.exit(0)
 
     output = "[SESSION START]\n\n"
+
+    if template_path_warning:
+        output += template_path_warning + "\n\n---\n\n"
 
     if sync_diffs:
         output += "⚠️  [DESYNC] .claude/hooks/ różni się od AI template repo:\n"
