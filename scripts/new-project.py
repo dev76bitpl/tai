@@ -33,6 +33,7 @@ COPY_DIRS = [".claude"]
 COPY_FILES = ["CLAUDE.md", "skills-manifest.json"]
 
 COPY_DOCS = [
+    "AI_TEMPLATE_NOTES.md",
     "CONVENTIONS.md",
     "DELIVERY_CHECKLIST.md",
     "SETUP.md",
