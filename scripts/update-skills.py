@@ -289,7 +289,11 @@ def sync_from_template(template_root: Path, apply: bool) -> None:
         sys.exit(1)
 
     template_manifest = json.loads(template_manifest_path.read_text(encoding="utf-8"))
-    project_manifest = load_manifest()
+    project_manifest = (
+        json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+        if MANIFEST_PATH.exists()
+        else {"skills": {}, "custom_skills": {}}
+    )
 
     template_custom = template_manifest.get("custom_skills", {})
     project_custom = project_manifest.get("custom_skills", {})
