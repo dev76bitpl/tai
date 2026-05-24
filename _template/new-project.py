@@ -3,11 +3,11 @@
 Bootstrap a new project from the AI template.
 
 Copies skills, hooks, scripts, and doc scaffolds to a new directory.
-Skips: .git/, README.md, and AI template meta content.
+Skips: .git/, README.md, _template/, and other template-only meta content.
 
 Usage:
-    python3 scripts/new-project.py /path/to/new-project
-    python3 scripts/new-project.py /path/to/new-project --dry-run
+    python3 _template/new-project.py /path/to/new-project
+    python3 _template/new-project.py /path/to/new-project --dry-run
 """
 import argparse
 import json
