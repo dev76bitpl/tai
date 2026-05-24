@@ -196,15 +196,28 @@ def check_template_skills_sync(config: dict) -> str | None:
     if not missing_custom and not outdated_custom and not missing_vendored:
         return None
 
-    lines = ["⚠️  [SKILLS DESYNC] Projekt nie jest zsynchronizowany z AI template:"]
-    if missing_custom:
-        lines.append(f"  Brakujące custom skille: {', '.join(missing_custom)}")
-    if outdated_custom:
-        lines.append(f"  Nieaktualne custom skille: {', '.join(outdated_custom)}")
-    if missing_vendored:
-        lines.append(f"  Brakujące vendored skille w manifeście: {', '.join(missing_vendored)}")
-    lines.append("  Uruchom: python3 scripts/update-skills.py --sync --apply")
-    return "\n".join(lines)
+    import subprocess
+
+    sync_script = MONOREPO_ROOT / "scripts" / "update-skills.py"
+    if not sync_script.exists():
+        return f"⚠️  [t-ai] Są zmiany w template, ale brak scripts/update-skills.py — zsynchronizuj ręcznie."
+
+    result = subprocess.run(
+        [sys.executable, str(sync_script), "--sync", "--apply"],
+        capture_output=True, text=True, encoding="utf-8",
+    )
+
+    if result.returncode == 0:
+        details = []
+        if missing_custom or outdated_custom:
+            details.append(f"custom skille: {', '.join(missing_custom + outdated_custom)}")
+        if missing_vendored:
+            details.append(f"vendored: {', '.join(missing_vendored)}")
+        detail_str = " | ".join(details)
+        return f"📦 [t-ai] Pobrano zmiany z template → {detail_str}"
+    else:
+        err = result.stderr.strip()[:200]
+        return f"⚠️  [t-ai] Auto-sync nie powiódł się: {err}\n  Uruchom: python3 scripts/update-skills.py --sync --apply"
 
 
 def check_skills_staleness() -> str | None:
