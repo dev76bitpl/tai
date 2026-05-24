@@ -2,28 +2,37 @@
 
 Konwencje kodu obowiązujące w projekcie.
 
+> **Scaffold** — dostosuj do swojego stacku. Sekcje "Nazewnictwo" i "Struktura pliku"
+> zależą od języka. Reszta (walidacja, error handling, testy, konfiguracja) jest universalna.
+
 ---
 
 ## Nazewnictwo
 
-- pliki komponentów: `PascalCase.tsx`
-- pliki narzędziowe: `camelCase.ts`
-- zmienne i funkcje: `camelCase`
-- typy i interfejsy: `PascalCase`
-- stałe: `UPPER_SNAKE_CASE`
-- tabele DB: `snake_case`
+Dostosuj do stacku. Przykłady dla popularnych konwencji:
+
+| Co | TypeScript/JS | Python | PHP |
+|----|--------------|--------|-----|
+| Pliki komponentów | `PascalCase.tsx` | `pascal_case.py` | `PascalCase.php` |
+| Pliki narzędziowe | `camelCase.ts` | `snake_case.py` | `snake_case.php` |
+| Zmienne i funkcje | `camelCase` | `snake_case` | `camelCase` |
+| Klasy i typy | `PascalCase` | `PascalCase` | `PascalCase` |
+| Stałe | `UPPER_SNAKE_CASE` | `UPPER_SNAKE_CASE` | `UPPER_SNAKE_CASE` |
+| Tabele DB | `snake_case` | `snake_case` | `snake_case` |
 
 ---
 
 ## Struktura pliku
 
+Kolejność sekcji w pliku (dostosuj składnię komentarzy do języka):
+
 ```
-// imports zewnętrzne
-// imports wewnętrzne
-// typy
-// stałe
-// komponent / funkcja
-// export
+imports zewnętrzne / vendor
+imports wewnętrzne / lokalne
+typy / interfejsy / schematy
+stałe
+logika / komponent / klasa
+export / public API
 ```
 
 ---
@@ -39,51 +48,43 @@ Konwencje kodu obowiązujące w projekcie.
 
 ## Error handling
 
-**Hybrydowy model:**
+**Hybrydowy model — universalny wzorzec:**
 
-### Błędy biznesowe → Result type
+### Błędy biznesowe → zwracane explicite
 
-Przewidywalne błędy domenowe zwracane explicite:
+Przewidywalne błędy domenowe (np. "zamówienie już istnieje", "brak uprawnień") zwracane jako wartość, nie wyjątek. Wymusza obsługę błędu przez wywołującego.
 
+Przykład w TypeScript:
 ```typescript
 type Result<T> =
   | { success: true; data: T }
   | { success: false; error: string; code?: string }
 ```
 
-Używany w logice domenowej i use-casach. Wymusza obsługę błędu na poziomie kompilatora.
+Odpowiednik w Python: dataclass lub `tuple[T | None, str | None]`, w Go: `(T, error)`.
 
 ### Błędy infrastrukturalne → wyjątki
 
-Nieoczekiwane błędy (DB niedostępna, sieć) rzucają wyjątek. Łapane na granicy systemu (server action / API route) i zwracane jako generyczny błąd — user nigdy nie widzi stack trace.
-
-```typescript
-try {
-  return await someUseCase()
-} catch (e) {
-  console.error(e)
-  return { success: false, error: 'Wystąpił błąd. Spróbuj ponownie.' }
-}
-```
+Nieoczekiwane błędy (DB niedostępna, sieć) — rzucaj wyjątek, łap na granicy systemu i zwracaj generyczny błąd. User nigdy nie widzi stack trace.
 
 - nie łap błędów żeby je zignorować
+- loguj przed zwróceniem generycznego błędu
 
 ---
 
 ## Testy
 
-- Lokalizacja: testy obok testowanego kodu (np. `*.test.ts` lub `__tests__/`)
+- Lokalizacja: testy obok testowanego kodu (np. `*.test.ts`, `*_test.go`, `test_*.py`) lub w `__tests__/` / `tests/`
 - Naming: `should_do_X_when_Y` — nazwa testu mówi co sprawdza bez czytania body
 - Każda funkcja domenowa ma testy jednostkowe — piszemy je razem z kodem, nie po fakcie
 - Testy integracyjne dla krytycznych flow (happy path + główny error case)
-- UI: nie robimy snapshotów/pixel-testów jako standardu; krytyczne flow zabezpieczamy testami integracyjnymi (actions/API), warstwę wizualną domyka manualna checklista regresji
 - Kod trywialny (getter, mapowanie 1:1) — bez testu, to tylko szum w suite
 
 ---
 
 ## Dostęp do bazy / zewnętrznych serwisów
 
-- Klient DB/serwisu jako singleton eksportowany z `lib/` — nigdy nie twórz nowej instancji poza tym miejscem
+- Klient DB/serwisu jako singleton eksportowany z jednego miejsca (`lib/`, `infrastructure/`, `services/`) — nigdy nie twórz nowej instancji poza tym miejscem
 - W projektach multi-tenant: każde zapytanie filtruje po identyfikatorze tenanta — bez wyjątków dla tabel operacyjnych
 
 ---
@@ -93,7 +94,7 @@ try {
 - Strefa czasowa pochodzi z konfiguracji (DB lub env) — nie hardkoduj nazwy strefy inline
 - Daty przechowuj w UTC; przed wyświetleniem przelicz przez strefę użytkownika / tenanta
 - Do konwersji używaj biblioteki — nie ręcznych obliczeń offsetu
-- `toLocaleDateString` / `toLocaleString` bez opcji `timeZone` używa strefy serwera (może być UTC) — zawsze przekazuj `timeZone` explicite w server components
+- Przy formatowaniu dat zawsze przekazuj strefę czasową explicite — domyślna strefa serwera może być UTC i dawać błędne wyniki
 
 ---
 
