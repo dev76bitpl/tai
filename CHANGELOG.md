@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.12](https://github.com/dev76bitpl/tai/compare/v0.1.11...v0.1.12) (2026-05-24)
+
+
+### Features
+
+* **docs:** Add example files for ADR, SETUP, TASKS, ROADMAP scaffolds ([#37](https://github.com/dev76bitpl/tai/issues/37)) ([40affd1](https://github.com/dev76bitpl/tai/commit/40affd1b0dacac4d6c89e611937ca26c2bd55494))
+
 ## [0.1.11](https://github.com/dev76bitpl/tai/compare/v0.1.10...v0.1.11) (2026-05-24)
 
 
