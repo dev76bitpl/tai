@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.9](https://github.com/dev76bitpl/ai/compare/v0.1.8...v0.1.9) (2026-05-24)
+
+
+### Features
+
+* **sync:** Support git URL in ai_template_path ([#30](https://github.com/dev76bitpl/ai/issues/30)) ([dcf9010](https://github.com/dev76bitpl/ai/commit/dcf90109123c685cf4f2b54ef6c1935b193810e8))
+
 ## [0.1.8](https://github.com/dev76bitpl/ai/compare/v0.1.7...v0.1.8) (2026-05-24)
 
 
