@@ -155,6 +155,58 @@ def check_template_sync(config: dict) -> list[str]:
     return diffs
 
 
+def check_template_skills_sync(config: dict) -> str | None:
+    """Zwraca ostrzeżenie jeśli custom skille lub wpisy manifest różnią się od template."""
+    template_path = config.get("ai_template_path", "")
+    if not template_path:
+        return None
+
+    template_root = Path(template_path)
+    if not template_root.exists():
+        return None
+
+    template_manifest_path = template_root / "skills-manifest.json"
+    project_manifest_path = MONOREPO_ROOT / "skills-manifest.json"
+
+    if not template_manifest_path.exists() or not project_manifest_path.exists():
+        return None
+    try:
+        template_manifest = json.loads(template_manifest_path.read_text(encoding="utf-8"))
+        project_manifest = json.loads(project_manifest_path.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+
+    project_skills_dir = MONOREPO_ROOT / ".claude" / "skills"
+    template_skills_dir = template_root / ".claude" / "skills"
+
+    missing_custom: list[str] = []
+    outdated_custom: list[str] = []
+    for name in template_manifest.get("custom_skills", {}):
+        project_file = project_skills_dir / name / "SKILL.md"
+        template_file = template_skills_dir / name / "SKILL.md"
+        if not project_file.exists():
+            missing_custom.append(name)
+        elif template_file.exists() and project_file.read_text("utf-8") != template_file.read_text("utf-8"):
+            outdated_custom.append(name)
+
+    template_vendored = set(template_manifest.get("skills", {}).keys())
+    project_vendored = set(project_manifest.get("skills", {}).keys())
+    missing_vendored = sorted(template_vendored - project_vendored)
+
+    if not missing_custom and not outdated_custom and not missing_vendored:
+        return None
+
+    lines = ["⚠️  [SKILLS DESYNC] Projekt nie jest zsynchronizowany z AI template:"]
+    if missing_custom:
+        lines.append(f"  Brakujące custom skille: {', '.join(missing_custom)}")
+    if outdated_custom:
+        lines.append(f"  Nieaktualne custom skille: {', '.join(outdated_custom)}")
+    if missing_vendored:
+        lines.append(f"  Brakujące vendored skille w manifeście: {', '.join(missing_vendored)}")
+    lines.append("  Uruchom: python3 scripts/update-skills.py --sync --apply")
+    return "\n".join(lines)
+
+
 def check_skills_staleness() -> str | None:
     """Zwraca ostrzeżenie jeśli skills w manifest nie były sprawdzane/przeglądane od X dni."""
     manifest_path = MONOREPO_ROOT / "skills-manifest.json"
@@ -254,9 +306,10 @@ def main():
     config = load_config()
     tasks = read_tasks(config)
     sync_diffs = check_template_sync(config)
+    skills_sync_warning = check_template_skills_sync(config)
     skills_warning = check_skills_staleness()
 
-    if not tasks and not sync_diffs and not skills_warning:
+    if not tasks and not sync_diffs and not skills_sync_warning and not skills_warning:
         sys.exit(0)
 
     output = "[SESSION START]\n\n"
@@ -266,6 +319,9 @@ def main():
         output += "\n".join(sync_diffs)
         output += f"\n  Template: {config.get('ai_template_path', '')}\n"
         output += "  Zsynchronizuj zmiany z template przed commitowaniem.\n\n---\n\n"
+
+    if skills_sync_warning:
+        output += skills_sync_warning + "\n\n---\n\n"
 
     if skills_warning:
         output += skills_warning + "\n\n---\n\n"
