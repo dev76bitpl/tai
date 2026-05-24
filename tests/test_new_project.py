@@ -1,4 +1,4 @@
-"""Tests for _template/new-project.py"""
+"""Tests for scripts/new-project.py"""
 import importlib.util
 import json
 import sys
@@ -7,8 +7,8 @@ from unittest import mock
 
 import pytest
 
-ROOT = Path(__file__).resolve().parent.parent.parent
-SCRIPT = ROOT / "_template" / "new-project.py"
+ROOT = Path(__file__).resolve().parent.parent
+SCRIPT = ROOT / "scripts" / "new-project.py"
 
 
 def _load():
