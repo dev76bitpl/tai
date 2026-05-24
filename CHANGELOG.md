@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.8](https://github.com/dev76bitpl/ai/compare/v0.1.7...v0.1.8) (2026-05-24)
+
+
+### Bug Fixes
+
+* Gitleaks false positives in skill docs ([#27](https://github.com/dev76bitpl/ai/issues/27)) ([d3fa0e1](https://github.com/dev76bitpl/ai/commit/d3fa0e100c905cfa5c0070c771c820aeb7dedce0))
+
 ## [0.1.7](https://github.com/dev76bitpl/ai/compare/v0.1.6...v0.1.7) (2026-05-24)
 
 
