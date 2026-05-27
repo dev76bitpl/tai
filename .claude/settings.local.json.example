@@ -1,5 +1,6 @@
 {
   "_readme": "Per-machine hook commands. Copy to settings.local.json and set correct interpreter: 'python3' on Ubuntu/macOS, 'py' on Windows.",
+  "_env_note": "Optional: add 'env' section with ANTHROPIC_API_KEY for per-project API key. See docs/CLAUDE_AUTH.md. Example: \"env\": { \"ANTHROPIC_API_KEY\": \"sk-ant-api03-...\" }",
   "hooks": {
     "UserPromptSubmit": [
       {
