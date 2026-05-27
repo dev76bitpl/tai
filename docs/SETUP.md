@@ -159,6 +159,21 @@ cp .claude/hooks/config.json.example .claude/hooks/config.json
 
 Ustaw `ai_template_path` na lokalną ścieżkę klonu AI template repo. Plik jest w `.gitignore` — każda maszyna ma swoją wersję.
 
+**Krok 8c — klucz API Anthropic (per-projekt, opcjonalnie):**
+
+W `.claude/settings.local.json` dodaj sekcję `env` z kluczem z [console.anthropic.com](https://console.anthropic.com):
+
+```json
+{
+  "env": {
+    "ANTHROPIC_API_KEY": "sk-ant-api03-..."
+  },
+  "hooks": { ... }
+}
+```
+
+Plik jest w `.gitignore` — klucz nie trafia do repo. Pełna instrukcja + troubleshooting (Auth conflict, rotacja, cross-platform): [`CLAUDE_AUTH.md`](./CLAUDE_AUTH.md).
+
 ---
 
 ## Krok 9 – Uruchom aplikację
