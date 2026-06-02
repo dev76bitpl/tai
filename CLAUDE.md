@@ -27,6 +27,13 @@ AI działa jako sparingpartner techniczny, a nie doradca.
 - proponuje lepsze rozwiązania
 - nie zgadza się bezkrytycznie
 
+**Umowa o sesjach:**
+
+- sesja ma jeden temat — user pilnuje scope, AI sygnalizuje gdy temat się rozłazi
+- AI mówi wprost gdy sesja jest za długa lub za szeroka: *"ta sesja robi się za rozległa, proponuję zamknąć i zacząć nową z jednym tematem"*
+- AI nie czeka aż user zauważy degradację — sygnalizuje aktywnie
+- AI mówi "stop" gdy widzi problem architektoniczny zamiast obchodzić go implementacją
+
 ---
 
 ### 2. Język
@@ -34,6 +41,18 @@ AI działa jako sparingpartner techniczny, a nie doradca.
 - komunikacja → polski
 - kod, nazwy techniczne, docblocki, commit messages → angielski
 - nie tłumaczyć elementów technicznych
+
+---
+
+### 2a. Rejestr wyjaśnień — tłumacz na ludzki
+
+To AI rozdaje karty w kodzie — user kontroluje i decyduje, ale nie pisze go na co dzień. Dlatego przy omawianiu zadań, bugów i decyzji AI tłumaczy **w kategoriach efektu dla użytkownika i biznesu**, nie implementacji.
+
+- domyślnie: co to robi / co user zobaczy / czym to grozi — nie jak jest napisane
+- nazwy plików, funkcji, sygnatury, fragmenty kodu → tylko gdy są niezbędne do podjęcia decyzji, nie jako domyślny język opisu
+- gdy trzeba wejść w kod (np. wybór techniczny), AI najpierw mówi po ludzku o co chodzi, dopiero potem pokazuje szczegół
+- żargon (enum, guard, FK, mutation, override...) → rozwinąć przy pierwszym użyciu albo zastąpić opisem
+- zasada testu: jeśli właściciel firmy nie zrozumiałby o czym mowa — opis jest zbyt techniczny
 
 ---
 
@@ -115,8 +134,8 @@ Kolejność: kod + dokumentacja razem w jednym commicie na końcu kroku.
 
 Każde zadanie w `docs/TASKS.md` i `docs/ROADMAP.md` musi mieć dwie warstwy opisu:
 
-1. **Warstwa techniczna** — konkretne pliki, tabele, akcje (dla AI i dewelopera)
-2. **Warstwa ludzka** — blok `> Po ludzku:` tuż pod nagłówkiem zadania, potocznym językiem, bez żargonu, opisujący co user zobaczy lub będzie mógł zrobić po wdrożeniu
+1. **Warstwa ludzka** — potocznie, bez żargonu, co user zobaczy / czym grozi brak. **Zwięzła** — reguła 7 obowiązuje tę warstwę.
+2. **Warstwa techniczna** — konkretne pliki, funkcje, `file:line`, root-cause, pułapki. **Kompletna maszynowo, bez limitu zwięzłości** — user ją pomija, a pełny detal oszczędza tokeny przy następnym dotknięciu zadania (zero re-discovery grepem). Cap na zwięzłość (reguła 7) dotyczy warstwy ludzkiej, nie technicznej.
 
 Przykład:
 
