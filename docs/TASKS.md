@@ -30,6 +30,32 @@ Checklisty implementacyjne per faza znajdują się wyłącznie w [docs/ROADMAP.m
 
 ---
 
+## Następna sesja (SYSTEM — zacznij tu)
+
+To jest sesja systemu (tai), nie projektu. Pierwszy ruch = utrwalić wnioski z
+2026-06-04 (wyszły w cdue-kti), żeby system pracował na nich, a nie AI na ich pamiętaniu.
+
+**Zadanie 1 (durable):** wpisz do `docs/AI_TEMPLATE_NOTES.md` + dodaj zasady do `CLAUDE.md`:
+- Wniosek 1: AI jest bezstanowy — co nie jest w repo/guardzie, znika. Liczenie na
+  pamięć/zrozumienie AI to bug. System ma NIE ufać AI.
+- Wniosek 2: guardy pisze ten sam AI, który tnie zakręty → bywają fail-open
+  (guard-ai-template omijany przez `git commit -F`) albo martwe (guard-template-sync
+  przy URL). Dlatego user wciąż jest realnym guardem.
+- Wniosek 3: template = produkt; projekty to miejsca, gdzie wychodzą jego błędy.
+  Lekcja ma lądować w guardzie Z TESTEM — inaczej zostaje "w głowie" = nigdzie.
+- **Zasada A:** żaden guard nie wchodzi bez testu dowodzącego, że blokuje bypass i
+  przepuszcza resztę.
+- **Zasada B:** rozdzielaj sesje "projekt" i "system" — nie mieszaj (mieszanie było
+  źródłem dzisiejszego chaosu).
+
+**Potem:** hardening A/B (patrz wpis 2026-06-04 niżej + backlog "Config canonicalizacja")
+i push brancha `fix/template-hardening` (commit `fb05114`).
+
+**Zasady pracy:** commit przez `-m`/heredoc, nigdy `-F` do omijania guardów;
+dry-run guardów tą samą treścią co commit.
+
+---
+
 ## Stan sesji
 
 - 2026-06-04: hardening hooków (branch `fix/template-hardening`). Wykryte podczas pracy
