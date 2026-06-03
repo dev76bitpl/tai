@@ -168,7 +168,7 @@ def _remote_head_hash(url: str) -> str | None:
     try:
         result = subprocess.run(
             ["git", "ls-remote", url, "HEAD"],
-            capture_output=True, text=True, timeout=6,
+            capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=6,
         )
         if result.returncode == 0 and result.stdout:
             return result.stdout.split()[0]
