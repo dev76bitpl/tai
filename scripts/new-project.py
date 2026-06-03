@@ -5,7 +5,11 @@ Bootstrap a new project from the AI template.
 Two modes:
 
   --init          Initialize THIS cloned repo as a new project in-place.
-                  Removes template meta (tests/, README, this script).
+                  Removes template meta (tests/, README, this script),
+                  resets release versioning (drops template CHANGELOG, manifest
+                  → 0.0.0), replaces template git history with a single init
+                  commit, and installs pre-commit/commit-msg guards.
+                  Use --no-git to skip the git reset + guard install.
                   Run once after: git clone ai my-project && cd my-project
 
   <dest>          Copy template to a separate new directory.
@@ -19,7 +23,9 @@ Usage:
 """
 import argparse
 import json
+import os
 import shutil
+import stat
 import subprocess
 import sys
 from pathlib import Path
@@ -214,9 +220,115 @@ def create_settings_local(dest: Path, template_root: Path, dry_run: bool) -> Non
     out.write_text(content, encoding="utf-8")
 
 
+def reset_versioning(root: Path, dry_run: bool) -> None:
+    """Drop the template's release history so the new project versions from scratch.
+
+    Without this, the project inherits the template's manifest version and CHANGELOG.
+    guard_release_tag then blocks the first commit (a declared version with no
+    matching GitHub Release). Deleting CHANGELOG.md lets release-please regenerate
+    it on the first real release; manifest → 0.0.0 makes that first release start
+    clean (first feat → 0.1.0).
+    """
+    changelog = root / "CHANGELOG.md"
+    if changelog.exists():
+        remove(changelog, root, dry_run)
+
+    manifest = root / ".release-please-manifest.json"
+    if manifest.exists():
+        log("reset", ".release-please-manifest.json  → 0.0.0", dry_run)
+        if not dry_run:
+            manifest.write_text('{\n  ".": "0.0.0"\n}\n', encoding="utf-8")
+
+
+def _on_rm_error(func, path, _exc_info) -> None:
+    """rmtree onerror handler: clear read-only bit (Windows .git pack files) and retry."""
+    os.chmod(path, stat.S_IWRITE)
+    func(path)
+
+
+def fresh_git_history(root: Path, dry_run: bool) -> None:
+    """Replace the template's git history with a single init commit for the project.
+
+    The new repo has no remote and no installed hooks yet, so the init commit is
+    unguarded by design — guards apply once the user wires up origin and installs
+    pre-commit (see next steps).
+    """
+    git_dir = root / ".git"
+    log("rmdir", ".git  (template history)", dry_run)
+    log("git", "init", dry_run)
+    log("git", 'commit -m "chore: initialize project from AI template"', dry_run)
+    if dry_run:
+        return
+    if git_dir.exists():
+        shutil.rmtree(git_dir, onerror=_on_rm_error)
+    try:
+        subprocess.run(["git", "init", "-q"], cwd=str(root), check=True)
+        subprocess.run(["git", "add", "-A"], cwd=str(root), check=True)
+        subprocess.run(
+            ["git", "commit", "-q", "-m", "chore: initialize project from AI template"],
+            cwd=str(root), check=True,
+        )
+    except subprocess.CalledProcessError as exc:
+        warn(
+            f"git init/commit failed (exit {exc.returncode}). "
+            "Cleaning is done; finish git manually:\n"
+            "    git init && git add -A && "
+            'git commit -m "chore: initialize project from AI template"'
+        )
+
+
+def warn(msg: str) -> None:
+    print(f"⚠️  {msg}", file=sys.stderr)
+
+
+def _resolve_pre_commit() -> list[str] | None:
+    """argv prefix to invoke pre-commit — standalone binary or `python -m pre_commit`.
+
+    Falls back to the module form because on Windows `pip install --user` often
+    leaves the binary off PATH while `python -m pre_commit` still works.
+    """
+    if shutil.which("pre-commit"):
+        return ["pre-commit"]
+    for py in ("python", "python3", "py"):
+        if not shutil.which(py):
+            continue
+        probe = subprocess.run(
+            [py, "-m", "pre_commit", "--version"], capture_output=True
+        )
+        if probe.returncode == 0:
+            return [py, "-m", "pre_commit"]
+    return None
+
+
+def install_guards(root: Path, dry_run: bool) -> None:
+    """Install pre-commit + commit-msg git hooks so the project is guarded from commit #1.
+
+    Runs after the init commit (the fresh repo defaults to branch main, where
+    no-commit-to-branch would otherwise block a guarded init commit). Soft-fails:
+    a missing pre-commit warns with the manual command instead of aborting init.
+    """
+    log("git-hooks", "pre-commit install (pre-commit + commit-msg)", dry_run)
+    if dry_run:
+        return
+    invocation = _resolve_pre_commit()
+    if invocation is None:
+        warn(
+            "pre-commit not found — guards not installed. Install later with:\n"
+            "    npm install   (or: pre-commit install "
+            "--hook-type pre-commit --hook-type commit-msg)"
+        )
+        return
+    result = subprocess.run(
+        [*invocation, "install", "--hook-type", "pre-commit", "--hook-type", "commit-msg"],
+        cwd=str(root), capture_output=True, text=True,
+    )
+    if result.returncode != 0:
+        warn(f"pre-commit install failed: {result.stderr.strip()[:300]}")
+
+
 # ── Init in-place ─────────────────────────────────────────────────────────────
 
-def init_in_place(root: Path, dry_run: bool) -> None:
+def init_in_place(root: Path, dry_run: bool, do_git: bool = True) -> None:
     """Remove template meta and turn this clone into a clean project directory."""
     print("🚀  new-project.py — INIT IN-PLACE")
     print(f"    Directory: {root}\n")
@@ -224,6 +336,9 @@ def init_in_place(root: Path, dry_run: bool) -> None:
     print("── Usuwam template meta ────────────────────────────────")
     for name in TEMPLATE_META:
         remove(root / name, root, dry_run)
+
+    print("\n── Reset wersjonowania ─────────────────────────────────")
+    reset_versioning(root, dry_run)
 
     print("\n── README scaffold ─────────────────────────────────────")
     log("scaffold", "README.md", dry_run)
@@ -234,26 +349,33 @@ def init_in_place(root: Path, dry_run: bool) -> None:
     create_config_json(root, root, dry_run)
     create_settings_local(root, root, dry_run)
 
+    # Remove this script before any git commit — it's template-only.
+    print("\n── Usuwam template-only skrypt ──────────────────────────")
+    remove(root / "scripts" / "new-project.py", root, dry_run)
+
+    if do_git:
+        print("\n── Świeża historia git + init commit ────────────────────")
+        fresh_git_history(root, dry_run)
+        print("\n── Instalacja guardów (pre-commit + commit-msg) ─────────")
+        install_guards(root, dry_run)
+
     if dry_run:
         print("\n✅  Dry-run complete — no files were written.\n")
         return
 
     print(f"\n✅  Gotowe: {root}\n")
     print("── Następne kroki ──────────────────────────────────────\n")
-    print("  # 1. Nowa historia git (bez historii template)")
-    print("  rm -rf .git && git init && git remote add origin <url>\n")
+    if not do_git:
+        print("  # 0. Nowa historia git (pominięta przez --no-git)")
+        print("  rm -rf .git && git init")
+        print("  pre-commit install --hook-type pre-commit --hook-type commit-msg\n")
+    print("  # 1. Podłącz zdalne repo")
+    print("  git remote add origin <url>\n")
     print("  # 2. Zainstaluj vendored skille")
     print("  python3 scripts/update-skills.py --apply\n")
     print("  # 3. Zdefiniuj scope projektu")
     print("  claude   # napisz: scope\n")
-    print("  # 4. (Opcjonalnie) Guard hooki pre-commit")
-    print("  pre-commit install --hook-type pre-commit --hook-type commit-msg\n")
     print("────────────────────────────────────────────────────────\n")
-
-    # Remove this script last — it's template-only
-    self_path = root / "scripts" / "new-project.py"
-    if self_path.exists():
-        self_path.unlink()
 
 
 # ── Main ─────────────────────────────────────────────────────────────────────
@@ -281,10 +403,14 @@ def main() -> None:
         "--dry-run", action="store_true",
         help="Show what would happen without making changes",
     )
+    parser.add_argument(
+        "--no-git", action="store_true",
+        help="Skip git history reset and init commit (--init only)",
+    )
     args = parser.parse_args()
 
     if args.init:
-        init_in_place(ROOT, args.dry_run)
+        init_in_place(ROOT, args.dry_run, do_git=not args.no_git)
         return
 
     if not args.dest:
