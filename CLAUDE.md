@@ -60,6 +60,8 @@ To AI rozdaje karty w kodzie — user kontroluje i decyduje, ale nie pisze go na
 
 **Branch strategy**: każda funkcjonalność / fix idzie na osobnym branchu, merge do main przez PR. Nigdy bezpośrednio na main.
 
+Przed stworzeniem nowego brancha: `git pull origin main` — zawsze, bez wyjątków. Branch z przestarzałego main = merge conflicts przy PR.
+
 Format nazwy brancha: `feat/nazwa`, `fix/nazwa`, `docs/nazwa`.
 
 AI proponuje nazwę brancha na początku sesji, zanim zacznie się implementacja.
