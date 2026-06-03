@@ -1,1 +1,0 @@
-../../../src/web-quality-skills/core-web-vitals.md
