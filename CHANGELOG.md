@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.15](https://github.com/dev76bitpl/tai/compare/v0.1.14...v0.1.15) (2026-06-03)
+
+
+### Features
+
+* **new-project:** Clean versioning + auto git/guards on --init ([#55](https://github.com/dev76bitpl/tai/issues/55)) ([a4a13c4](https://github.com/dev76bitpl/tai/commit/a4a13c45033fcea77b4f1e95b63ece304cbe225b))
+
+
+### Bug Fixes
+
+* **update-skills:** Use posix paths for manifest keys ([#54](https://github.com/dev76bitpl/tai/issues/54)) ([af2f4a7](https://github.com/dev76bitpl/tai/commit/af2f4a729b4d6db2023d331c8e67f299b40403d6))
+
 ## [0.1.14](https://github.com/dev76bitpl/tai/compare/v0.1.13...v0.1.14) (2026-05-24)
 
 
