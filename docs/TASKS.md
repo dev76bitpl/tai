@@ -8,8 +8,9 @@ Checklisty implementacyjne per faza znajdują się wyłącznie w [docs/ROADMAP.m
 ## Aktualny fokus
 
 - [x] `update-skills`: klucze manifestu cross-platform (`rel.as_posix()`)
-- [ ] `new-project --init`: reset wersjonowania + auto init commit (branch `feat/init-versioning-reset`)
-- [ ] `new-project --init`: poprawny `template_root` (błąd A) + auto-instalacja guardów (Q2)
+- [x] `new-project --init`: reset wersjonowania (usuwa CHANGELOG, manifest → 0.0.0)
+- [x] `new-project --init`: świeży git + automatyczny init commit (`--no-git` opt-out)
+- [x] `new-project --init`: auto-instalacja guardów (pre-commit + commit-msg)
 
 ---
 
@@ -19,8 +20,10 @@ Checklisty implementacyjne per faza znajdują się wyłącznie w [docs/ROADMAP.m
       `guard_template_sync` czyta `.pre-commit-hooks.config.json` (przez
       `stack.load_config`), a `doctor.py` + `new-project.py` używają
       `.claude/hooks/config.json`. Dwa różne pliki → guard sync template'u jest
-      w nowych projektach trwale martwy. Dodatkowo `ai_template_path` bywa URL-em,
-      a konsumenci wymagają lokalnej ścieżki (`Path(...).is_dir()`).
+      w nowych projektach trwale martwy. Plus `ai_template_path` bywa URL-em, a
+      konsumenci wymagają lokalnej ścieżki (`Path(...).is_dir()`). Obejmuje też
+      **błąd A**: w `--init` `create_config_json(root, root)` zapisuje remote
+      *projektu* jako template path zamiast template'u.
 
 ---
 
@@ -30,3 +33,7 @@ Checklisty implementacyjne per faza znajdują się wyłącznie w [docs/ROADMAP.m
   Windows → rozjazd manifestu między OS). Zmiana na `rel.as_posix()`; 2 wcześniej
   czerwone testy `TestCollectFiles` zielone, 35/35 modułu. Branch `fix/update-skills-path-separator`.
   Wykryto przy okazji: config canonicalizacja (backlog) + błąd A/Q2 w `new-project` (fokus).
+- 2026-06-03: `new-project.py` domknięty dla trybu `--init` — reset wersjonowania
+  + fresh git + init commit + instalacja guardów. 29/29 testów modułu, 2× e2e na
+  realnym klonie. Powiązany fix `update-skills` (posix paths) → PR #54. Config
+  canonicalizacja + błąd A świadomie odłożone na osobną sesję z ADR (backlog).
