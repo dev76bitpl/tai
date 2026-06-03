@@ -1,14 +1,19 @@
 #!/usr/bin/env python3
 """
 Guard 4: Ocena AI template repo.
-Blokuje (exit 2 + stderr) feat/fix/docs/refactor commit i pyta czy zmiana
-powinna trafić do repo template AI.
+Blokuje (exit 2 + stderr) commit dotykający plików generycznych i pyta,
+czy zmiana powinna trafić do repo template AI.
 
-Bypass: [no-template] lub [template-done] w wiadomości commita.
+FAIL-CLOSED: jeśli nie da się odczytać wiadomości commita, guard BLOKUJE
+zamiast po cichu przepuszczać. Czyta wiadomość z -m, heredoc ORAZ z pliku
+(-F/--file) — żeby `git commit -F` nie omijał guarda (regresja: typ był
+parsowany tylko z -m, więc -F dawał exit 0 = cichy bypass).
+
+Bypass: [no-template] lub [template-done] w wiadomości commita
+(wykrywane w -m, heredoc oraz w pliku -F).
 """
 import json
 import re
-import subprocess
 import sys
 from pathlib import Path
 
@@ -25,6 +30,7 @@ TEMPLATE_PATTERNS: list[str] = [
 ]
 
 TRIGGER_TYPES = ("feat", "fix", "docs", "refactor")
+CONVENTIONAL = r"^(feat|fix|docs|refactor|test|chore|style|perf|ci|build)"
 
 
 def get_command() -> str:
@@ -35,18 +41,48 @@ def get_command() -> str:
         return ""
 
 
-def extract_commit_type(command: str) -> str:
-    m = re.search(r'-m\s+["\']([^"\']+)', command)
-    if not m:
-        m = re.search(r"<<['\"]?EOF['\"]?\s*\n([^\n]+)", command)
-    if not m:
-        # PowerShell heredoc: git commit -m @'\n<first line>\n'@
-        m = re.search(r"-m\s+@['\"]?\n([^\n]+)", command)
+def _inline_message(command: str) -> str | None:
+    """Commit message passed inline: -m "...", bash heredoc, or PowerShell here-string."""
+    m = re.search(r'-m\s+"([^"]+)"', command) or re.search(r"-m\s+'([^']+)'", command)
     if m:
-        t = re.match(r"^(feat|fix|docs|refactor|test|chore|style|perf|ci|build)", m.group(1).strip())
-        if t:
-            return t.group(1)
-    return ""
+        return m.group(1)
+    # bash heredoc: ... <<'EOF' ... EOF  (any word delimiter)
+    m = re.search(r"<<-?\s*['\"]?(\w+)['\"]?\s*\n(.*?)\n\1\b", command, re.DOTALL)
+    if m:
+        return m.group(2)
+    # PowerShell here-string: -m @'\n...\n'@  or  @"\n...\n"@
+    m = re.search(r"-m\s+@['\"]\s*\n(.*?)\n['\"]@", command, re.DOTALL)
+    if m:
+        return m.group(1)
+    return None
+
+
+def _file_message(command: str) -> str | None:
+    """Commit message from a file: -F <path> / --file <path> / --file=<path>."""
+    m = re.search(r"(?:-F|--file)(?:=|\s+)(\S+)", command)
+    if not m:
+        return None
+    path = m.group(1).strip("\"'")
+    try:
+        return Path(path).read_text(encoding="utf-8", errors="replace")
+    except Exception:
+        return None
+
+
+def get_commit_message(command: str) -> str | None:
+    """Best-effort full commit message from inline (-m/heredoc) or file (-F)."""
+    return _inline_message(command) or _file_message(command)
+
+
+def commit_type_of(message: str) -> str:
+    """Conventional-commit type from message first line, or '' if none."""
+    m = re.match(CONVENTIONAL, message.strip())
+    return m.group(1) if m else ""
+
+
+def _block(msg: str) -> None:
+    print(msg, file=sys.stderr)
+    sys.exit(2)
 
 
 def main():
@@ -55,37 +91,52 @@ def main():
 
     if not is_git_commit_command(command):
         sys.exit(0)
-
     if is_foreign_repo(command):
         sys.exit(0)
 
-    if "[no-template]" in command or "[template-done]" in command:
+    message = get_commit_message(command)
+
+    # Bypass flags may live in the inline message OR the -F file.
+    haystack = command + "\n" + (message or "")
+    if "[no-template]" in haystack or "[template-done]" in haystack:
         sys.exit(0)
-
-    if extract_commit_type(command) not in TRIGGER_TYPES:
-        sys.exit(0)
-
-    staged = get_staged_files(command)
-
-    template_hits = [f for f in staged if any(re.search(p, f) for p in TEMPLATE_PATTERNS)]
 
     config = load_config()
     template_path = config.get("ai_template_path", "<ai_template_path not set in .claude/hooks/config.json>")
 
-    msg = "❌ [BLOCK] Ocena AI template repo:\n\n"
+    # FAIL-CLOSED: cannot read the message → do not silently pass.
+    if message is None:
+        _block(
+            "❌ [BLOCK] Nie mogę odczytać wiadomości commita.\n\n"
+            "  Guard AI-template musi sprawdzić typ i treść commita, ale nie znalazł\n"
+            "  jej w komendzie (brak -m / heredoc / -F z czytelnym plikiem).\n\n"
+            "  Commituj z -m, heredoc lub -F <plik>, albo dodaj [no-template]/[template-done]."
+        )
+
+    staged = get_staged_files(command)
+    template_hits = [f for f in staged if any(re.search(p, f) for p in TEMPLATE_PATTERNS)]
+    ctype = commit_type_of(message)
+
+    # Touching generic/template files → always force the decision (any commit type).
     if template_hits:
+        msg = "❌ [BLOCK] Ocena AI template repo:\n\n"
         msg += "  Pliki potencjalnie generyczne w staged:\n"
         msg += "".join(f"  → {f}\n" for f in template_hits[:10])
         msg += f"\n  Czy powinny trafić do template ({template_path}) ?\n"
-    else:
-        commit_type = extract_commit_type(command)
-        msg += f"  Commit typu '{commit_type}' — czy coś z tej zmiany jest generyczne\n"
-        msg += "  i powinno trafić do template AI?\n"
+        msg += "\n  Tak  → zsynchronizuj, potem dodaj [template-done] i commituj."
+        msg += "\n  Nie  → dodaj [no-template] do wiadomości commita."
+        _block(msg)
 
-    msg += "\n  Tak  → zsynchronizuj, potem dodaj [template-done] i commituj."
-    msg += "\n  Nie  → dodaj [no-template] do wiadomości commita."
-    print(msg, file=sys.stderr)
-    sys.exit(2)
+    # No template files touched: nag only on substantive commit types.
+    if ctype in TRIGGER_TYPES:
+        msg = "❌ [BLOCK] Ocena AI template repo:\n\n"
+        msg += f"  Commit typu '{ctype}' — czy coś z tej zmiany jest generyczne\n"
+        msg += "  i powinno trafić do template AI?\n"
+        msg += "\n  Tak  → zsynchronizuj, potem dodaj [template-done] i commituj."
+        msg += "\n  Nie  → dodaj [no-template] do wiadomości commita."
+        _block(msg)
+
+    sys.exit(0)
 
 
 if __name__ == "__main__":

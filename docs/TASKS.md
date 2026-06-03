@@ -11,6 +11,9 @@ Checklisty implementacyjne per faza znajdują się wyłącznie w [docs/ROADMAP.m
 - [x] `new-project --init`: reset wersjonowania (usuwa CHANGELOG, manifest → 0.0.0)
 - [x] `new-project --init`: świeży git + automatyczny init commit (`--no-git` opt-out)
 - [x] `new-project --init`: auto-instalacja guardów (pre-commit + commit-msg)
+- [x] `guard-ai-template`: fail-closed + czyta wiadomość z `-F`/heredoc (koniec cichego
+      bypassu przez `git commit -F`; flagi `[no-template]`/`[template-done]` czytane też z pliku)
+- [x] `session-context` + `update-skills`: wymuszenie utf-8 (koniec crashy cp1250 na Windows)
 
 ---
 
@@ -29,6 +32,18 @@ Checklisty implementacyjne per faza znajdują się wyłącznie w [docs/ROADMAP.m
 
 ## Stan sesji
 
+- 2026-06-04: hardening hooków (branch `fix/template-hardening`). Wykryte podczas pracy
+  w projekcie cdue-kti: (1) `guard-ai-template` puszczał commit przy `git commit -F`
+  bo `extract_commit_type` parsował tylko `-m` → cichy bypass; przepisany na fail-closed
+  + czytanie wiadomości/flag z pliku `-F`, heredoc, here-string; gdy nie umie odczytać
+  wiadomości → blok. Dodatkowo blokuje przy każdym tknięciu plików template'owych (dowolny
+  typ), nie tylko feat/fix/docs/refactor. (2) `session-context._remote_head_hash` —
+  `ls-remote` bez `encoding=utf-8` → wyjątek w wątku readera na Windows (cp1250); dodano
+  `encoding="utf-8", errors="replace"`. (3) `update-skills.py` — brak `stdout.reconfigure`
+  → crash przy emoji w `print` na cp1250; dodano reconfigure jak w `stack.py`/`session-context`.
+  Przetestowane ręcznie (guard: 5 scenariuszy exit-code; update-skills: emoji print bez crashu).
+  Items 4–6 (guard-template-sync URL, skille copywriting/cro do manifestu, AI_TEMPLATE_NOTES)
+  odłożone — item 4 łączy się z backlogiem „Config canonicalizacja ai_template_path (+ADR)".
 - 2026-06-03: fix `update-skills` — `collect_files` używał `str(rel)` (backslashe na
   Windows → rozjazd manifestu między OS). Zmiana na `rel.as_posix()`; 2 wcześniej
   czerwone testy `TestCollectFiles` zielone, 35/35 modułu. Branch `fix/update-skills-path-separator`.
