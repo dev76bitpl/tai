@@ -98,7 +98,9 @@ def collect_files(path: Path, exclude: list[str] | None = None) -> dict[str, str
         if any(part in exclude_set for part in rel.parts):
             continue
         try:
-            files[str(rel)] = file.read_text(encoding="utf-8", errors="replace")
+            # as_posix() keeps manifest keys forward-slashed on every OS — str(rel)
+            # would emit backslashes on Windows, drifting the manifest per platform.
+            files[rel.as_posix()] = file.read_text(encoding="utf-8", errors="replace")
         except Exception:
             pass
     return files
