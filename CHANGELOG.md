@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.17](https://github.com/dev76bitpl/tai/compare/v0.1.16...v0.1.17) (2026-06-04)
+
+
+### Features
+
+* **template:** Canonical config + acknowledgment sync guard (ADR-002) ([#61](https://github.com/dev76bitpl/tai/issues/61)) ([664b11e](https://github.com/dev76bitpl/tai/commit/664b11eb55f37651766ed07c66181aceb15bf4e8))
+
 ## [0.1.16](https://github.com/dev76bitpl/tai/compare/v0.1.15...v0.1.16) (2026-06-04)
 
 
