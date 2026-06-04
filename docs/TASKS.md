@@ -121,6 +121,13 @@ dry-run guardów tą samą treścią co commit; nie mieszaj sesji system/projekt
 
 ## Stan sesji
 
+- 2026-06-04: dopisana uniwersalna meta-zasada do `docs/AI_TEMPLATE_NOTES.md` (sekcja
+  „Praca z AI — meta-zasady"): nowy UI nie startuje od estetyki „AI-default", zakotwicz
+  w specyfice biznesu, dopcham jeden kierunek do końca, sygnalizuj gdy coś pachnie
+  AI-średnią. Lekcja wyciągnięta z sesji designu w projekcie cdue-kti (5 makiet hero →
+  pierwsze szkice były generyczne; user złapał regresję do średniej). Część user-specific
+  została w pamięci maszynowej projektu, do template'u trafił tylko uniwersalny rdzeń
+  (reguła 13a). Branch `docs/ui-anti-ai-default`.
 - 2026-06-04: Config canonicalizacja KROK 2 KOMPLETNY (branch `feat/config-canonical-template-sync`).
   ADR-002 accepted. A: `reset_adr_dir` czyści `docs/adr/` przy init. B: `create_config_json`
   bez `_git_remote_url`, zostawia placeholder (bug A skasowany). C: `dev-guards/stack.py`
