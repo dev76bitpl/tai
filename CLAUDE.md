@@ -343,6 +343,10 @@ Każda zasada w tym repo musi być sformułowana tak, żeby miała sens w **dowo
 
 Pamięć maszynowa (`~/.claude/...`) = supplement do CLAUDE.md, nie zamiennik.
 
+**Guard tylko z testem.** Żaden guard (hook, pre-commit) nie wchodzi do template'u bez testu, który dowodzi dwóch rzeczy naraz: (1) blokuje ścieżkę którą ma blokować, (2) przepuszcza wszystko inne. Guard bez testu bywa fail-open (cicho przepuszcza to co miał łapać) albo martwy (nigdy się nie odpala) — w obu przypadkach daje fałszywe poczucie ochrony, gorsze niż brak guarda. AI piszące guard pisze do niego test w tym samym kroku, nie "potem".
+
+**Rozdzielaj sesje „system" i „projekt".** Praca nad template'em / guardami / zasadami (system) i praca nad produktem (projekt) to dwa różne poziomy — mieszanie ich w jednej sesji rozjeżdża scope. Jedna sesja trzyma jeden poziom. Lekcja, która wyjdzie przy pracy nad projektem a dotyczy systemu, ląduje w systemie (guard z testem lub dokument), nie zostaje w sesji projektowej. AI sygnalizuje gdy sesja zaczyna mieszać poziomy.
+
 ---
 
 ### 13b. Pluginy — podpowiadaj raz gdy kontekst pasuje
