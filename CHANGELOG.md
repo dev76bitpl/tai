@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.16](https://github.com/dev76bitpl/tai/compare/v0.1.15...v0.1.16) (2026-06-04)
+
+
+### Features
+
+* **skills:** Vendor copywriting + cro marketing skills ([#59](https://github.com/dev76bitpl/tai/issues/59)) ([80d64b1](https://github.com/dev76bitpl/tai/commit/80d64b177816aea2301cd247865d5371b7271d63))
+
+
+### Bug Fixes
+
+* **hooks:** Fail-closed ai-template guard + utf-8 in hooks/scripts ([#57](https://github.com/dev76bitpl/tai/issues/57)) ([9f10465](https://github.com/dev76bitpl/tai/commit/9f104656a636ef10d5ed3be07a1de9ea13c3df00))
+
 ## [0.1.15](https://github.com/dev76bitpl/tai/compare/v0.1.14...v0.1.15) (2026-06-03)
 
 
