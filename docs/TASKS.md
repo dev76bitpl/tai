@@ -15,6 +15,9 @@ Checklisty implementacyjne per faza znajdują się wyłącznie w [docs/ROADMAP.m
       bypassu przez `git commit -F`; flagi `[no-template]`/`[template-done]` czytane też z pliku)
 - [x] `session-context` + `update-skills`: wymuszenie utf-8 (koniec crashy cp1250 na Windows)
 - [x] skille `copywriting` + `cro` zwendorowane do template'u (manifest + `.claude/skills/` + `docs/SKILLS.md`)
+- [x] durable lessons: wnioski (bezstanowość AI, guardy fail-open, template=produkt) →
+      `docs/AI_TEMPLATE_NOTES.md`; zasady (guard tylko z testem, rozdziel sesje system/projekt)
+      → `CLAUDE.md` reguła 13a; lekcje praktyczne (utf-8 w hookach, guard fail-closed) → NOTES
 
 ---
 
@@ -37,32 +40,34 @@ Checklisty implementacyjne per faza znajdują się wyłącznie w [docs/ROADMAP.m
 
 ## Następna sesja (SYSTEM — zacznij tu)
 
-To jest sesja systemu (tai), nie projektu. Pierwszy ruch = utrwalić wnioski z
-2026-06-04 (wyszły w cdue-kti), żeby system pracował na nich, a nie AI na ich pamiętaniu.
+To jest sesja systemu (tai), nie projektu.
 
-**Zadanie 1 (durable):** wpisz do `docs/AI_TEMPLATE_NOTES.md` + dodaj zasady do `CLAUDE.md`:
-- Wniosek 1: AI jest bezstanowy — co nie jest w repo/guardzie, znika. Liczenie na
-  pamięć/zrozumienie AI to bug. System ma NIE ufać AI.
-- Wniosek 2: guardy pisze ten sam AI, który tnie zakręty → bywają fail-open
-  (guard-ai-template omijany przez `git commit -F`) albo martwe (guard-template-sync
-  przy URL). Dlatego user wciąż jest realnym guardem.
-- Wniosek 3: template = produkt; projekty to miejsca, gdzie wychodzą jego błędy.
-  Lekcja ma lądować w guardzie Z TESTEM — inaczej zostaje "w głowie" = nigdzie.
-- **Zasada A:** żaden guard nie wchodzi bez testu dowodzącego, że blokuje bypass i
-  przepuszcza resztę.
-- **Zasada B:** rozdzielaj sesje "projekt" i "system" — nie mieszaj (mieszanie było
-  źródłem dzisiejszego chaosu).
+Domknięte (2026-06-04): durable lessons (wnioski → `AI_TEMPLATE_NOTES`, zasady A/B →
+`CLAUDE.md` 13a), hardening hooków 1–3 (fail-closed guard, utf-8), push+merge
+`fix/template-hardening` (PR #57), skille copywriting/cro (PR #59).
 
-**Potem:** hardening A/B (patrz wpis 2026-06-04 niżej + backlog "Config canonicalizacja")
-i push brancha `fix/template-hardening` (commit `fb05114`).
+**Zadanie do zrobienia — Config canonicalizacja `ai_template_path` (+ADR):** to jedyny
+otwarty kawałek hardeningu (items 4–6) i wymaga własnej sesji z ADR. Szczegóły w backlogu
+niżej. Obejmuje: jeden kanoniczny plik configu (`guard_template_sync` czyta inny niż
+`doctor.py`/`new-project.py` → guard sync martwy w nowych projektach), URL-aware
+`ai_template_path` (konsumenci wymagają lokalnej ścieżki), oraz błąd A w `--init`
+(`create_config_json(root, root)` zapisuje remote projektu jako template path). Każdy
+guard, który tu powstanie/zmieni się, wchodzi z testem (Zasada A).
 
 **Zasady pracy:** commit przez `-m`/heredoc, nigdy `-F` do omijania guardów;
-dry-run guardów tą samą treścią co commit.
+dry-run guardów tą samą treścią co commit; nie mieszaj sesji system/projekt.
 
 ---
 
 ## Stan sesji
 
+- 2026-06-04: durable lessons utrwalone (branch `docs/durable-ai-lessons`). Wnioski 1–3
+  (bezstanowość AI → system nie ufa AI; guardy bywają fail-open/martwe → user realnym
+  guardem; template=produkt) → `docs/AI_TEMPLATE_NOTES.md`. Zasady A/B (guard tylko z
+  testem; rozdziel sesje system/projekt) → `CLAUDE.md` reguła 13a. Lekcje praktyczne
+  (utf-8 na stdout/stderr hooków, guard commit-msg fail-closed) → sekcja guard w NOTES.
+  Items 4–6 hardeningu domknięte poza canonicalizacją `ai_template_path` (osobna sesja
+  z ADR — patrz „Następna sesja" + backlog).
 - 2026-06-04: zwendorowano skille `copywriting` + `cro` z coreyhaines31/marketingskills
   (commit `7f4af1ea`) — wpisy w `skills-manifest.json`, pobrane przez `update-skills.py
   --apply` (skan bezpieczeństwa czysty), wiersze w obu tabelach `docs/SKILLS.md`. Branch
