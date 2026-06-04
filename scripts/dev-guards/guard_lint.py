@@ -15,7 +15,7 @@ def main() -> None:
     lint_cmd = get_lint_cmd()
 
     if not lint_cmd:
-        print(f"⚠️  [WARN] Unknown stack — lint skipped. Configure .pre-commit-hooks.config.json")
+        print(f"⚠️  [WARN] Unknown stack — lint skipped. Configure .claude/hooks/config.json")
         return
 
     if not cmd_exists(lint_cmd):

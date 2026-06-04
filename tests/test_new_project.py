@@ -66,11 +66,13 @@ class TestCreateConfigJson:
         cfg = dest / ".claude" / "hooks" / "config.json"
         assert cfg.exists()
 
-    def test_ai_template_path_set(self, template, dest):
+    def test_ai_template_path_left_as_placeholder(self, template, dest):
+        # ADR-002 decision 3: generator must NOT auto-fill ai_template_path (bug A).
+        # The example placeholder is preserved verbatim.
         (dest / ".claude" / "hooks").mkdir(parents=True)
         create_config_json(dest, template, dry_run=False)
         data = json.loads((dest / ".claude" / "hooks" / "config.json").read_text())
-        assert data["ai_template_path"] == str(template)
+        assert data["ai_template_path"] == "PLACEHOLDER"
 
     def test_repo_name_set_to_dest_name(self, template, dest):
         (dest / ".claude" / "hooks").mkdir(parents=True)
@@ -177,6 +179,17 @@ class TestInitInPlace:
                 mod.init_in_place(fake_root, dry_run=False, do_git=False)
         assert (fake_root / "README.md").read_text(encoding="utf-8") == README_SCAFFOLD
 
+    def test_resets_adr_dir(self, tmp_path):
+        fake_root = self._setup(tmp_path)
+        adr = fake_root / "docs" / "adr"
+        adr.mkdir(parents=True)
+        (adr / "ADR-002-template-sync-acknowledgment.md").write_text("# internal\n")
+        with mock.patch.object(mod, "create_config_json"):
+            with mock.patch.object(mod, "create_settings_local"):
+                mod.init_in_place(fake_root, dry_run=False, do_git=False)
+        assert list(adr.glob("*.md")) == []
+        assert (adr / ".gitkeep").exists()
+
     def test_self_deletes_script(self, tmp_path):
         fake_root = self._setup(tmp_path)
         with mock.patch.object(mod, "create_config_json"):
@@ -237,6 +250,39 @@ class TestResetVersioning:
         # Neither file present — must not raise.
         mod.reset_versioning(tmp_path, dry_run=False)
         assert not (tmp_path / "CHANGELOG.md").exists()
+
+
+# ── reset_adr_dir ──────────────────────────────────────────────────────────────
+
+class TestResetAdrDir:
+    def _setup(self, tmp_path: Path) -> Path:
+        adr = tmp_path / "docs" / "adr"
+        adr.mkdir(parents=True)
+        (adr / "ADR-001-example.md").write_text("# example\n")
+        (adr / "ADR-002-template-sync-acknowledgment.md").write_text("# internal\n")
+        return tmp_path
+
+    def test_removes_all_template_adrs(self, tmp_path):
+        root = self._setup(tmp_path)
+        mod.reset_adr_dir(root, dry_run=False)
+        assert list((root / "docs" / "adr").glob("*.md")) == []
+
+    def test_leaves_gitkeep(self, tmp_path):
+        root = self._setup(tmp_path)
+        mod.reset_adr_dir(root, dry_run=False)
+        assert (root / "docs" / "adr" / ".gitkeep").exists()
+
+    def test_dry_run_changes_nothing(self, tmp_path):
+        root = self._setup(tmp_path)
+        mod.reset_adr_dir(root, dry_run=True)
+        names = {p.name for p in (root / "docs" / "adr").glob("*.md")}
+        assert "ADR-002-template-sync-acknowledgment.md" in names
+        assert not (root / "docs" / "adr" / ".gitkeep").exists()
+
+    def test_missing_dir_is_no_op(self, tmp_path):
+        # No docs/adr present — must not raise.
+        mod.reset_adr_dir(tmp_path, dry_run=False)
+        assert not (tmp_path / "docs" / "adr").exists()
 
 
 # ── fresh_git_history ──────────────────────────────────────────────────────────

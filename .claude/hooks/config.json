@@ -1,0 +1,4 @@
+{
+  "_comment": "This repo IS the AI template. is_template makes guard-template-sync a no-op here (ADR-002 decision 5) — there is no template above this one to sync to. Projects generated via new-project.py get a config.json WITHOUT this flag (create_config_json builds from config.json.example).",
+  "is_template": true
+}

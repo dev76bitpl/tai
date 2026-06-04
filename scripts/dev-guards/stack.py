@@ -6,9 +6,13 @@ hook invocation, staged-file resolution, and exit-code propagation — the
 guards just need stack detection + git helpers + config loading.
 
 Resolution order for lint/test commands:
-  1. .pre-commit-hooks.config.json (project-level override, optional)
+  1. .claude/hooks/config.json (project-level override, optional)
   2. Autodetection based on repo marker files
   3. Unknown stack → warn, do not block
+
+Config file is canonical (ADR-002): the same .claude/hooks/config.json read by
+.claude/hooks/stack.py, doctor.py and session-context.py. The old orphan
+.pre-commit-hooks.config.json had no producer, leaving these guards dead.
 """
 import json
 import platform
@@ -21,7 +25,7 @@ sys.stdout.reconfigure(encoding="utf-8")
 sys.stderr.reconfigure(encoding="utf-8")
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-CONFIG_PATH = REPO_ROOT / ".pre-commit-hooks.config.json"
+CONFIG_PATH = REPO_ROOT / ".claude" / "hooks" / "config.json"
 
 STACKS: dict[str, dict] = {
     "node": {

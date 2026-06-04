@@ -27,14 +27,28 @@ Checklisty implementacyjne per faza znajdują się wyłącznie w [docs/ROADMAP.m
       nie zgadza się z plikiem (skrypt zmieniony w PR #57, hash nie). Zero referencji
       w hookach/pre-commit → nic go nie egzekwuje. Albo zaktualizować hash przy każdej
       zmianie skryptu (dodać guard), albo usunąć pole jako mylące.
-- [ ] **Config canonicalizacja `ai_template_path`** (własna sesja + ADR) —
-      `guard_template_sync` czyta `.pre-commit-hooks.config.json` (przez
-      `stack.load_config`), a `doctor.py` + `new-project.py` używają
-      `.claude/hooks/config.json`. Dwa różne pliki → guard sync template'u jest
-      w nowych projektach trwale martwy. Plus `ai_template_path` bywa URL-em, a
-      konsumenci wymagają lokalnej ścieżki (`Path(...).is_dir()`). Obejmuje też
-      **błąd A**: w `--init` `create_config_json(root, root)` zapisuje remote
-      *projektu* jako template path zamiast template'u.
+- [x] **Config canonicalizacja `ai_template_path`** — ✅ KROK 2 zrobiony (ADR-002);
+      pozostaje KROK 3: migracja cdue-kti (osobna sesja projektowa, Zasada B)
+
+  > Po ludzku: guard, który pilnuje, by zmiany reguł wracały do wzorca, był w nowych
+  > projektach martwy (czytał nieistniejący plik) i wymagał, żeby każdy miał wzorzec
+  > na dysku. Po zmianie guard działa dla każdego od pierwszego commita, bez setupu.
+
+  Decyzja: ADR-002 — sync = blokada-potwierdzenie (nie lokalne porównanie); lokalna
+  ścieżka `ai_template_path` opcjonalna; jeden kanoniczny config `.claude/hooks/config.json`.
+  Inkrementy KROK 2:
+  - [x] **A** — `new-project.py`: `reset_adr_dir` czyści `docs/adr/` przy `--init`
+        (ADR-y wzorca nie wyciekają do projektów; decyzja 6) + testy
+  - [x] **B** — `create_config_json`: usunięty `_git_remote_url`, nie auto-ustawia
+        `ai_template_path` (zostaje placeholder; kasuje błąd A; decyzja 3) + test
+  - [x] **C** — `scripts/dev-guards/stack.py` `CONFIG_PATH` → `.claude/hooks/config.json`;
+        wyczyszczone wszystkie ślady `.pre-commit-hooks.config.json` (decyzja 4)
+  - [x] **D** — oba guardy sync przepisane na tryb potwierdzenia
+        (`scripts/dev-guards/guard_template_sync.py` + `.claude/hooks/guard-template-sync.py`):
+        brak klona/URL/zła ścieżka → blokada-ack na CLAUDE.md zamiast cichego skipu;
+        ścieżka do lokalnego klona → auto-weryfikacja (decyzja 1+2) + 23 testy
+  - [x] **E** — `tai/.claude/hooks/config.json` z `is_template: true`; oba guardy no-op
+        sync we wzorcu (decyzja 5)
 
 ---
 
@@ -61,6 +75,15 @@ dry-run guardów tą samą treścią co commit; nie mieszaj sesji system/projekt
 
 ## Stan sesji
 
+- 2026-06-04: Config canonicalizacja KROK 2 KOMPLETNY (branch `feat/config-canonical-template-sync`).
+  ADR-002 accepted. A: `reset_adr_dir` czyści `docs/adr/` przy init. B: `create_config_json`
+  bez `_git_remote_url`, zostawia placeholder (bug A skasowany). C: `dev-guards/stack.py`
+  `CONFIG_PATH` → `.claude/hooks/config.json`, wyczyszczone ślady `.pre-commit-hooks.config.json`.
+  D: oba guardy sync (pre-commit + Claude hook) na tryb potwierdzenia — brak klona/URL/zła ścieżka
+  → blokada-ack na CLAUDE.md (koniec cichego skipu); klon → auto-weryfikacja. E: `tai/.claude/hooks/
+  config.json` z `is_template: true` → guardy no-op we wzorcu. Testy: 111/111 (nowe
+  `test_guard_template_sync` 16, `_hook` 7). **KROK 3 (migracja cdue-kti) → następna sesja** —
+  zaktualizować pliki guarda + `stack.py` w cdue-kti, naprawić `ai_template_path`; Zasada B.
 - 2026-06-04: durable lessons utrwalone (branch `docs/durable-ai-lessons`). Wnioski 1–3
   (bezstanowość AI → system nie ufa AI; guardy bywają fail-open/martwe → user realnym
   guardem; template=produkt) → `docs/AI_TEMPLATE_NOTES.md`. Zasady A/B (guard tylko z

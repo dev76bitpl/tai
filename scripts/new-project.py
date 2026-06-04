@@ -116,11 +116,12 @@ README_SCAFFOLD = """\
 TEMPLATE_META: list[str] = [
     "tests",
     "README.md",
-    "docs/adr/ADR-001-example.md",
     "docs/SETUP.example.md",
     "docs/TASKS.example.md",
     "docs/ROADMAP.example.md",
 ]
+# docs/adr/ is reset wholesale by reset_adr_dir (not listed here) — the template's
+# own ADRs (ADR-002+) plus the example must all go, leaving a clean docs/adr/.
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -176,29 +177,22 @@ def mkdir(path: Path, dest: Path, dry_run: bool) -> None:
     (path / ".gitkeep").touch()
 
 
-def _git_remote_url(repo_root: Path) -> str | None:
-    """Returns git remote origin URL, or None if unavailable."""
-    result = subprocess.run(
-        ["git", "-C", str(repo_root), "remote", "get-url", "origin"],
-        capture_output=True, text=True,
-    )
-    url = result.stdout.strip()
-    return url if result.returncode == 0 and url else None
-
-
 def create_config_json(dest: Path, template_root: Path, dry_run: bool) -> None:
-    """Creates .claude/hooks/config.json with ai_template_path pre-filled.
+    """Creates .claude/hooks/config.json from the template's example.
 
-    Prefers git remote URL over local path so config works across machines.
+    ai_template_path is left as the example placeholder, not auto-filled (ADR-002
+    decision 3): it's an optional per-machine path to a local template clone that
+    the generator can't know, and the sync guard works without it (acknowledgment
+    mode). Auto-filling it was the source of bug A — in --init the project's own
+    remote got written as the template path.
     """
     example_src = template_root / ".claude" / "hooks" / "config.json.example"
     if not example_src.exists():
         return
-    log("auto-config", ".claude/hooks/config.json  (ai_template_path pre-filled)", dry_run)
+    log("auto-config", ".claude/hooks/config.json  (ai_template_path = placeholder)", dry_run)
     if dry_run:
         return
     config = json.loads(example_src.read_text(encoding="utf-8"))
-    config["ai_template_path"] = _git_remote_url(template_root) or str(template_root)
     if config.get("repos") and isinstance(config["repos"], list):
         config["repos"][0]["name"] = dest.name
         config["repos"][0]["tasks"] = "docs/TASKS.md"
@@ -238,6 +232,26 @@ def reset_versioning(root: Path, dry_run: bool) -> None:
         log("reset", ".release-please-manifest.json  → 0.0.0", dry_run)
         if not dry_run:
             manifest.write_text('{\n  ".": "0.0.0"\n}\n', encoding="utf-8")
+
+
+def reset_adr_dir(root: Path, dry_run: bool) -> None:
+    """Drop the template's own ADRs so the project starts with a clean docs/adr/.
+
+    docs/adr/ in the template plays two roles — a scaffold example for projects
+    AND the home for the template's own engineering decisions (ADR-002+). Without
+    a reset those internal ADRs leak into every project (they document template
+    plumbing the project has no stake in). Mirrors reset_versioning: the project
+    gets a clean start. End state — empty docs/adr/ with .gitkeep — matches the
+    copy mode (which mkdirs an empty adr/).
+    """
+    adr_dir = root / "docs" / "adr"
+    if not adr_dir.is_dir():
+        return
+    for adr in sorted(adr_dir.glob("*.md")):
+        remove(adr, root, dry_run)
+    if dry_run:
+        return
+    (adr_dir / ".gitkeep").touch()
 
 
 def _on_rm_error(func, path, _exc_info) -> None:
@@ -339,6 +353,9 @@ def init_in_place(root: Path, dry_run: bool, do_git: bool = True) -> None:
 
     print("\n── Reset wersjonowania ─────────────────────────────────")
     reset_versioning(root, dry_run)
+
+    print("\n── Reset docs/adr (czysty start) ───────────────────────")
+    reset_adr_dir(root, dry_run)
 
     print("\n── README scaffold ─────────────────────────────────────")
     log("scaffold", "README.md", dry_run)
