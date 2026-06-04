@@ -27,6 +27,19 @@ Checklisty implementacyjne per faza znajdują się wyłącznie w [docs/ROADMAP.m
       nie zgadza się z plikiem (skrypt zmieniony w PR #57, hash nie). Zero referencji
       w hookach/pre-commit → nic go nie egzekwuje. Albo zaktualizować hash przy każdej
       zmianie skryptu (dodać guard), albo usunąć pole jako mylące.
+- [ ] **GitHub: uprawnienie Actions do tworzenia PR-ów** — projekty z template'u
+
+  > Po ludzku: w nowym projekcie release-please nie wystawia release'u (czyli wersja nie
+  > powstaje) dopóki nie włączysz jednego ustawienia na GitHubie — pada po cichu w CI.
+
+  Projekty bootstrapowane z template'u mają domyślnie wyłączone „Allow GitHub Actions to
+  create and approve pull requests" (`default_workflow_permissions: read`,
+  `can_approve_pull_request_reviews: false`). release-please pada przy każdym merge do main:
+  `GitHub Actions is not permitted to create or approve pull requests` — aż ktoś ręcznie
+  włączy. Fix (per repo):
+  `gh api -X PUT repos/<owner>/<repo>/actions/permissions/workflow -f default_workflow_permissions=write -F can_approve_pull_request_reviews=true`
+  Do zrobienia: dopisać do `docs/SETUP.md` (sekcja GitHub settings / „Done when") albo
+  zautomatyzować w `new-project.py` post-init. Wykryte w cdue-kti (release-please padał od #2).
 - [x] **Config canonicalizacja `ai_template_path`** — ✅ KROK 2 zrobiony (ADR-002);
       pozostaje KROK 3: migracja cdue-kti (osobna sesja projektowa, Zasada B)
 
