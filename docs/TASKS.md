@@ -14,11 +14,16 @@ Checklisty implementacyjne per faza znajdują się wyłącznie w [docs/ROADMAP.m
 - [x] `guard-ai-template`: fail-closed + czyta wiadomość z `-F`/heredoc (koniec cichego
       bypassu przez `git commit -F`; flagi `[no-template]`/`[template-done]` czytane też z pliku)
 - [x] `session-context` + `update-skills`: wymuszenie utf-8 (koniec crashy cp1250 na Windows)
+- [x] skille `copywriting` + `cro` zwendorowane do template'u (manifest + `.claude/skills/` + `docs/SKILLS.md`)
 
 ---
 
 ## Backlog
 
+- [ ] **Martwy `script_integrity` w `skills-manifest.json`** — hash `update-skills.py`
+      nie zgadza się z plikiem (skrypt zmieniony w PR #57, hash nie). Zero referencji
+      w hookach/pre-commit → nic go nie egzekwuje. Albo zaktualizować hash przy każdej
+      zmianie skryptu (dodać guard), albo usunąć pole jako mylące.
 - [ ] **Config canonicalizacja `ai_template_path`** (własna sesja + ADR) —
       `guard_template_sync` czyta `.pre-commit-hooks.config.json` (przez
       `stack.load_config`), a `doctor.py` + `new-project.py` używają
@@ -58,6 +63,11 @@ dry-run guardów tą samą treścią co commit.
 
 ## Stan sesji
 
+- 2026-06-04: zwendorowano skille `copywriting` + `cro` z coreyhaines31/marketingskills
+  (commit `7f4af1ea`) — wpisy w `skills-manifest.json`, pobrane przez `update-skills.py
+  --apply` (skan bezpieczeństwa czysty), wiersze w obu tabelach `docs/SKILLS.md`. Branch
+  `feat/vendor-marketing-skills` z main. Item 5 z listy hardeningu 4–6 domknięty. Przy
+  okazji wykryto martwy `script_integrity` (→ backlog).
 - 2026-06-04: hardening hooków (branch `fix/template-hardening`). Wykryte podczas pracy
   w projekcie cdue-kti: (1) `guard-ai-template` puszczał commit przy `git commit -F`
   bo `extract_commit_type` parsował tylko `-m` → cichy bypass; przepisany na fail-closed
