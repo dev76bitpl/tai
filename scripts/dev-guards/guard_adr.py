@@ -3,7 +3,7 @@
 
 Stage: commit-msg.
 
-Patterns are configurable via .pre-commit-hooks.config.json:
+Patterns are configurable via .claude/hooks/config.json:
   { "adr_patterns": [["migrations/", "database migration"]] }
 
 Bypass:

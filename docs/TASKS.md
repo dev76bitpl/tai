@@ -27,7 +27,8 @@ Checklisty implementacyjne per faza znajdują się wyłącznie w [docs/ROADMAP.m
       nie zgadza się z plikiem (skrypt zmieniony w PR #57, hash nie). Zero referencji
       w hookach/pre-commit → nic go nie egzekwuje. Albo zaktualizować hash przy każdej
       zmianie skryptu (dodać guard), albo usunąć pole jako mylące.
-- [ ] **Config canonicalizacja `ai_template_path`** — 🚧 w toku (ADR-002 accepted)
+- [x] **Config canonicalizacja `ai_template_path`** — ✅ KROK 2 zrobiony (ADR-002);
+      pozostaje KROK 3: migracja cdue-kti (osobna sesja projektowa, Zasada B)
 
   > Po ludzku: guard, który pilnuje, by zmiany reguł wracały do wzorca, był w nowych
   > projektach martwy (czytał nieistniejący plik) i wymagał, żeby każdy miał wzorzec
@@ -38,14 +39,16 @@ Checklisty implementacyjne per faza znajdują się wyłącznie w [docs/ROADMAP.m
   Inkrementy KROK 2:
   - [x] **A** — `new-project.py`: `reset_adr_dir` czyści `docs/adr/` przy `--init`
         (ADR-y wzorca nie wyciekają do projektów; decyzja 6) + testy
-  - [ ] **B** — `create_config_json`: usuń `_git_remote_url`, przestań auto-ustawiać
-        `ai_template_path` (kasuje błąd A `create_config_json(root, root)`; decyzja 3)
-  - [ ] **C** — `scripts/dev-guards/stack.py` `CONFIG_PATH` → `.claude/hooks/config.json`;
-        usuń ślady `.pre-commit-hooks.config.json` (decyzja 4)
-  - [ ] **D** — przepisz oba guardy sync (`scripts/dev-guards/guard_template_sync.py` +
-        `.claude/hooks/guard-template-sync.py`) na tryb potwierdzenia (decyzja 1+2)
-  - [ ] **E** — flaga `is_template: true` w `.claude/hooks/config.json` wzorca; guard
-        respektuje (no-op sync we wzorcu; decyzja 5)
+  - [x] **B** — `create_config_json`: usunięty `_git_remote_url`, nie auto-ustawia
+        `ai_template_path` (zostaje placeholder; kasuje błąd A; decyzja 3) + test
+  - [x] **C** — `scripts/dev-guards/stack.py` `CONFIG_PATH` → `.claude/hooks/config.json`;
+        wyczyszczone wszystkie ślady `.pre-commit-hooks.config.json` (decyzja 4)
+  - [x] **D** — oba guardy sync przepisane na tryb potwierdzenia
+        (`scripts/dev-guards/guard_template_sync.py` + `.claude/hooks/guard-template-sync.py`):
+        brak klona/URL/zła ścieżka → blokada-ack na CLAUDE.md zamiast cichego skipu;
+        ścieżka do lokalnego klona → auto-weryfikacja (decyzja 1+2) + 23 testy
+  - [x] **E** — `tai/.claude/hooks/config.json` z `is_template: true`; oba guardy no-op
+        sync we wzorcu (decyzja 5)
 
 ---
 
@@ -72,12 +75,15 @@ dry-run guardów tą samą treścią co commit; nie mieszaj sesji system/projekt
 
 ## Stan sesji
 
-- 2026-06-04: Config canonicalizacja (branch `feat/config-canonical-template-sync`).
-  ADR-002 napisany i zaakceptowany (sync = blokada-potwierdzenie zamiast lokalnego porównania;
-  `ai_template_path` opcjonalny; kanoniczny `.claude/hooks/config.json`; reset `docs/adr/` przy
-  init). Inkrement A domknięty: `new-project.py` → `reset_adr_dir` (na wzór `reset_versioning`)
-  czyści `docs/adr/` przy `--init`, wpis ADR usunięty z `TEMPLATE_META`; 5 nowych testów, 34/34.
-  Pozostałe inkrementy B–E (bug A, repoint stack.py, przepisanie guardów, flaga is_template) w toku.
+- 2026-06-04: Config canonicalizacja KROK 2 KOMPLETNY (branch `feat/config-canonical-template-sync`).
+  ADR-002 accepted. A: `reset_adr_dir` czyści `docs/adr/` przy init. B: `create_config_json`
+  bez `_git_remote_url`, zostawia placeholder (bug A skasowany). C: `dev-guards/stack.py`
+  `CONFIG_PATH` → `.claude/hooks/config.json`, wyczyszczone ślady `.pre-commit-hooks.config.json`.
+  D: oba guardy sync (pre-commit + Claude hook) na tryb potwierdzenia — brak klona/URL/zła ścieżka
+  → blokada-ack na CLAUDE.md (koniec cichego skipu); klon → auto-weryfikacja. E: `tai/.claude/hooks/
+  config.json` z `is_template: true` → guardy no-op we wzorcu. Testy: 111/111 (nowe
+  `test_guard_template_sync` 16, `_hook` 7). **KROK 3 (migracja cdue-kti) → następna sesja** —
+  zaktualizować pliki guarda + `stack.py` w cdue-kti, naprawić `ai_template_path`; Zasada B.
 - 2026-06-04: durable lessons utrwalone (branch `docs/durable-ai-lessons`). Wnioski 1–3
   (bezstanowość AI → system nie ufa AI; guardy bywają fail-open/martwe → user realnym
   guardem; template=produkt) → `docs/AI_TEMPLATE_NOTES.md`. Zasady A/B (guard tylko z

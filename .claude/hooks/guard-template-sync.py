@@ -9,10 +9,14 @@ Zasada: każdy uniwersalny wzorzec wymyślony w projekcie musi trafić do templa
 Sekcje project-specific i świadome odejścia od template zostają w projekcie —
 przy commicie świadoma decyzja przez bypass [skip-sync].
 
-Konfiguracja w .claude/hooks/config.json:
-{ "ai_template_path": "<absolute-path-to-template-repo>" }
+Konfiguracja w .claude/hooks/config.json (kanoniczny, ADR-002):
+{ "ai_template_path": "<lokalna-ścieżka-do-klona-template>" }   # opcjonalne
 
-Bez klucza ai_template_path: guard pomija się cicho.
+Model (ADR-002): brak lokalnego klona (brak ścieżki / URL / nieistniejący katalog)
+NIE pomija się cicho — bramkuje na CLAUDE.md (sync reguł uniwersalnych, reguła 13a)
+z prośbą o [skip-sync] albo przeniesienie do template. Bogate porównanie *.md/guardów
+odpala się tylko gdy klon istnieje (auto-weryfikacja dla maintainera).
+is_template: true → to repo JEST template'm, sync pomijany.
 Trigger: staged pliki zawierają *.md lub scripts/dev-guards/*.py.
 Bypass: [skip-sync] w wiadomości commita.
 """
@@ -44,6 +48,31 @@ def get_section_headers(text: str) -> set[str]:
     return headers
 
 
+_URL_PREFIXES = ("http://", "https://", "git@", "ssh://")
+
+
+def _local_template_root(template_path: str) -> Path | None:
+    """Lokalny katalog klona template (ADR-002): URL i nieistniejąca ścieżka → None."""
+    if not template_path or template_path.startswith(_URL_PREFIXES):
+        return None
+    root = Path(template_path)
+    return root if root.is_dir() else None
+
+
+def _touches_claude(staged: list[str]) -> bool:
+    return any(f == "CLAUDE.md" or f.endswith("/CLAUDE.md") for f in staged)
+
+
+def _ack_message() -> str:
+    return (
+        "❌ [BLOCK] CLAUDE.md zmieniony — potwierdź gdzie ta zmiana należy (reguła 13a).\n\n"
+        "   Uniwersalna reguła → przenieś ją też do CLAUDE.md w repo template.\n"
+        "   Projektowa / już zsynchronizowana → dodaj [skip-sync] do wiadomości commita.\n\n"
+        "   (Brak lokalnego klona template do auto-weryfikacji — ustaw ai_template_path\n"
+        "    w .claude/hooks/config.json, jeśli chcesz automatycznego sprawdzania.)"
+    )
+
+
 def main():
     command = get_command()
     chdir_to_project_root(command)
@@ -58,16 +87,22 @@ def main():
         sys.exit(0)
 
     config = load_config()
-    template_path = config.get("ai_template_path", "")
-    if not template_path:
-        sys.exit(0)
+    if config.get("is_template"):
+        sys.exit(0)  # to repo JEST template'm — nie ma czego synchronizować wyżej (ADR-002)
 
-    template_root = Path(template_path)
-    if not template_root.is_dir():
-        print(f"⚠️  [WARN] ai_template_path nie istnieje: {template_path}", file=sys.stderr)
-        sys.exit(0)
-
+    template_root = _local_template_root(config.get("ai_template_path", ""))
     staged = get_staged_files(command)
+
+    if template_root is None:
+        # Brak użytecznego lokalnego klona (brak / URL / nieistniejący katalog).
+        # Bogate porównanie *.md/guardów wymaga drzewa roboczego — nie odpala się.
+        # Nie pomijaj po cichu (ADR-002): bramkuj na CLAUDE.md (sync reguł uniwersalnych,
+        # reguła 13a). Sync pozostałych *.md zostaje bonusem przy klonie, nie bramką,
+        # żeby nie blokować każdego commita z docs.
+        if _touches_claude(staged):
+            print(_ack_message(), file=sys.stderr)
+            sys.exit(2)
+        sys.exit(0)
 
     has_md = any(f.endswith(".md") for f in staged)
     has_py = any("scripts/dev-guards/" in f and f.endswith(".py") for f in staged)

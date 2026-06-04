@@ -177,29 +177,22 @@ def mkdir(path: Path, dest: Path, dry_run: bool) -> None:
     (path / ".gitkeep").touch()
 
 
-def _git_remote_url(repo_root: Path) -> str | None:
-    """Returns git remote origin URL, or None if unavailable."""
-    result = subprocess.run(
-        ["git", "-C", str(repo_root), "remote", "get-url", "origin"],
-        capture_output=True, text=True,
-    )
-    url = result.stdout.strip()
-    return url if result.returncode == 0 and url else None
-
-
 def create_config_json(dest: Path, template_root: Path, dry_run: bool) -> None:
-    """Creates .claude/hooks/config.json with ai_template_path pre-filled.
+    """Creates .claude/hooks/config.json from the template's example.
 
-    Prefers git remote URL over local path so config works across machines.
+    ai_template_path is left as the example placeholder, not auto-filled (ADR-002
+    decision 3): it's an optional per-machine path to a local template clone that
+    the generator can't know, and the sync guard works without it (acknowledgment
+    mode). Auto-filling it was the source of bug A — in --init the project's own
+    remote got written as the template path.
     """
     example_src = template_root / ".claude" / "hooks" / "config.json.example"
     if not example_src.exists():
         return
-    log("auto-config", ".claude/hooks/config.json  (ai_template_path pre-filled)", dry_run)
+    log("auto-config", ".claude/hooks/config.json  (ai_template_path = placeholder)", dry_run)
     if dry_run:
         return
     config = json.loads(example_src.read_text(encoding="utf-8"))
-    config["ai_template_path"] = _git_remote_url(template_root) or str(template_root)
     if config.get("repos") and isinstance(config["repos"], list):
         config["repos"][0]["name"] = dest.name
         config["repos"][0]["tasks"] = "docs/TASKS.md"

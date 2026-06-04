@@ -17,7 +17,7 @@ def main() -> None:
     test_cmd = get_test_cmd()
 
     if not test_cmd:
-        print(f"⚠️  [WARN] Unknown stack — tests skipped. Configure .pre-commit-hooks.config.json")
+        print(f"⚠️  [WARN] Unknown stack — tests skipped. Configure .claude/hooks/config.json")
         return
 
     staged = get_staged_files()

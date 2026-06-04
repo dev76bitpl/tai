@@ -66,11 +66,13 @@ class TestCreateConfigJson:
         cfg = dest / ".claude" / "hooks" / "config.json"
         assert cfg.exists()
 
-    def test_ai_template_path_set(self, template, dest):
+    def test_ai_template_path_left_as_placeholder(self, template, dest):
+        # ADR-002 decision 3: generator must NOT auto-fill ai_template_path (bug A).
+        # The example placeholder is preserved verbatim.
         (dest / ".claude" / "hooks").mkdir(parents=True)
         create_config_json(dest, template, dry_run=False)
         data = json.loads((dest / ".claude" / "hooks" / "config.json").read_text())
-        assert data["ai_template_path"] == str(template)
+        assert data["ai_template_path"] == "PLACEHOLDER"
 
     def test_repo_name_set_to_dest_name(self, template, dest):
         (dest / ".claude" / "hooks").mkdir(parents=True)
