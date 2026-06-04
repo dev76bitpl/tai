@@ -116,11 +116,12 @@ README_SCAFFOLD = """\
 TEMPLATE_META: list[str] = [
     "tests",
     "README.md",
-    "docs/adr/ADR-001-example.md",
     "docs/SETUP.example.md",
     "docs/TASKS.example.md",
     "docs/ROADMAP.example.md",
 ]
+# docs/adr/ is reset wholesale by reset_adr_dir (not listed here) — the template's
+# own ADRs (ADR-002+) plus the example must all go, leaving a clean docs/adr/.
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -240,6 +241,26 @@ def reset_versioning(root: Path, dry_run: bool) -> None:
             manifest.write_text('{\n  ".": "0.0.0"\n}\n', encoding="utf-8")
 
 
+def reset_adr_dir(root: Path, dry_run: bool) -> None:
+    """Drop the template's own ADRs so the project starts with a clean docs/adr/.
+
+    docs/adr/ in the template plays two roles — a scaffold example for projects
+    AND the home for the template's own engineering decisions (ADR-002+). Without
+    a reset those internal ADRs leak into every project (they document template
+    plumbing the project has no stake in). Mirrors reset_versioning: the project
+    gets a clean start. End state — empty docs/adr/ with .gitkeep — matches the
+    copy mode (which mkdirs an empty adr/).
+    """
+    adr_dir = root / "docs" / "adr"
+    if not adr_dir.is_dir():
+        return
+    for adr in sorted(adr_dir.glob("*.md")):
+        remove(adr, root, dry_run)
+    if dry_run:
+        return
+    (adr_dir / ".gitkeep").touch()
+
+
 def _on_rm_error(func, path, _exc_info) -> None:
     """rmtree onerror handler: clear read-only bit (Windows .git pack files) and retry."""
     os.chmod(path, stat.S_IWRITE)
@@ -339,6 +360,9 @@ def init_in_place(root: Path, dry_run: bool, do_git: bool = True) -> None:
 
     print("\n── Reset wersjonowania ─────────────────────────────────")
     reset_versioning(root, dry_run)
+
+    print("\n── Reset docs/adr (czysty start) ───────────────────────")
+    reset_adr_dir(root, dry_run)
 
     print("\n── README scaffold ─────────────────────────────────────")
     log("scaffold", "README.md", dry_run)

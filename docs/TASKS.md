@@ -27,14 +27,25 @@ Checklisty implementacyjne per faza znajdują się wyłącznie w [docs/ROADMAP.m
       nie zgadza się z plikiem (skrypt zmieniony w PR #57, hash nie). Zero referencji
       w hookach/pre-commit → nic go nie egzekwuje. Albo zaktualizować hash przy każdej
       zmianie skryptu (dodać guard), albo usunąć pole jako mylące.
-- [ ] **Config canonicalizacja `ai_template_path`** (własna sesja + ADR) —
-      `guard_template_sync` czyta `.pre-commit-hooks.config.json` (przez
-      `stack.load_config`), a `doctor.py` + `new-project.py` używają
-      `.claude/hooks/config.json`. Dwa różne pliki → guard sync template'u jest
-      w nowych projektach trwale martwy. Plus `ai_template_path` bywa URL-em, a
-      konsumenci wymagają lokalnej ścieżki (`Path(...).is_dir()`). Obejmuje też
-      **błąd A**: w `--init` `create_config_json(root, root)` zapisuje remote
-      *projektu* jako template path zamiast template'u.
+- [ ] **Config canonicalizacja `ai_template_path`** — 🚧 w toku (ADR-002 accepted)
+
+  > Po ludzku: guard, który pilnuje, by zmiany reguł wracały do wzorca, był w nowych
+  > projektach martwy (czytał nieistniejący plik) i wymagał, żeby każdy miał wzorzec
+  > na dysku. Po zmianie guard działa dla każdego od pierwszego commita, bez setupu.
+
+  Decyzja: ADR-002 — sync = blokada-potwierdzenie (nie lokalne porównanie); lokalna
+  ścieżka `ai_template_path` opcjonalna; jeden kanoniczny config `.claude/hooks/config.json`.
+  Inkrementy KROK 2:
+  - [x] **A** — `new-project.py`: `reset_adr_dir` czyści `docs/adr/` przy `--init`
+        (ADR-y wzorca nie wyciekają do projektów; decyzja 6) + testy
+  - [ ] **B** — `create_config_json`: usuń `_git_remote_url`, przestań auto-ustawiać
+        `ai_template_path` (kasuje błąd A `create_config_json(root, root)`; decyzja 3)
+  - [ ] **C** — `scripts/dev-guards/stack.py` `CONFIG_PATH` → `.claude/hooks/config.json`;
+        usuń ślady `.pre-commit-hooks.config.json` (decyzja 4)
+  - [ ] **D** — przepisz oba guardy sync (`scripts/dev-guards/guard_template_sync.py` +
+        `.claude/hooks/guard-template-sync.py`) na tryb potwierdzenia (decyzja 1+2)
+  - [ ] **E** — flaga `is_template: true` w `.claude/hooks/config.json` wzorca; guard
+        respektuje (no-op sync we wzorcu; decyzja 5)
 
 ---
 
@@ -61,6 +72,12 @@ dry-run guardów tą samą treścią co commit; nie mieszaj sesji system/projekt
 
 ## Stan sesji
 
+- 2026-06-04: Config canonicalizacja (branch `feat/config-canonical-template-sync`).
+  ADR-002 napisany i zaakceptowany (sync = blokada-potwierdzenie zamiast lokalnego porównania;
+  `ai_template_path` opcjonalny; kanoniczny `.claude/hooks/config.json`; reset `docs/adr/` przy
+  init). Inkrement A domknięty: `new-project.py` → `reset_adr_dir` (na wzór `reset_versioning`)
+  czyści `docs/adr/` przy `--init`, wpis ADR usunięty z `TEMPLATE_META`; 5 nowych testów, 34/34.
+  Pozostałe inkrementy B–E (bug A, repoint stack.py, przepisanie guardów, flaga is_template) w toku.
 - 2026-06-04: durable lessons utrwalone (branch `docs/durable-ai-lessons`). Wnioski 1–3
   (bezstanowość AI → system nie ufa AI; guardy bywają fail-open/martwe → user realnym
   guardem; template=produkt) → `docs/AI_TEMPLATE_NOTES.md`. Zasady A/B (guard tylko z
