@@ -33,6 +33,8 @@ krótkie słowo które wpisujesz świadomie. Nie używaj składni `/command` (to
 | `symfony` | symfony | DDD/CQRS, Messenger, API Platform, Doctrine, DI, Voters |
 | `typescript` | mastering-typescript | TypeScript 5.9+, generics, Zod, React, NestJS, Vite |
 | `nextjs` | nextjs-app-router | Next.js App Router, RSC, Server Actions, streaming, caching |
+| `copywriting` | copywriting | Pisanie/poprawa marketingowego copy (landing, hero, CTA, pricing) |
+| `cro` | cro | Optymalizacja konwersji strony/formularza |
 
 ## Skille zewnętrzne (vendored)
 
@@ -67,6 +69,8 @@ krótkie słowo które wpisujesz świadomie. Nie używaj składni `/command` (to
 | `symfony` | `symfony` | DDD/CQRS, Messenger, API Platform, Doctrine, DI, Voters, best practices |
 | `typescript` | [SpillwaveSolutions/mastering-typescript-skill](https://github.com/SpillwaveSolutions/mastering-typescript-skill) | TypeScript 5.9+, typy zaawansowane, Zod, React integration, NestJS, Vite |
 | `nextjs` | [mileson/agent-skills](https://github.com/mileson/agent-skills) | Next.js App Router, RSC, Server Actions, streaming, caching, parallel routes |
+| `copywriting` | [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) | Konwersyjne copy: formuły nagłówków, CTA, wartość, frameworki sekcja-po-sekcji dla landingów |
+| `cro` | [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) | Conversion Rate Optimization: optymalizacja stron i formularzy pod konwersję |
 
 ## Pluginy (instalowane per developer, poza repo)
 

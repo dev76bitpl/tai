@@ -37,6 +37,20 @@
     }
   },
   "skills": {
+    "copywriting": {
+      "repo": "https://github.com/coreyhaines31/marketingskills",
+      "local_path": ".claude/skills/copywriting",
+      "remote_path": "skills/copywriting",
+      "commit": "7f4af1ea8e7809e0142c55bf19243a706f539c25",
+      "checked": "2026-06-04"
+    },
+    "cro": {
+      "repo": "https://github.com/coreyhaines31/marketingskills",
+      "local_path": ".claude/skills/cro",
+      "remote_path": "skills/cro",
+      "commit": "7f4af1ea8e7809e0142c55bf19243a706f539c25",
+      "checked": "2026-06-04"
+    },
     "ui-ux-pro-max": {
       "repo": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill",
       "local_path": ".claude/skills/ui-ux-pro-max",
