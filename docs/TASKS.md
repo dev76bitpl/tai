@@ -40,6 +40,39 @@ Checklisty implementacyjne per faza znajdują się wyłącznie w [docs/ROADMAP.m
   `gh api -X PUT repos/<owner>/<repo>/actions/permissions/workflow -f default_workflow_permissions=write -F can_approve_pull_request_reviews=true`
   Do zrobienia: dopisać do `docs/SETUP.md` (sekcja GitHub settings / „Done when") albo
   zautomatyzować w `new-project.py` post-init. Wykryte w cdue-kti (release-please padał od #2).
+- [ ] **Onboarding + update z tai — jeden punkt wejścia** — dziura wykryta przy migracji
+      cdue-kti (KROK 3)
+
+  > Po ludzku: dev który dostaje gotowy projekt (albo wraca do niego po czasie) nie wie,
+  > co odpalić, żeby guardy i hooki działały — info jest porozrzucane. A devu, który chce
+  > wciągnąć najnowsze poprawki ze wzorca, nikt nie mówi jak — robi to na piechotę.
+
+  Trzy persony, dziś obsłużone nierówno:
+  - **Nowy projekt z tai** — pokryte: README „Nowy projekt — 3 kroki" (`new-project.py --init`
+    + `update-skills.py --apply` + `scope`). OK, bez zmian.
+  - **Dołączenie do istniejącego projektu** — info istnieje (`docs/SETUP.md` Krok 7 pre-commit,
+    Krok 8 Claude hooks; `doctor.py` mówi „skopiuj z config.json.example"), ale **rozsypane**,
+    brak jednego punktu wejścia. Do zrobienia: README scaffold projektu kieruje wprost do
+    `python3 scripts/doctor.py` jako pierwszego kroku po klonie; doctor robi audyt i wypisuje
+    czego brakuje (config.json, pre-commit install, hooki). Rozważ czy doctor ma `--fix`.
+  - **Update istniejącego projektu z tai** — **brak mechanizmu**. `update-skills.py --sync`
+    pokrywa tylko skille; guardy (`scripts/dev-guards/*.py`, `.claude/hooks/*.py`) aktualizuje
+    się ręcznie — dokładnie to, co KROK 3 robi gołymi rękami. Do zrobienia: udokumentowany
+    flow „pull z tai" albo skrypt `update-from-template.py` (kopiuje kanoniczne guardy/hooki
+    z `ai_template_path`, raportuje diff). To nietrywialne → **zasługuje na ADR-003**.
+
+- [ ] **Bug: NameError w `.claude/hooks/guard-template-sync.py` (linia ~171)** — w ścieżce
+      raportu desyncu jest `f"...({template_path})..."`, ale zmienna nazywa się `template_root`
+      → `NameError`. Hook wywala się wyjątkiem (exit 1), a exit 1 **nie blokuje** → guard
+      fail-open dokładnie w sytuacji, którą ma łapać (lokalny klon ustawiony + wykryty desync
+      *.md/guardów). Aktywuje się gdy `ai_template_path` wskazuje realny klon. Fix: `template_path`
+      → `template_root`. Wchodzi z testem dowodzącym (Zasada A): desync + valid clone → blok.
+
+- [ ] **Niespójność: `session-context.py` podpowiada URL jako `ai_template_path`** — linia ~361
+      sugeruje `"ai_template_path": "git@github.com:dev76bitpl/tai.git"`, ale wg ADR-002 URL jest
+      martwy (guard wymaga lokalnego katalogu, URL → tryb potwierdzenia). `config.json.example`
+      mówi poprawnie (lokalna ścieżka). Ujednolicić podpowiedź session-context do lokalnej ścieżki.
+
 - [x] **Config canonicalizacja `ai_template_path`** — ✅ KROK 2 zrobiony (ADR-002);
       pozostaje KROK 3: migracja cdue-kti (osobna sesja projektowa, Zasada B)
 
