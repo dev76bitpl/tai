@@ -121,6 +121,16 @@ dry-run guardów tą samą treścią co commit; nie mieszaj sesji system/projekt
 
 ## Stan sesji
 
+- 2026-06-07: nowa sekcja „SEO / znajdowalność — wzorce z buildu" w `docs/AI_TEMPLATE_NOTES.md`.
+  Lekcja z projektu hackersmovie.org (cel C — znajdowalność): trzy uniwersalne wzorce — (1) treść
+  renderowana po stronie klienta = pusta strona dla crawlera → pre-render/SSG, diagnoza `curl|grep`;
+  (2) jedno źródło domeny (`baseUrl`) → og/robots/sitemap generowane na buildzie, `lastmod` z daty
+  zmiany treści nie deployu; (3) testuj output SEO (surowy HTML ma treść, host spójny w og/robots/
+  sitemap, JSON-LD parsuje się i `<` zescape'owany). **Forma:** świadomie NIE w skillu `seo` — ten
+  jest vendored (zewnętrzna referencja); lekcja z praktyki idzie do tai-owned `AI_TEMPLATE_NOTES.md`
+  (ładowany na starcie każdej sesji). Bez testu — to wiedza, nie guard (13a). Branch
+  `docs/seo-build-time-patterns` z main.
+
 - 2026-06-04: dopisana uniwersalna meta-zasada do `docs/AI_TEMPLATE_NOTES.md` (sekcja
   „Praca z AI — meta-zasady"): nowy UI nie startuje od estetyki „AI-default", zakotwicz
   w specyfice biznesu, dopcham jeden kierunek do końca, sygnalizuj gdy coś pachnie

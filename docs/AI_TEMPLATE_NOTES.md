@@ -27,5 +27,13 @@ Każdy nowy projekt dokłada tu swoje obserwacje. Sekcje domenowe nie trafiają 
 
 ---
 
+## SEO / znajdowalność — wzorce z buildu
+
+- **Treść renderowana po stronie klienta = pusta strona dla crawlera** — jeśli sekcje powstają w przeglądarce (`fetch()` + `innerHTML`, hydracja SPA, cokolwiek zależnego od JS), surowy HTML, który crawler dostaje jako pierwszy, jest pusty. Googlebot renderuje JS, ale z opóźnieniem i zawodnie — zabójcze dla świeżej domeny w piaskownicy. Pre-render / SSG / SSR tak, żeby treść była w HTML. Diagnoza jednym strzałem: `curl -s URL | grep "fragment widocznej treści"` → 0 trafień = crawler nie widzi nic. To pierwsza rzecz do sprawdzenia przy SEO, przed strojeniem tagów.
+- **Jedno źródło prawdy dla domeny** — domena pojawia się w `og:url`, `og:image`, linii `Sitemap:` w robots.txt i w każdym `<loc>` sitemapy. Przepisywana ręcznie w czterech miejscach — rozjedzie się. Trzymaj ją w jednej wartości configu (`baseUrl`) i generuj wszystkie cztery na buildzie. Generowanie robots/sitemap na buildzie (zamiast ręcznych plików statycznych) trzyma też `lastmod` uczciwym — wyprowadź go z daty zmiany treści (np. `git log -1 --format=%cs -- <plik z treścią>`), nie z czasu deployu.
+- **Testuj output SEO, nie intencję** — tanie guardy regresji łapiące powyższe bugi: (1) surowy zbudowany HTML zawiera reprezentatywną treść body (to `curl|grep` z punktu 1, jako asercja); (2) host w `og:url` == host w `<loc>` sitemapy == host w `Sitemap:` robots (brak driftu); (3) JSON-LD danych strukturalnych parsuje się, a `<` jest zescape'owany (`<`), żeby nie wyłamał się z `<script>`.
+
+---
+
 <!-- Dodawaj nowe sekcje gdy pojawi się universalny wzorzec z projektu. -->
 <!-- Nie dodawaj tu wzorców domenowych (konkretny framework, biblioteka, biznes). -->
