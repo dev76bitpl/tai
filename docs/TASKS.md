@@ -73,6 +73,20 @@ Checklisty implementacyjne per faza znajdują się wyłącznie w [docs/ROADMAP.m
       martwy (guard wymaga lokalnego katalogu, URL → tryb potwierdzenia). `config.json.example`
       mówi poprawnie (lokalna ścieżka). Ujednolicić podpowiedź session-context do lokalnej ścieżki.
 
+- [ ] **Migracja śledzenia zadań na GitHub Issues/Projects** — wg **ADR-004** (accepted, wykonanie odłożone)
+
+  > Po ludzku: backlog w pliku markdown przestaje się skalować przy ~30 zadaniach — nieczytelny
+  > dla właściciela, nie trzyma stanu (ręczne wykreślanie „zrobione"), brak jednej kolejności →
+  > AI dryfuje w rekomendacjach co sesja. Przenosimy taski tam, gdzie i tak żyją PR-y i kod.
+
+  Wg **ADR-004**: Issues = dane (priorytet/klasa jako etykiety, dwuwarstwowy opis przez Issue
+  Template); Project = widok (kolumny statusu + jedna kolumna „Up next"); auto-zamykanie przez
+  `Closes #N`; roadmapa → milestones; markdown zostaje fallbackiem dla projektów spoza GitHub.
+  Do zrobienia: `.github/ISSUE_TEMPLATE/task.yml`, dokument konfiguracji Projects, tryb wyboru
+  markdown/Issues w `new-project.py` (wykrycie remote GitHub), usunięcie/przepięcie guardów
+  `TASKS.md`, skrypt migracji przez `gh issue create`. Każdy guard z testem (Zasada A).
+  **Timing: granica bezpieczna dla projektu (po fazie/MVP), nie w środku krytycznej pracy.**
+
 - [x] **Config canonicalizacja `ai_template_path`** — ✅ KROK 2 zrobiony (ADR-002);
       pozostaje KROK 3: migracja cdue-kti (osobna sesja projektowa, Zasada B)
 
