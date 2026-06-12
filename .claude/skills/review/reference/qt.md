@@ -74,7 +74,7 @@ Check logic that might cause infinite signal loops (e.g., `valueChanged` -> `set
 
 ```cpp
 void MyClass::setValue(int v) {
-    if (m_value == v) return; // ? Good: Break loop
+    if (m_value == v) return; // ✅ Good: Break loop
     m_value = v;
     emit valueChanged(v);
 }
@@ -106,7 +106,7 @@ if (str == u"test"_s) ...             // Qt 6
 ```cpp
 // ❌ Forces deep copy if function modifies 'list'
 void process(QVector<int> list) {
-    list[0] = 1;
+    list[0] = 1; 
 }
 
 // ✅ Read-only reference
@@ -123,7 +123,7 @@ Prefer the "Worker Object" pattern over subclassing `QThread` implementation det
 ```cpp
 // ❌ Business logic inside QThread::run()
 class MyThread : public QThread {
-    void run() override { ... }
+    void run() override { ... } 
 };
 
 // ✅ Worker object moved to thread

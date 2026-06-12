@@ -1,5 +1,7 @@
 # Exceptions
 
+> **[Exception](../../LANGUAGE.md)** is defined in `LANGUAGE.md`; this file owns the grammar.
+
 Internals of business exceptions: how they are named, shaped, and
 rendered. *When* to throw one (an invariant violation) is governed by
 [../architecture/invariants.md](../architecture/invariants.md); this file

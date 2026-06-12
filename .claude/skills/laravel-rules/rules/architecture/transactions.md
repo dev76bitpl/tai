@@ -72,9 +72,19 @@ Centralizing dispatch in actions keeps the "what fires when" decision in
 one layer and preserves the after-commit guarantee, which only the
 write owner can honor.
 
+## Rule: cache invalidation follows the same timing — with one exception
+
+Cache invalidation is a write side effect, so it obeys this rule: Redis-side
+deletes (`forget`, `tags()->flush()`) and flush jobs fire **after commit**
+([../cache/invalidation.md](../cache/invalidation.md)). The exception is the
+**database** version-counter bump — an intra-DB write that belongs **inside** the
+transaction, so it rolls back with a failed write and leaves no staleness window.
+
 ## Checklist
 
 - Single-write actions use no transaction.
 - Multi-write orchestrators wrap the workflow in one transaction.
 - Jobs/events fire via `DB::afterCommit` or `$afterCommit = true`.
 - Jobs are dispatched from actions only.
+- Cache invalidation: Redis-side after commit; the DB version bump inside the
+  transaction.

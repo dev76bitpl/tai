@@ -41,43 +41,43 @@
       "repo": "https://github.com/coreyhaines31/marketingskills",
       "local_path": ".claude/skills/copywriting",
       "remote_path": "skills/copywriting",
-      "commit": "7f4af1ea8e7809e0142c55bf19243a706f539c25",
-      "checked": "2026-06-04"
+      "commit": "4b377f289bd37be457a7154626e109ec3affad50",
+      "checked": "2026-06-12"
     },
     "cro": {
       "repo": "https://github.com/coreyhaines31/marketingskills",
       "local_path": ".claude/skills/cro",
       "remote_path": "skills/cro",
-      "commit": "7f4af1ea8e7809e0142c55bf19243a706f539c25",
-      "checked": "2026-06-04"
+      "commit": "4b377f289bd37be457a7154626e109ec3affad50",
+      "checked": "2026-06-12"
     },
     "ui-ux-pro-max": {
       "repo": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill",
       "local_path": ".claude/skills/ui-ux-pro-max",
       "remote_path": "src/ui-ux-pro-max",
       "commit": "b7e3af80f6e331f6fb456667b82b12cade7c9d35",
-      "checked": "2026-05-24"
+      "checked": "2026-06-12"
     },
     "security": {
       "repo": "https://github.com/agamm/claude-code-owasp",
       "local_path": ".claude/skills/security",
       "remote_path": ".claude/skills/owasp-security",
       "commit": "d0dc44da5d884409ee478258b7c666c84d9dab9e",
-      "checked": "2026-05-24"
+      "checked": "2026-06-12"
     },
     "a11y": {
       "repo": "https://github.com/fecarrico/A11Y.md",
       "local_path": ".claude/skills/a11y",
       "remote_path": "docs/en",
       "commit": "733dbc899181c0b769b7e9e036606e130dd5f8da",
-      "checked": "2026-05-24"
+      "checked": "2026-06-12"
     },
     "web-quality-skills": {
       "repo": "https://github.com/addyosmani/web-quality-skills",
       "local_path": ".claude/skills/perf",
       "remote_path": "skills",
       "commit": "7b59d48aaf1f793935002f4998dfccc656f40839",
-      "checked": "2026-05-24"
+      "checked": "2026-06-12"
     },
     "code-review": {
       "repo": "https://github.com/awesome-skills/code-review-skill",
@@ -90,50 +90,50 @@
         "LICENSE",
         ".gitignore"
       ],
-      "commit": "eb12fb247ba09fd8a2bce0d1ecafa99df0bf4891",
-      "checked": "2026-05-24"
+      "commit": "17267ff26b95dcea28c3dae76f9931cdf9604520",
+      "checked": "2026-06-12"
     },
     "wp-plugin-development": {
       "repo": "https://github.com/jorgerosal/wordpress-skills",
       "local_path": ".claude/skills/wp-plugin-development",
       "remote_path": "claude-skills/wp-plugin-development",
-      "commit": "840a9a6fb49ad8d0c0e48ff09323378388b14f89",
-      "checked": "2026-05-24"
+      "commit": "8c964424d05ba34b3ea5641f7181d4c13829e06f",
+      "checked": "2026-06-12"
     },
     "wp-theme-development": {
       "repo": "https://github.com/jorgerosal/wordpress-skills",
       "local_path": ".claude/skills/wp-theme-development",
       "remote_path": "claude-skills/wp-theme-development",
-      "commit": "840a9a6fb49ad8d0c0e48ff09323378388b14f89",
-      "checked": "2026-05-24"
+      "commit": "8c964424d05ba34b3ea5641f7181d4c13829e06f",
+      "checked": "2026-06-12"
     },
     "wp-security-review": {
       "repo": "https://github.com/jorgerosal/wordpress-skills",
       "local_path": ".claude/skills/wp-security-review",
       "remote_path": "claude-skills/wp-security-review",
-      "commit": "840a9a6fb49ad8d0c0e48ff09323378388b14f89",
-      "checked": "2026-05-24"
+      "commit": "8c964424d05ba34b3ea5641f7181d4c13829e06f",
+      "checked": "2026-06-12"
     },
     "wp-woocommerce-dev": {
       "repo": "https://github.com/jorgerosal/wordpress-skills",
       "local_path": ".claude/skills/wp-woocommerce-dev",
       "remote_path": "claude-skills/wp-woocommerce-dev",
-      "commit": "840a9a6fb49ad8d0c0e48ff09323378388b14f89",
-      "checked": "2026-05-24"
+      "commit": "8c964424d05ba34b3ea5641f7181d4c13829e06f",
+      "checked": "2026-06-12"
     },
     "wp-block-development": {
       "repo": "https://github.com/jorgerosal/wordpress-skills",
       "local_path": ".claude/skills/wp-block-development",
       "remote_path": "claude-skills/wp-block-development",
-      "commit": "840a9a6fb49ad8d0c0e48ff09323378388b14f89",
-      "checked": "2026-05-24"
+      "commit": "8c964424d05ba34b3ea5641f7181d4c13829e06f",
+      "checked": "2026-06-12"
     },
     "laravel-rules": {
       "repo": "https://github.com/fbarrento/laravel-agent-kit",
       "local_path": ".claude/skills/laravel-rules",
       "remote_path": "skills/laravel-rules",
-      "commit": "bdee94abe2de0df953c0b9ccdddc20a82b08d23c",
-      "checked": "2026-05-24"
+      "commit": "00447bf01f150cbfdaed0e3983e74dafbd740b09",
+      "checked": "2026-06-12"
     },
     "php-modernization": {
       "repo": "https://github.com/netresearch/php-modernization-skill",
@@ -143,8 +143,8 @@
         "scripts",
         "templates"
       ],
-      "commit": "0f747435af8c293dfc06ba88cf0792e98901b59f",
-      "checked": "2026-05-24"
+      "commit": "d65e9dfaf9d4320a89c2e20d001b1bb435b25433",
+      "checked": "2026-06-12"
     },
     "mastering-typescript": {
       "repo": "https://github.com/SpillwaveSolutions/mastering-typescript-skill",
@@ -155,14 +155,14 @@
         "scripts"
       ],
       "commit": "2f74a00f731f2ea4d48f45d852067a7be8efd0d1",
-      "checked": "2026-05-24"
+      "checked": "2026-06-12"
     },
     "nextjs-app-router": {
       "repo": "https://github.com/mileson/agent-skills",
       "local_path": ".claude/skills/nextjs",
       "remote_path": "nextjs-app-router-patterns",
       "commit": "7897700422f2196591457f2ae39c822ed37dc147",
-      "checked": "2026-05-24"
+      "checked": "2026-06-12"
     }
   }
 }

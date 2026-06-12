@@ -11,7 +11,10 @@ and the collection-typing idiom with `search-docs`.
 ## Rule: construct with `::from()` — never `new`
 
 Always create a Spatie Data object through `::from()`, passing a request,
-Eloquent model, array, or JSON. Never instantiate one with `new`.
+Eloquent model, array, or JSON. Never instantiate one with `new`. A common
+offender is page copy/seo built as `new PageSeoData(title: '…', …)` with inline
+literals — that text belongs in a lang file, loaded via `::from(__(...))`
+([inertia-page-data.md](inertia-page-data.md)).
 
 **Why:** `::from()` runs the full pipeline — casts, transformers, name
 mapping, and `Optional` resolution. `new` bypasses all of it: casts never
@@ -167,6 +170,15 @@ DB disagree on casing safely.
   `Money` via `#[WithCast(MoneyCast::class)]`.
 - Shape a property for array/JSON output with a **transformer** —
   `CarbonImmutable` → ISO string via `#[WithTransformer(...)]`.
+
+**Type the property precisely — it is the frontend contract, too.** When a
+Data class feeds an Inertia page, the generated TypeScript (inertia-rules
+`types/generated`) is only as narrow as the PHP type. A property typed as
+the enum (or a precise Data class) generates a narrow TS type; a generic
+stringly-typed shape — `LabeledValue { value: string }` — generates
+`value: string` and forces a frontend re-narrow. Prefer `RoleData { value:
+TeamRole }` over a generic `value: string` so the type narrows **at the
+source**; the frontend never re-narrows.
 
 Custom casts live in `app/Data/Casts`, transformers in
 `app/Data/Transformers` — the **only** sanctioned nesting (registry in

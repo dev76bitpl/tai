@@ -118,7 +118,7 @@ groups) and `ttl()`, and stays thin ([../enums/conventions.md](../enums/conventi
 
 A `VersionedCache` interface + `CachesVersioned` trait
 (`@phpstan-require-implements`, mirroring
-[`ProjectsToData`](../queries/conventions.md)) is the **sole** key path —
+[`TransformsToData`](../queries/conventions.md)) is the **sole** key path —
 version always injected, `flexible()` + TTL always applied, repopulation
 lock-protected (below). Add it only to a query that participates in a versioned
 group; single-entity reads stay on plain `forget` keys.

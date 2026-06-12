@@ -1,5 +1,7 @@
 # Events (guardrail)
 
+> **[Event](../../LANGUAGE.md)** is defined in `LANGUAGE.md` (a guardrail term); this file owns the grammar.
+
 Internals of event classes and listeners — framed as a **guardrail**.
 This project avoids an event/listener architecture. Events are a special
 case with two narrow justifications; everywhere else, side effects are

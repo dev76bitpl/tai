@@ -1,5 +1,7 @@
 # Data objects
 
+> **[Data object](../../LANGUAGE.md)** is defined in `LANGUAGE.md`; this file owns the grammar.
+
 A data object is an **immutable, typed shape** that travels between
 layers of the application. This file is the package-agnostic anchor — the
 *what* and *why*. The project realizes data objects with
@@ -80,6 +82,10 @@ than one model.
 **Why:** each role has a *different contract* once serialized to
 array/JSON. A dual-purpose object accumulates "set sometimes" fields —
 exactly how nullable rot and leaky API payloads begin.
+
+When the frontend is **Inertia**, the response role takes a specific shape —
+one per-page `*PageData` object (`can`/`copy`/`seo`) — governed by
+[inertia-page-data.md](inertia-page-data.md).
 
 ## Rule: carry scalars, value objects, and IDs — not Eloquent models
 

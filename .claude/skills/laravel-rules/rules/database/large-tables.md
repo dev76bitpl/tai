@@ -29,7 +29,11 @@ Adding a populated, constrained column is not one migration. Sequence it:
    at first — [migrations.md](migrations.md)).
 2. **Backfill in batches** — a job/command using `chunkById()`, *not* a
    migration, so it does not run in one giant locking transaction
-   ([performance.md](performance.md)).
+   ([performance.md](performance.md)). The backfill writes the derived
+   value **explicitly** — a mass `update()`/`upsert()` is an eventless
+   path, so no observer, cast, or `HasUuids` fills it for you
+   ([../actions/conventions.md](../actions/conventions.md),
+   [../observers/conventions.md](../observers/conventions.md)).
 3. **Add the index / `NOT NULL`** as its own online step once data is in
    place.
 

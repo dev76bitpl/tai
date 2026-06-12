@@ -1,5 +1,7 @@
 # Enums
 
+> **[Enum](../../LANGUAGE.md)** is defined in `LANGUAGE.md`; this file owns the grammar.
+
 Internals of PHP enums: how they are backed, named, kept, and cast.
 Building-block folder (internals of one class type, see
 [../architecture/placement.md](../architecture/placement.md)). Use an enum
@@ -7,18 +9,37 @@ for a **fixed, closed set** of values — the boundary against a
 [value object](../value-objects/conventions.md) (open but structured) is
 in that file's Decision.
 
-## Rule: enums are string-backed
+## Rule: enums are backed, never pure
 
-Every domain enum is a backed enum with **string** backing values, not
-`int` and not pure (unbacked).
+Every domain enum is a **backed** enum (string or int) — never pure
+(unbacked). A pure enum cannot be cast or persisted at all.
 
-**Why:** string backing survives persistence and serialization legibly —
-a row or JSON payload reads `'pending'`, not `2`. Integer backing couples
-meaning to position, so reordering or removing a case silently rewrites
-stored data; pure enums cannot be cast or persisted at all.
+## Decision: string or int backing?
+
+**Default to string; choose int only as a measured exception.**
+
+- **String (default)** — values are legible end to end: a row, JSON
+  payload, log line, or ad-hoc query reads `'pending'`, not `2`. That
+  legibility dividend is paid on every query a human ever writes.
+- **Int (measured exception)** — only when a large, hot, **indexed** table
+  makes the narrower index key a *proven* win. A 1-byte `TINYINT` key packs
+  more entries per page than an ~8-byte string, so a larger fraction of a
+  big secondary/composite index stays in the buffer pool
+  ([../database/large-tables.md](../database/large-tables.md),
+  [../database/performance.md](../database/performance.md)). Reach for it
+  when the table's scale demonstrates the need — **never preemptively**.
+
+**Why:** the int storage/index saving is invisible until tens-to-hundreds
+of millions of indexed rows, while the int legibility cost — meaning
+coupled to a case number, opaque raw data, a lookup for every support
+query — is paid at *every* scale. So string is the default and int earns
+its place only by measurement. Either way, backing values are a stable
+contract: never repurpose an existing value, and reorder/remove a case
+only as a deliberate data migration (more dangerous with int, where
+meaning rides on the number).
 
 ```php
-// Good — string-backed, values are stable and self-describing
+// Default — string-backed, self-describing
 enum OrderStatus: string
 {
     case Pending = 'pending';
@@ -26,10 +47,12 @@ enum OrderStatus: string
     case Refunded = 'refunded';
 }
 
-// Bad — int backing ties stored data to ordering; pending becomes "1"
+// Exception — int-backed, only on a large indexed table where it measurably helps
 enum OrderStatus: int
 {
-    case Pending = 1;
+    case Pending = 1;   // values are a stable contract — never reorder/repurpose
+    case Paid = 2;
+    case Refunded = 3;
 }
 ```
 
@@ -101,7 +124,7 @@ enum OrderStatus: string
 ## Edge cases
 
 - **Persisted set changes.** Because backing values are the stored
-  contract, never repurpose an existing string; add a new case and migrate
+  contract, never repurpose an existing value; add a new case and migrate
   data deliberately.
 - **`from()` vs `tryFrom()`.** Use `from()` when an unknown value is a bug
   worth throwing on; `tryFrom()` only where an unmatched value is a valid
@@ -109,7 +132,8 @@ enum OrderStatus: string
 
 ## Checklist
 
-- Enum is string-backed (not int, not pure).
+- Enum is backed, never pure; string-backed by default, int only as a
+  measured large-table exception ([../database/large-tables.md](../database/large-tables.md)).
 - Named for the concept, no `Enum` suffix.
 - Cast in the model's `casts()`; stored in a `string` column, never a
   native DB `enum`.
