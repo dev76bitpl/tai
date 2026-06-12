@@ -77,6 +77,14 @@ Zaktualizuj odpowiednie artefakty:
 - `CLAUDE.md` - gdy dochodzi nowa trwała zasada pracy
 - `docs/adr/*` - jeśli zapadła decyzja architektoniczna
 
+### Czy flow ma wpis w pomocy / dokumentacji użytkownika?
+
+Nowa funkcjonalność użytkownika nie trafia do pomocy automatycznie. Jeśli projekt ma generowane sekcje pomocy (z rejestrów funkcji), strażnik pilnuje tylko ich wzajemnej spójności — nie wymusza dokumentacji nowego flow. To ręczna bramka:
+
+- [ ] Czy ten flow jest **widoczny dla użytkownika** (ekran / akcja / ustawienie)? Jeśli nie → pomiń (background / dev-only).
+- [ ] Jeśli tak — czy ma wpis w pomocy / dokumentacji użytkownika (opis ustawienia, uprawnienia, automatu albo artykuł „jak zrobić X")?
+- [ ] Jeśli świadomie odkładamy pomoc → zapisz jako TODO w `docs/TASKS.md`, nie zostawiaj cicho.
+
 ---
 
 ## 6. Commit package

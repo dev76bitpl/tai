@@ -93,3 +93,6 @@ Alternatywnie zmień port w `DATABASE_URL` i uruchom Postgres na innym porcie.
 
 **`npm run dev` — błąd `Cannot find module`**
 Brakuje `npm install` po pull. Uruchom `npm install`.
+
+**Release PR (release-please) pokazuje CI jako `action_required`**
+Od 2026-06-11 GitHub wstrzymuje workflowy wyzwalane przez PR-y tworzone przez `github-actions[bot]` — zdarzenia z domyślnego `GITHUB_TOKEN` wymagają zgody człowieka (zmiana bezpieczeństwa: auto-wygenerowany PR nie odpala sam CI mającego dostęp do sekretów). To nie jest błąd w repo. Kliknij **„Approve workflows to run"** w merge boxie release PR-a; albo, jeśli repo nie ma wymaganych checków, po prostu zmerguj (`action_required` jest wtedy czysto informacyjny). Stałe obejście — kosztem długowiecznego sekretu — to dać release-please **GitHub App token / PAT** zamiast `GITHUB_TOKEN`; zwykle nieopłacalne przy rzadkich releasach. Źródło: [GitHub Changelog 2026-06-11](https://github.blog/changelog/2026-06-11-bot-created-pull-requests-can-run-workflows-if-approved/).
