@@ -35,5 +35,14 @@ Każdy nowy projekt dokłada tu swoje obserwacje. Sekcje domenowe nie trafiają 
 
 ---
 
+## CI — wydajność pipeline'u
+
+- **Niezależne checki w równoległych jobach, nie sekwencyjnie w jednym** — lint, test, typecheck i build nie zależą od siebie. W jednym jobie wall-clock = suma; w osobnych jobach = najdłuższy leg. Realnie skraca oczekiwanie na PR (obserwowane ~o 1/3–1/2). Koszt: każdy job powtarza setup (checkout + instalacja zależności) → więcej minut runnera. Świadomy trade-off: szybszy feedback loop vs zużycie minut — wart na aktywnym repo, mniej gdy minuty są limitowane.
+- **Identyczne checki przez `strategy.matrix`, nie copy-paste jobów** — test/lint/typecheck mają ten sam setup, różni je tylko końcowa komenda. Matrix z `{name, cmd}` + `fail-fast: false` (żeby jeden czerwony leg nie ubił feedbacku z reszty). Build zwykle osobnym jobem, bo niesie własny cache.
+- **Cache katalogu cache build-toola między runami** — `setup-*` cache'uje zwykle tylko menedżer pakietów (`~/.npm`, `~/.cache/pip`), nie cache samego builda (`.next/cache`, `target/`, `build/`, `.gradle/`…). Bez tego build leci od zera za każdym runem. `actions/cache` na katalogu cache build-toola z `restore-keys` na same zależności → build inkrementalny nawet gdy źródła się zmieniły. **Zysk widać dopiero od 2. runu** (1. populuje cache) — nie myl braku przyspieszenia na 1. runie z brakiem działania.
+- **Po zrównolegleniu krytyczną ścieżką jest najdłuższy job (zwykle build)** — reszta kończy wcześniej i nie wpływa już na wall-clock. Dalsze skracanie = przyspieszenie tego jednego joba (szybszy bundler/kompilator), nie kolejne tasowanie struktury.
+
+---
+
 <!-- Dodawaj nowe sekcje gdy pojawi się universalny wzorzec z projektu. -->
 <!-- Nie dodawaj tu wzorców domenowych (konkretny framework, biblioteka, biznes). -->
