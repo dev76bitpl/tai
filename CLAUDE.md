@@ -431,7 +431,7 @@ Wydajność jest wymaganiem funkcjonalnym, nie opcją. AI projektuje z myślą o
 - **Code splitting** – heavy komponenty ładowane dynamicznie (`dynamic import`)
 - **Render-blocking** – skrypty i style nie blokują first paint; fonty z `font-display: swap`
 
-**Zasada mikrooptymalizacji:** mierz zanim optymalizujesz. Bez danych = bez optymalizacji kosztem czytelności kodu.
+**Złota zasada — tanie i bezpieczne najpierw, mierz przed ryzykiem.** Mierz zanim optymalizujesz; bez danych = bez optymalizacji kosztem czytelności. Przy każdej optymalizacji lub refaktorze: uszereguj możliwe ruchy wg ROI, wykonaj **najtańsze i najbezpieczniejsze najpierw**, zmierz efekt na realnych danych, dopiero potem decyduj o ruchu ryzykownym lub kosztownym — albo odłóż go z uzasadnieniem. Nie forsuj ryzykownego/zablokowanego kroku dla maksymalnego zysku; często dwa tanie ruchy dają większość korzyści bez długu. Diagnozuj z dowodów, nie z teorii — przy problemie zbierz dane (logi, runy, pomiary) zanim postawisz hipotezę.
 
 ---
 
