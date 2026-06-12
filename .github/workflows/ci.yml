@@ -57,13 +57,29 @@ jobs:
             pre-commit run guard-commit-lang --hook-stage commit-msg --commit-msg-filename /tmp/commit-msg || exit 1
           done
 
-  # Project-specific build/test job — adapt to your stack (node/python/php/etc.).
-  # ci:
-  #   needs: guards
+  # Project-specific checks — adapt to your stack (node/python/php/etc.).
+  # Recommended: run independent checks as PARALLEL jobs so wall-clock ≈ the
+  # slowest leg, not the sum. Trade-off: each job repeats setup → more runner
+  # minutes. Rationale: docs/AI_TEMPLATE_NOTES.md → "CI — wydajność pipeline'u".
+  #
+  # checks:                            # test / lint / typecheck — same setup, different command
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     fail-fast: false               # one red leg shouldn't cancel the others' feedback
+  #     matrix:
+  #       task:
+  #         - { name: test,      cmd: <test command> }
+  #         - { name: lint,      cmd: <lint command> }
+  #         - { name: typecheck, cmd: <typecheck command> }
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     # - <setup toolchain + cache package manager + install deps>
+  #     - run: ${{ matrix.task.cmd }}
+  #
+  # build:                             # own job — usually the longest; carries the build cache
   #   runs-on: ubuntu-latest
   #   steps:
   #     - uses: actions/checkout@v4
-  #     - run: npm ci
-  #     - run: npm run lint
-  #     - run: npm test
-  #     - run: npm run build
+  #     # - <setup toolchain + install deps>
+  #     # - cache the build tool's cache dir across runs (.next/cache, target/, build/, …)
+  #     - run: <build command>
