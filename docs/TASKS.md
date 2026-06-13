@@ -164,6 +164,15 @@ dry-run guardów tą samą treścią co commit; nie mieszaj sesji system/projekt
 
 ## Stan sesji
 
+- 2026-06-13: fix `guard-template-sync` (hook) — czytał `[skip-sync]` tylko z komendy, więc
+  `git commit -F <plik>` z flagą w pliku był wadliwie blokowany (wykryte przy domykaniu commita
+  w cdue na Windows/PowerShell, gdzie wieloliniowy message idzie przez plik). Bliźniaczy
+  `guard-ai-template` umiał czytać `-F` od 2026-06-04, ale template-sync przeoczono. Fix:
+  ekstrakcja wiadomości (`-m`/heredoc/here-string/`-F`) wyniesiona do współdzielonego
+  `get_commit_message()` w `.claude/hooks/stack.py`; oba hooki jej używają (koniec dwóch kopii
+  regexa); bypass sprawdza `haystack = command + message`. Testy: `-F` z flagą przepuszcza,
+  `-F` bez flagi nadal blokuje (brak cichego bypassu) — 115/115 suite. Branch
+  `fix/template-sync-read-file`. Pochodne cdue: fix wsiąknie do projektów przez sync skilli.
 - 2026-06-07: nowa sekcja „SEO / znajdowalność — wzorce z buildu" w `docs/AI_TEMPLATE_NOTES.md`.
   Lekcja z projektu hackersmovie.org (cel C — znajdowalność): trzy uniwersalne wzorce — (1) treść
   renderowana po stronie klienta = pusta strona dla crawlera → pre-render/SSG, diagnoza `curl|grep`;
