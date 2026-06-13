@@ -102,6 +102,20 @@ Checklisty implementacyjne per faza znajdują się wyłącznie w [docs/ROADMAP.m
   (scope `project`). Wzór: docs/SETUP.md w projekcie pilotażowym, do uogólnienia
   (placeholdery zamiast repo/nazw milestones).
 
+- [ ] **`new-project.py --init` oznacza scaffoldy jako "stan przed implementacją"**
+
+  > Po ludzku: świeży projekt z template'u dostaje SETUP.md, który wygląda jak gotowa
+  > instrukcja (`npm run db:migrate`, `localhost:3000`, "Logowanie działa"), choć żadna
+  > z tych komend jeszcze nie istnieje. Czytelnik nie odróżnia szkieletu od faktu —
+  > dokument kłamie od inicjalizacji do końca fundamentu, chyba że ktoś to zauważy.
+
+  Wykryte w pilocie (2026-06-13): właściciel trafił na `db:migrate` w SETUP.md projektu,
+  w którym `package.json` ma tylko `doctor` i `prepare`. Do zrobienia: `--init` dodaje
+  automatyczną banderolę na górze scaffoldowanych docs (co działa po init: repo settings,
+  clone, guard system, hooki; co jest szkieletem do wypełnienia; TODO usunięcia przy
+  zamknięciu fundamentu) — albo scaffold przepisany na jawne placeholdery `<uzupełnij>`.
+  Wzór banderoli: docs/SETUP.md w projekcie pilotażowym.
+
 - [x] **Config canonicalizacja `ai_template_path`** — ✅ KROK 2 zrobiony (ADR-002);
       pozostaje KROK 3: migracja cdue-kti (osobna sesja projektowa, Zasada B)
 
