@@ -87,6 +87,16 @@ Checklisty implementacyjne per faza znajdują się wyłącznie w [docs/ROADMAP.m
   `TASKS.md`, skrypt migracji przez `gh issue create`. Każdy guard z testem (Zasada A).
   **Timing: granica bezpieczna dla projektu (po fazie/MVP), nie w środku krytycznej pracy.**
 
+  **Pilot wykonania: projekt CDUE (od 2026-06-13), metoda nazwana TAIGA** (**T**asks **A**s
+  **I**ssues, **G**ates, **A**utomation). Decyzja ADR-004 weszła do realizacji w cdue
+  (tamtejszy ADR-003) z rozszerzeniami z researchu metodyk (CCPM / GitHub Spec Kit):
+  epic + sub-issues dla funkcjonalności wielozadaniowych, mini-spec w body issue dla
+  większych tasków, board Projects wyłącznie na wbudowanych automatach (zero ręcznych pól),
+  komentarze issue jako audit trail, uporządkowana kolumna „Up next" wg ADR-004.
+  Kryterium oceny pilota (po F2–F3 cdue, ~połowa lipca 2026): zadania aktualne bez
+  przypominajek właściciela, zero sesji od rekonstrukcji „co już zrobiliśmy".
+  Pozytywny wynik → wykonanie listy „Do zrobienia" powyżej w template.
+
 - [x] **Config canonicalizacja `ai_template_path`** — ✅ KROK 2 zrobiony (ADR-002);
       pozostaje KROK 3: migracja cdue-kti (osobna sesja projektowa, Zasada B)
 
