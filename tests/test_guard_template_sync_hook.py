@@ -94,3 +94,46 @@ class TestMainNoClone:
         with pytest.raises(SystemExit) as exc:
             self._run(config={}, staged=["docs/README.md"])
         assert exc.value.code == 0
+
+
+# ── main(): [skip-sync] bypass across message styles ──────────────────────────
+# The bypass flag must be honored whether it sits inline (-m / heredoc) or inside
+# a -F <file> message. Reading only the bare command string missed the file case
+# and wrongly blocked `git commit -F <file>` even with [skip-sync] in the file.
+
+class TestSkipSyncBypass:
+    def _run(self, command: str, *, staged):
+        with mock.patch.object(h, "get_command", return_value=command), \
+             mock.patch.object(h, "chdir_to_project_root"), \
+             mock.patch.object(h, "is_git_commit_command", return_value=True), \
+             mock.patch.object(h, "is_foreign_repo", return_value=False), \
+             mock.patch.object(h, "load_config", return_value={}), \
+             mock.patch.object(h, "get_staged_files", return_value=staged):
+            h.main()
+
+    def test_inline_skip_sync_passes(self):
+        with pytest.raises(SystemExit) as exc:
+            self._run('git commit -m "docs: x [skip-sync]"', staged=["CLAUDE.md"])
+        assert exc.value.code == 0
+
+    def test_heredoc_skip_sync_passes(self):
+        cmd = "git commit -F - <<'EOF'\ndocs: x\n\n[skip-sync] reason\nEOF"
+        with pytest.raises(SystemExit) as exc:
+            self._run(cmd, staged=["CLAUDE.md"])
+        assert exc.value.code == 0
+
+    def test_file_skip_sync_passes(self, tmp_path):
+        # THE FIX: flag lives in the -F file, not in the command string.
+        msg = tmp_path / "COMMIT_EDITMSG"
+        msg.write_text("docs: x\n\n[skip-sync] reason\n", encoding="utf-8")
+        with pytest.raises(SystemExit) as exc:
+            self._run(f"git commit -F {msg}", staged=["CLAUDE.md"])
+        assert exc.value.code == 0
+
+    def test_file_without_flag_still_blocks(self, tmp_path):
+        # Regression: -F must not become a silent bypass when the flag is absent.
+        msg = tmp_path / "COMMIT_EDITMSG"
+        msg.write_text("docs: x\n\nno bypass here\n", encoding="utf-8")
+        with pytest.raises(SystemExit) as exc:
+            self._run(f"git commit -F {msg}", staged=["CLAUDE.md"])
+        assert exc.value.code == 2

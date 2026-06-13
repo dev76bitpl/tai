@@ -27,7 +27,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from stack import chdir_to_project_root, get_staged_files, is_foreign_repo, is_git_commit_command, load_config
+from stack import chdir_to_project_root, get_commit_message, get_staged_files, is_foreign_repo, is_git_commit_command, load_config
 
 
 def get_command() -> str:
@@ -83,7 +83,9 @@ def main():
     if is_foreign_repo(command):
         sys.exit(0)
 
-    if "[skip-sync]" in command:
+    # Bypass flag may live inline (command) OR inside a -F <file> message.
+    haystack = command + "\n" + (get_commit_message(command) or "")
+    if "[skip-sync]" in haystack:
         sys.exit(0)
 
     config = load_config()

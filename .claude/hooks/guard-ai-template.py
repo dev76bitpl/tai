@@ -18,7 +18,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from stack import chdir_to_project_root, get_staged_files, is_foreign_repo, is_git_commit_command, load_config
+from stack import chdir_to_project_root, get_commit_message, get_staged_files, is_foreign_repo, is_git_commit_command, load_config
 
 TEMPLATE_PATTERNS: list[str] = [
     r"^\.claude/",
@@ -39,39 +39,6 @@ def get_command() -> str:
         return data.get("tool_input", {}).get("command", "")
     except Exception:
         return ""
-
-
-def _inline_message(command: str) -> str | None:
-    """Commit message passed inline: -m "...", bash heredoc, or PowerShell here-string."""
-    m = re.search(r'-m\s+"([^"]+)"', command) or re.search(r"-m\s+'([^']+)'", command)
-    if m:
-        return m.group(1)
-    # bash heredoc: ... <<'EOF' ... EOF  (any word delimiter)
-    m = re.search(r"<<-?\s*['\"]?(\w+)['\"]?\s*\n(.*?)\n\1\b", command, re.DOTALL)
-    if m:
-        return m.group(2)
-    # PowerShell here-string: -m @'\n...\n'@  or  @"\n...\n"@
-    m = re.search(r"-m\s+@['\"]\s*\n(.*?)\n['\"]@", command, re.DOTALL)
-    if m:
-        return m.group(1)
-    return None
-
-
-def _file_message(command: str) -> str | None:
-    """Commit message from a file: -F <path> / --file <path> / --file=<path>."""
-    m = re.search(r"(?:-F|--file)(?:=|\s+)(\S+)", command)
-    if not m:
-        return None
-    path = m.group(1).strip("\"'")
-    try:
-        return Path(path).read_text(encoding="utf-8", errors="replace")
-    except Exception:
-        return None
-
-
-def get_commit_message(command: str) -> str | None:
-    """Best-effort full commit message from inline (-m/heredoc) or file (-F)."""
-    return _inline_message(command) or _file_message(command)
 
 
 def commit_type_of(message: str) -> str:

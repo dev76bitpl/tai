@@ -286,3 +286,42 @@ def get_staged_files(command: str = "") -> list[str]:
 
     # Dedup while preserving order
     return list(dict.fromkeys(staged + pending_adds))
+
+
+def _inline_commit_message(command: str) -> str | None:
+    """Commit message passed inline: -m "...", bash heredoc, or PowerShell here-string."""
+    m = re.search(r'-m\s+"([^"]+)"', command) or re.search(r"-m\s+'([^']+)'", command)
+    if m:
+        return m.group(1)
+    # bash heredoc: ... <<'EOF' ... EOF  (any word delimiter)
+    m = re.search(r"<<-?\s*['\"]?(\w+)['\"]?\s*\n(.*?)\n\1\b", command, re.DOTALL)
+    if m:
+        return m.group(2)
+    # PowerShell here-string: -m @'\n...\n'@  or  @"\n...\n"@
+    m = re.search(r"-m\s+@['\"]\s*\n(.*?)\n['\"]@", command, re.DOTALL)
+    if m:
+        return m.group(1)
+    return None
+
+
+def _file_commit_message(command: str) -> str | None:
+    """Commit message from a file: -F <path> / --file <path> / --file=<path>."""
+    m = re.search(r"(?:-F|--file)(?:=|\s+)(\S+)", command)
+    if not m:
+        return None
+    path = m.group(1).strip("\"'")
+    try:
+        return Path(path).read_text(encoding="utf-8", errors="replace")
+    except Exception:
+        return None
+
+
+def get_commit_message(command: str) -> str | None:
+    """Best-effort full commit message from inline (-m/heredoc/here-string) or file (-F).
+
+    Shared by PreToolUse guards that must see bypass flags regardless of how the
+    message reaches git — inline flags live in the command string, but `-F <file>`
+    keeps them in a file the command only references. Without reading the file a
+    flag check on the bare command silently misses `[skip-sync]` / `[no-template]`.
+    """
+    return _inline_commit_message(command) or _file_commit_message(command)
