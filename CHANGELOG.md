@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.18](https://github.com/dev76bitpl/tai/compare/v0.1.17...v0.1.18) (2026-06-13)
+
+
+### Bug Fixes
+
+* **hooks:** Read -F file message in template-sync bypass check ([#79](https://github.com/dev76bitpl/tai/issues/79)) ([b1d762d](https://github.com/dev76bitpl/tai/commit/b1d762dfe283442ff44d567f4b164a8b9942c444))
+
 ## [0.1.17](https://github.com/dev76bitpl/tai/compare/v0.1.16...v0.1.17) (2026-06-04)
 
 
