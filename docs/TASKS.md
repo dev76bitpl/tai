@@ -95,7 +95,12 @@ Checklisty implementacyjne per faza znajdują się wyłącznie w [docs/ROADMAP.m
   komentarze issue jako audit trail, uporządkowana kolumna „Up next" wg ADR-004.
   Kryterium oceny pilota (po F2–F3 cdue, ~połowa lipca 2026): zadania aktualne bez
   przypominajek właściciela, zero sesji od rekonstrukcji „co już zrobiliśmy".
-  Pozytywny wynik → wykonanie listy „Do zrobienia" powyżej w template.
+  Pozytywny wynik → wykonanie listy „Do zrobienia" powyżej w template. Do tej listy dochodzi
+  (lekcja z pilota): scaffold sekcji SETUP „praca z zadaniami przez gh" — kokpit
+  (`gh issue list --milestone/--label`, `gh issue status/view --comments`), standup przez
+  API milestones (postęp + due date jednym `gh api --jq`), skoki `--web`, board z CLI
+  (scope `project`). Wzór: docs/SETUP.md w projekcie pilotażowym, do uogólnienia
+  (placeholdery zamiast repo/nazw milestones).
 
 - [x] **Config canonicalizacja `ai_template_path`** — ✅ KROK 2 zrobiony (ADR-002);
       pozostaje KROK 3: migracja cdue-kti (osobna sesja projektowa, Zasada B)
