@@ -39,9 +39,10 @@ Checklisty implementacyjne per faza znajdują się wyłącznie w [docs/ROADMAP.m
   włączy. Fix (per repo):
   `gh api -X PUT repos/<owner>/<repo>/actions/permissions/workflow -f default_workflow_permissions=write -F can_approve_pull_request_reviews=true`
   Do zrobienia: dopisać do `docs/SETUP.md` (sekcja GitHub settings / „Done when") albo
-  zautomatyzować w `new-project.py` post-init. Wykryte w cdue-kti (release-please padał od #2).
+  zautomatyzować w `new-project.py` post-init. Wykryte w projekcie pochodnym (release-please
+  padał od #2).
 - [ ] **Onboarding + update z tai — jeden punkt wejścia** — dziura wykryta przy migracji
-      cdue-kti (KROK 3)
+      projektu pochodnego
 
   > Po ludzku: dev który dostaje gotowy projekt (albo wraca do niego po czasie) nie wie,
   > co odpalić, żeby guardy i hooki działały — info jest porozrzucane. A devu, który chce
@@ -87,20 +88,18 @@ Checklisty implementacyjne per faza znajdują się wyłącznie w [docs/ROADMAP.m
   `TASKS.md`, skrypt migracji przez `gh issue create`. Każdy guard z testem (Zasada A).
   **Timing: granica bezpieczna dla projektu (po fazie/MVP), nie w środku krytycznej pracy.**
 
-  **Pilot wykonania: projekt CDUE (od 2026-06-13), metoda nazwana TAIGA** (**T**asks **A**s
-  **I**ssues, **G**ates, **A**utomation). Decyzja ADR-004 weszła do realizacji w cdue
-  (tamtejszy ADR-003) z rozszerzeniami z researchu metodyk (CCPM / GitHub Spec Kit):
-  epic + sub-issues dla funkcjonalności wielozadaniowych, mini-spec w body issue dla
-  większych tasków, board Projects wyłącznie na wbudowanych automatach (zero ręcznych pól),
-  komentarze issue jako audit trail, uporządkowana kolumna „Up next" wg ADR-004.
-  Kryterium oceny pilota (po F2–F3 cdue, ~połowa lipca 2026): zadania aktualne bez
-  przypominajek właściciela, zero sesji od rekonstrukcji „co już zrobiliśmy".
-  Pozytywny wynik → wykonanie listy „Do zrobienia" powyżej w template. Do tej listy dochodzi
-  (lekcja z pilota): scaffold sekcji SETUP „praca z zadaniami przez gh" — kokpit
-  (`gh issue list --milestone/--label`, `gh issue status/view --comments`), standup przez
-  API milestones (postęp + due date jednym `gh api --jq`), skoki `--web`, board z CLI
-  (scope `project`). Wzór: docs/SETUP.md w projekcie pilotażowym, do uogólnienia
-  (placeholdery zamiast repo/nazw milestones).
+  **Metoda TAIGA** (**T**asks **A**s **I**ssues, **G**ates, **A**utomation) — rozszerzenia
+  z researchu metodyk (CCPM / GitHub Spec Kit): epic + sub-issues dla funkcjonalności
+  wielozadaniowych, mini-spec w body issue dla większych tasków, board Projects wyłącznie na
+  wbudowanych automatach (zero ręcznych pól), komentarze issue jako audit trail, uporządkowana
+  kolumna „Up next". Lekcja z pilota: do listy „Do zrobienia" dochodzi scaffold sekcji SETUP
+  „praca z zadaniami przez gh" — kokpit (`gh issue list --milestone/--label`,
+  `gh issue status/view --comments`), standup przez API milestones (postęp + due date jednym
+  `gh api --jq`), skoki `--web`, board z CLI (scope `project`); wzór do uogólnienia z projektu
+  pilotażowego (placeholdery zamiast repo/nazw milestones).
+
+  > Pilot wykonania na konkretnym projekcie + kryterium oceny → prywatny backlog maintainera
+  > (`docs/MAINTAINER_BACKLOG.local.md`), poza commitowanym logiem template'u (reguła 13a).
 
 - [ ] **`new-project.py --init` oznacza scaffoldy jako "stan przed implementacją"**
 
@@ -117,7 +116,8 @@ Checklisty implementacyjne per faza znajdują się wyłącznie w [docs/ROADMAP.m
   Wzór banderoli: docs/SETUP.md w projekcie pilotażowym.
 
 - [x] **Config canonicalizacja `ai_template_path`** — ✅ KROK 2 zrobiony (ADR-002);
-      pozostaje KROK 3: migracja cdue-kti (osobna sesja projektowa, Zasada B)
+      pozostaje KROK 3: migracja projektu pochodnego (osobna sesja projektowa, Zasada B →
+      `docs/MAINTAINER_BACKLOG.local.md`)
 
   > Po ludzku: guard, który pilnuje, by zmiany reguł wracały do wzorca, był w nowych
   > projektach martwy (czytał nieistniejący plik) i wymagał, żeby każdy miał wzorzec
@@ -164,6 +164,14 @@ dry-run guardów tą samą treścią co commit; nie mieszaj sesji system/projekt
 
 ## Stan sesji
 
+- 2026-06-14: **scrub nazw projektów pochodnych z logu (reguła 13a).** Log tai przeciekał
+  nazwami konkretnych projektów — proweniencja („wykryte w X") i operacyjne TODO. Rozdział:
+  czysta proweniencja → „projekt pochodny" (zero straty); operacyjne TODO związane z nazwanym
+  projektem (migracja KROK 3 config-canonicalizacji; pilot wykonania metody TAIGA + kryterium
+  oceny) → prywatny, gitignorowany `docs/MAINTAINER_BACKLOG.local.md`. Zasada: generyczna metoda
+  i lekcja zostają w commitowanym logu, projektowe wykonanie wychodzi. Atrybucja vendoringu
+  (`coreyhaines31/marketingskills`) zostaje — to wymagane źródło zewnętrznego kodu, nie
+  proweniencja. `.gitignore`: `docs/*.local.md`. Branch `chore/scrub-project-names`.
 - 2026-06-14: `.gitignore` — dodany `.claude/hooks/.sync-hash`. To per-klon stan synchronizacji
   z template'em (`session-context.py` zapisuje hash HEAD template'u po auto-syncu, żeby przy
   starcie sesji wykryć drift). Nie jest współdzielonym baseline'em — gdyby był commitowany, stan
@@ -175,20 +183,20 @@ dry-run guardów tą samą treścią co commit; nie mieszaj sesji system/projekt
   usunięcie zmergowanego brancha (lokalnie `git branch -d` + zdalnie); kolejne zadanie startuje
   z czystego, dociągniętego maina. Trigger = zmergowany PR, nie „koniec sesji"; `git branch -d`
   (nie `-D`) odmawia skasowania niezmergowanej pracy, więc in-flight branche są bezpieczne.
-  Feedback wykryty w sesji projektowej cdue (stale branch po PR #41 + niedociągnięty lokalny
-  main) — lekcja systemowa, więc ląduje w template (reguła 13a), nie w cdue. Branch
+  Feedback wykryty w sesji projektowej pochodnej (stale branch po merge'u PR + niedociągnięty
+  lokalny main) — lekcja systemowa, więc ląduje w template (reguła 13a), nie w projekcie. Branch
   `docs/branch-cleanup-rule`. Pochodne projekty dostaną regułę przez sync skilli/CLAUDE.md.
 - 2026-06-13: fix `guard-template-sync` (hook) — czytał `[skip-sync]` tylko z komendy, więc
   `git commit -F <plik>` z flagą w pliku był wadliwie blokowany (wykryte przy domykaniu commita
-  w cdue na Windows/PowerShell, gdzie wieloliniowy message idzie przez plik). Bliźniaczy
+  w projekcie pochodnym na Windows/PowerShell, gdzie wieloliniowy message idzie przez plik). Bliźniaczy
   `guard-ai-template` umiał czytać `-F` od 2026-06-04, ale template-sync przeoczono. Fix:
   ekstrakcja wiadomości (`-m`/heredoc/here-string/`-F`) wyniesiona do współdzielonego
   `get_commit_message()` w `.claude/hooks/stack.py`; oba hooki jej używają (koniec dwóch kopii
   regexa); bypass sprawdza `haystack = command + message`. Testy: `-F` z flagą przepuszcza,
   `-F` bez flagi nadal blokuje (brak cichego bypassu) — 115/115 suite. Branch
-  `fix/template-sync-read-file`. Pochodne cdue: fix wsiąknie do projektów przez sync skilli.
+  `fix/template-sync-read-file`. Efekt w projektach pochodnych: fix wsiąknie przez sync skilli.
 - 2026-06-07: nowa sekcja „SEO / znajdowalność — wzorce z buildu" w `docs/AI_TEMPLATE_NOTES.md`.
-  Lekcja z projektu hackersmovie.org (cel C — znajdowalność): trzy uniwersalne wzorce — (1) treść
+  Lekcja z projektu pochodnego (cel: znajdowalność): trzy uniwersalne wzorce — (1) treść
   renderowana po stronie klienta = pusta strona dla crawlera → pre-render/SSG, diagnoza `curl|grep`;
   (2) jedno źródło domeny (`baseUrl`) → og/robots/sitemap generowane na buildzie, `lastmod` z daty
   zmiany treści nie deployu; (3) testuj output SEO (surowy HTML ma treść, host spójny w og/robots/
@@ -200,7 +208,7 @@ dry-run guardów tą samą treścią co commit; nie mieszaj sesji system/projekt
 - 2026-06-04: dopisana uniwersalna meta-zasada do `docs/AI_TEMPLATE_NOTES.md` (sekcja
   „Praca z AI — meta-zasady"): nowy UI nie startuje od estetyki „AI-default", zakotwicz
   w specyfice biznesu, dopcham jeden kierunek do końca, sygnalizuj gdy coś pachnie
-  AI-średnią. Lekcja wyciągnięta z sesji designu w projekcie cdue-kti (5 makiet hero →
+  AI-średnią. Lekcja wyciągnięta z sesji designu w projekcie pochodnym (5 makiet hero →
   pierwsze szkice były generyczne; user złapał regresję do średniej). Część user-specific
   została w pamięci maszynowej projektu, do template'u trafił tylko uniwersalny rdzeń
   (reguła 13a). Branch `docs/ui-anti-ai-default`.
@@ -211,8 +219,9 @@ dry-run guardów tą samą treścią co commit; nie mieszaj sesji system/projekt
   D: oba guardy sync (pre-commit + Claude hook) na tryb potwierdzenia — brak klona/URL/zła ścieżka
   → blokada-ack na CLAUDE.md (koniec cichego skipu); klon → auto-weryfikacja. E: `tai/.claude/hooks/
   config.json` z `is_template: true` → guardy no-op we wzorcu. Testy: 111/111 (nowe
-  `test_guard_template_sync` 16, `_hook` 7). **KROK 3 (migracja cdue-kti) → następna sesja** —
-  zaktualizować pliki guarda + `stack.py` w cdue-kti, naprawić `ai_template_path`; Zasada B.
+  `test_guard_template_sync` 16, `_hook` 7). **KROK 3 (migracja projektu pochodnego) → prywatny
+  backlog** — szczegóły projektowe poza commitowanym logiem template'u (`docs/MAINTAINER_BACKLOG.local.md`;
+  reguła 13a; Zasada B).
 - 2026-06-04: durable lessons utrwalone (branch `docs/durable-ai-lessons`). Wnioski 1–3
   (bezstanowość AI → system nie ufa AI; guardy bywają fail-open/martwe → user realnym
   guardem; template=produkt) → `docs/AI_TEMPLATE_NOTES.md`. Zasady A/B (guard tylko z
@@ -226,7 +235,7 @@ dry-run guardów tą samą treścią co commit; nie mieszaj sesji system/projekt
   `feat/vendor-marketing-skills` z main. Item 5 z listy hardeningu 4–6 domknięty. Przy
   okazji wykryto martwy `script_integrity` (→ backlog).
 - 2026-06-04: hardening hooków (branch `fix/template-hardening`). Wykryte podczas pracy
-  w projekcie cdue-kti: (1) `guard-ai-template` puszczał commit przy `git commit -F`
+  w projekcie pochodnym: (1) `guard-ai-template` puszczał commit przy `git commit -F`
   bo `extract_commit_type` parsował tylko `-m` → cichy bypass; przepisany na fail-closed
   + czytanie wiadomości/flag z pliku `-F`, heredoc, here-string; gdy nie umie odczytać
   wiadomości → blok. Dodatkowo blokuje przy każdym tknięciu plików template'owych (dowolny
