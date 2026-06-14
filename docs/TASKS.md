@@ -164,6 +164,18 @@ dry-run guardów tą samą treścią co commit; nie mieszaj sesji system/projekt
 
 ## Stan sesji
 
+- 2026-06-14: **ADR-004 korekta — board zdegradowany do opcjonalnego (wynik pilotażu).**
+  Pierwszy pilotaż wykonania metody Issues/Projects w projekcie pochodnym (model 1 właściciel
+  + AI) obalił §2 w części „board = widok statusu": kanban bez wartości dla solo (nikt nie
+  patrzy — start to sesja, koniec to merge PR-a), oczekiwany auto-postęp na tablicy nie
+  istnieje OOTB (dobudowa = przerost, reguła 5/17), a realną potrzebę („czy projekt na czas")
+  pokrywa strona Milestones (termin + % zamkniętych). Korekta: blok „Korekta 2026-06-14"
+  + wskaźniki w §2/§4/Konsekwencjach — widok statusu = Milestones, board opcjonalny, widok
+  „Roadmap" Projects opcjonalny. Kolumna „Up next" zostaje, ale oznaczona jako
+  niezweryfikowana pilotażem (kolejność wykonania ≠ dashboard statusu — osobny argument,
+  którego pilotaż nie testował; do sprawdzenia w kolejnym projekcie). Reszta decyzji
+  (Issues=dane, `Closes #N`, milestones, markdown fallback) bez zmian. Branch
+  `docs/adr-004-board-optional`.
 - 2026-06-14: **scrub nazw projektów pochodnych z logu (reguła 13a).** Log tai przeciekał
   nazwami konkretnych projektów — proweniencja („wykryte w X") i operacyjne TODO. Rozdział:
   czysta proweniencja → „projekt pochodny" (zero straty); operacyjne TODO związane z nazwanym
