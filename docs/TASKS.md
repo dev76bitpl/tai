@@ -23,6 +23,22 @@ Checklisty implementacyjne per faza znajdują się wyłącznie w [docs/ROADMAP.m
 
 ## Backlog
 
+- [ ] **Lekki tor dla zmian trywialnych — wpiąć w `CLAUDE.md`** (uzgodnione, nie zakodowane)
+
+  > Po ludzku: trywialna decyzja (np. „board: tak/nie") nie może kosztować godziny i 4 PR-ów.
+  > Właściciel ustawia kierunek i klika merge; AI robi resztę.
+
+  Ustalenia (dziś tylko w pamięci maszynowej — warstwa ulotna, reguła 13 → do repo):
+  (1) **test trywialności** — odwracalne tanio + decyzja w jednym zdaniu + dotyka docs/configu nie
+  runtime + zero ryzyka dla usera; choć jedno „nie" → pełny tor; (2) lekki tor **pomija** ADR,
+  duplikat w wielu miejscach, branch/PR per drobiazg, hard-stop 16b — **zostaje** commit + uczciwy
+  message; (3) **jedno źródło prawdy na poziom** (projekt vs template), w obrębie poziomu fakt ma
+  jeden dom, reszta linkuje; (4) **batch** — jeden PR per repo, nie N osobnych; (5) **decyzja „A"**:
+  AI robi branch→PR→sprzątanie autonomicznie, właściciel klika **merge raz na batch** (commit
+  prosto na main = odrzucone); (6) pełny tor zostaje dla realnego kodu produktu.
+  Wpięcie wytnie wyjątki w regułach 3/16b + „AI nie dodaje flag bypass sam" → **sam nie jest
+  trywialne, idzie pełnym torem z testami guardów**. Osobna krótka sesja systemowa.
+
 - [ ] **Martwy `script_integrity` w `skills-manifest.json`** — hash `update-skills.py`
       nie zgadza się z plikiem (skrypt zmieniony w PR #57, hash nie). Zero referencji
       w hookach/pre-commit → nic go nie egzekwuje. Albo zaktualizować hash przy każdej
