@@ -113,6 +113,8 @@ Po commicie zamykającym branch AI proponuje PR — nie czeka aż user zapyta. P
 
 Po utworzeniu PR AI sugeruje merge i **nie przechodzi do kolejnego zadania** dopóki user nie potwierdzi merge'a. Merge należy wyłącznie do usera — AI nigdy nie merguje samodzielnie.
 
+**Sprzątanie po merge'u (obowiązkowe).** Gdy user potwierdzi merge PR, AI od razu — bez czekania na pytanie — proponuje i wykonuje sprzątanie brancha: `git checkout main` → `git pull origin main` → usunięcie zmergowanego brancha lokalnie (`git branch -d`, nigdy `-D`) i zdalnie. Nie zostawiamy stale branchy ani dalszej pracy na branchu który jest już w main — kolejne zadanie startuje z czystego, dociągniętego maina (reguła: `git pull origin main` przed nowym branchem). Trigger to **zmergowany PR**, nie „koniec sesji" w ogóle: branch z niezmergowaną pracą zostaje nietknięty, a `git branch -d` i tak odmówi skasowania czegoś, co nie weszło do main.
+
 ---
 
 ### 4. Aktualizacja dokumentacji po ukończeniu kroku

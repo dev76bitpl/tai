@@ -164,6 +164,14 @@ dry-run guardów tą samą treścią co commit; nie mieszaj sesji system/projekt
 
 ## Stan sesji
 
+- 2026-06-14: nowa reguła workflow w `CLAUDE.md` §3 — **sprzątanie brancha po merge'u**. Po
+  potwierdzeniu merge'a przez usera AI od razu proponuje i wykonuje `checkout main` → `pull` →
+  usunięcie zmergowanego brancha (lokalnie `git branch -d` + zdalnie); kolejne zadanie startuje
+  z czystego, dociągniętego maina. Trigger = zmergowany PR, nie „koniec sesji"; `git branch -d`
+  (nie `-D`) odmawia skasowania niezmergowanej pracy, więc in-flight branche są bezpieczne.
+  Feedback wykryty w sesji projektowej cdue (stale branch po PR #41 + niedociągnięty lokalny
+  main) — lekcja systemowa, więc ląduje w template (reguła 13a), nie w cdue. Branch
+  `docs/branch-cleanup-rule`. Pochodne projekty dostaną regułę przez sync skilli/CLAUDE.md.
 - 2026-06-13: fix `guard-template-sync` (hook) — czytał `[skip-sync]` tylko z komendy, więc
   `git commit -F <plik>` z flagą w pliku był wadliwie blokowany (wykryte przy domykaniu commita
   w cdue na Windows/PowerShell, gdzie wieloliniowy message idzie przez plik). Bliźniaczy
