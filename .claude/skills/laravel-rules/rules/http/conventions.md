@@ -20,14 +20,15 @@ without the framework. Keeping it thin means the domain lives in actions/
 queries, callable from any entry point.
 
 ```php
-// Good — validate (form request), delegate (action), respond
+// Good — validate (form request), delegate (action), respond.
+// One action → its own controller exposing the fitting resource verb (store).
 final class RegisterOrganizationController
 {
     public function __construct(
         private readonly RegisterOrganization $registerOrganization,
     ) {}
 
-    public function __invoke(RegisterOrganizationRequest $request): JsonResponse
+    public function store(RegisterOrganizationRequest $request): JsonResponse
     {
         $organization = $this->registerOrganization->handle(
             RegisterOrganizationData::from($request->validated()),
@@ -39,6 +40,66 @@ final class RegisterOrganizationController
     }
 }
 ```
+
+## Rule: a controller exposes only the seven resource methods
+
+A controller's public methods are exactly the RESTful resource set —
+`index`, `create`, `store`, `show`, `edit`, `update`, `destroy` — and
+nothing else. **No custom-named action methods** (`switch`, `approve`,
+`restore`), **no `__invoke`**, and **no `private`/`protected` helper
+methods**. Register every controller with `Route::resource` /
+`Route::apiResource`, narrowing with `->only([...])` / `->except([...])`
+when it serves fewer than seven.
+
+An action that doesn't map onto one of the seven is the signal to create a
+**new controller named for that action's resource**, exposing the single
+resource verb that fits — never to add a method to an existing CRUD
+controller.
+
+```php
+// Bad — a custom verb bolted onto the resource controller
+final class TeamController extends Controller
+{
+    public function switch(Request $request, Team $team, SwitchTeam $switchTeam): RedirectResponse
+    { /* ... */ }   // `switch` is not one of the seven
+}
+
+// Good — the switch is its own resource; performing it is `store`
+// routes/web.php
+Route::resource('switch-team', SwitchTeamController::class)->only(['store']);
+
+final class SwitchTeamController extends Controller
+{
+    public function store(SwitchTeamRequest $request, SwitchTeam $switchTeam): RedirectResponse
+    {
+        $switchTeam->handle($request->user(), $request->team());   // form request resolves the team
+
+        return back();
+    }
+}
+```
+
+**Why:** the seven verbs are a closed, predictable vocabulary — every
+controller reads the same way, route names generate consistently, and
+there is exactly one place per resource for each operation. A custom
+method (`switch`) breaks that uniformity and almost always hides a second
+resource trying to exist; promoting it to its own controller names that
+resource and keeps each controller a single, cohesive CRUD surface. A
+`private`/`protected` method is logic that escaped the boundary — it
+belongs in an [action](../actions/conventions.md), a
+[query](../queries/conventions.md), or a form request (below), never as a
+hidden helper on transport glue.
+
+### Choosing the verb for a non-CRUD action
+
+Model the action as a resource and pick the verb by HTTP semantics:
+
+| The action… | Controller + verb |
+|---|---|
+| performs a one-off command / creates a selection (switch team, publish post, send invite) | `…Controller@store` — POST |
+| replaces the state of an existing resource | `…Controller@update` — PUT/PATCH |
+| tears something down | `…Controller@destroy` — DELETE |
+| lists, shows, or renders a form | `index` / `show` / `create` / `edit` — GET |
 
 ## Rule: delegate reads to injected queries, writes to injected actions
 
@@ -115,11 +176,37 @@ response object is the allow-list of what ships, which is also the output
 API Resources redundant here — the data object already shapes and types
 the payload.
 
+When the frontend is **Inertia**, that response object is one per-page
+`*PageData` (composing `can`/`copy`/`seo`), governed by
+[../data-objects/inertia-page-data.md](../data-objects/inertia-page-data.md).
+
+## Rule: cache data, not responses — never share-cache an authenticated response
+
+In an authed app the default is to cache at the
+[data layer](../patterns/caching.md), not to cache rendered responses.
+Full-response caching (keyed by URL, replayed without running the controller) is
+reserved for **public, anonymous, identical-for-every-user** responses, and is
+invalidated through the same
+[after-commit + version](../cache/invalidation.md) machinery. **Never** store a
+personalized/authenticated response in a shared cache — it serves one user's
+data to another (an output-safety failure, see
+[../security/output.md](../security/output.md)).
+
+Set cache headers deliberately even when not caching server-side, because
+CDNs/proxies obey them: `Cache-Control: private` (or `no-store`) for anything
+authed/personalized, `public, max-age=…` only for truly public responses, and
+`ETag`/`Last-Modified` (→ `304`) for cacheable GETs. Inertia/JSON responses are
+per-user — never full-response-cached.
+
 ## Rule: routes are resourceful, named, and use route-model binding
 
-Prefer RESTful resource routes, named consistently, with implicit
-route-model binding for lookups. Keep route files declarative — no
-closures with logic; point routes at controllers.
+Register controllers with `Route::resource` / `Route::apiResource`, named
+consistently, with implicit route-model binding for lookups. A controller
+that serves fewer than seven verbs narrows with `->only([...])` /
+`->except([...])` — never a hand-written route to a custom method. There
+are no `Route::post('…', [C::class, 'switch'])` lines, because there are no
+custom methods (rule above). Keep route files declarative — no closures
+with logic; point routes at controllers.
 
 ## Edge cases
 
@@ -134,6 +221,9 @@ closures with logic; point routes at controllers.
 
 ## Checklist
 
+- Controller exposes only the seven resource methods — no custom-named
+  methods, no `__invoke`, no `private`/`protected` methods; a non-resource
+  action gets its own controller (verb chosen by HTTP semantics).
 - Controller method: validated request in → one action/query → response
   out; no business logic, no raw Eloquent writes.
 - Structural validation in a form request; action receives a data object

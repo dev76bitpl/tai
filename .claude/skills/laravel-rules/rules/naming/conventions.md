@@ -1,5 +1,23 @@
 # Naming Rules
 
+This file owns the *grammar* of names — suffixes, verb-first order,
+variable naming. The **class types** being named (Action, Query, Service,
+Model, …) are defined in [../../LANGUAGE.md](../../LANGUAGE.md); the rules
+below say how to spell them.
+
+## Domain names
+
+`LANGUAGE.md` names the **architecture** (Action, Query, Data object); the
+**domain** half of a name (Signup, Invoice, Vehicle) comes from the product's
+own language. A class name is one of each — `CreateSignup` is the `Create`
+verb + the `Signup` domain term.
+
+- Name every domain concept with the term the product and its users actually
+  use — not a generic placeholder (`data`, `item`, `manager`, `result`).
+- If you are unsure what a concept is called, ask rather than coining a term
+  silently. Inventing language the product does not use is itself a naming
+  bug.
+
 ## Class Names
 
 - Actions do not use the `Action` suffix.

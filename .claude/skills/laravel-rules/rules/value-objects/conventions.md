@@ -1,5 +1,7 @@
 # Value objects
 
+> **[Value object](../../LANGUAGE.md)** is defined in `LANGUAGE.md`; this file owns the grammar.
+
 Internals of domain value objects — small immutable types that model a
 *value with rules and behavior* (`Money`, `Email`, `Percentage`),
 compared by their contents rather than by identity. Building-block folder

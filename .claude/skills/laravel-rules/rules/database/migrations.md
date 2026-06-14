@@ -11,6 +11,14 @@ trait to the model; the migration column is simply:
 $table->uuid('id')->primary();
 ```
 
+`HasUuids` sets the key in `save()`/`create()` (inline in `performInsert()`,
+so it survives `saveQuietly()`) — but it does **not** run on a bulk
+`insert()`/`upsert()` or a query-builder write, and the PK is `NOT NULL`
+with no DB default. So a bulk-writing action must generate `Str::uuid7()`
+per row itself ([../actions/conventions.md](../actions/conventions.md));
+do not rely on a DB default like `gen_random_uuid()` (defaults are
+forbidden below, and `gen_random_uuid()` is UUIDv4 anyway).
+
 Never use a random UUIDv4 PK. A random PK lands inserts at random points
 in the B-tree on large tables — page splits, poor cache locality, write
 amplification — which hurts exactly the tens-of-millions-row tables. A

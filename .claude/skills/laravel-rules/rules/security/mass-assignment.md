@@ -55,9 +55,10 @@ reaching a write). Two defensible positions:
 
 **The condition that makes unguarded safe:** if you unguard, the
 "never mass-assign raw input" rule stops being best-practice and becomes
-**load-bearing**, so enforce it mechanically — a Pest arch test or
-grep/lint that fails when `create(`/`update(`/`fill(` receives
-`$request->...`. Global `Model::unguard()` is the most consistent (no
+**load-bearing**, so enforce it mechanically — a
+[Pest arch test or grep/lint](../testing/architecture.md) that fails when
+`create(`/`update(`/`fill(` receives `$request->...` (this rule is the
+grep/lint case — an inherited request method isn't arch-expressible). Global `Model::unguard()` is the most consistent (no
 per-model drift); the trade is the broadest blast radius if the boundary
 ever breaks.
 

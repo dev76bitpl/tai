@@ -1,5 +1,7 @@
 # Action Rules
 
+> **[Action](../../LANGUAGE.md)** is defined in `LANGUAGE.md`; this file owns the grammar.
+
 ## Purpose
 
 Actions encapsulate all business logic and state mutation workflows. Controllers, console commands, and jobs may depend on actions, but they must not implement business logic themselves.
@@ -75,6 +77,48 @@ its write-path terminal ([../queries/conventions.md](../queries/conventions.md))
 the action mutates it. The id reaches the action **inside the data
 object** (a typed identifier), not as a passed model.
 
+## Rule: bulk and eventless writes set their own values
+
+When an action writes in bulk — `insert()`, `upsert()`, `insertOrIgnore()`,
+a mass `update()`, or raw SQL — it goes straight to the query builder and
+**bypasses the model layer entirely**: no model events fire, `HasUuids`
+does not run, casts and mutators do not apply, and `created_at`/`updated_at`
+are not filled. So the action must set, **per row**, everything a single
+`save()` would have set for it:
+
+- the **primary key** — `Str::uuid7()` (time-ordered, [../database/migrations.md](../database/migrations.md));
+- any **derived column** (slug, normalized value) — computed in PHP into the row;
+- the **timestamps**.
+
+```php
+final class ImportOrganizations
+{
+    public function handle(ImportOrganizationsData $data): void
+    {
+        $now = now();
+
+        $rows = $data->organizations->map(fn (NewOrganizationData $org): array => [
+            'id'         => Str::uuid7()->toString(),   // HasUuids does NOT run here
+            'name'       => $org->name,
+            'slug'       => Str::slug($org->name),       // no mutator/observer fires
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
+
+        Organization::query()->insert($rows->all());     // chunk for large sets
+    }
+}
+```
+
+**Why:** a derived value or key that an [observer](../observers/conventions.md)
+or `HasUuids` would set on a `save()` is silently skipped on these paths —
+leaving a `NOT NULL` column to throw mid-insert, or a nullable one to fill
+with `NULL` across every row. The only place a value is guaranteed on every
+write path is the action's payload (and a DB constraint as backstop,
+[../database/schema.md](../database/schema.md)). Large backfills run the
+same way from a chunked job ([../database/large-tables.md](../database/large-tables.md),
+[../database/performance.md](../database/performance.md)).
+
 ## Decision: single-responsibility vs orchestrator
 
 Two action shapes. Choose by responsibility and number of writes:
@@ -121,6 +165,9 @@ restate it.
   travels in the data object, never a passed model).
 - Reads go through an injected query; the action's only direct DB op is
   the write — no `Model::query()->find/where/get` inline.
+- Bulk/eventless writes (`insert`/`upsert`/mass-`update`/raw) set the
+  `uuid`, derived columns, and timestamps per row — the model layer is
+  bypassed.
 - Action shape chosen via the Decision above (single vs orchestrator).
 - Transaction + invariant rules deferred to their canonical homes
   (linked above), not re-decided here.

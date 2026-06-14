@@ -1,37 +1,43 @@
 # Observers (guardrail)
 
-Model observers — framed as a **guardrail**. Consistent with the
-no-model-magic stance (explicit reads, no query scopes), observers are
-discouraged: they hide side effects behind Eloquent lifecycle hooks. This
-file documents what to do instead and the narrow cases where an observer
-is tolerable. Building-block folder (see
+> **[Observer](../../LANGUAGE.md)** is defined in `LANGUAGE.md` (a guardrail term); this file owns the grammar.
+
+Model observers and Eloquent model events — framed as a **guardrail**.
+Consistent with the no-model-magic stance (explicit reads, no query
+scopes), they are **not used in application code**: they hide behavior
+behind Eloquent lifecycle hooks that fire implicitly, from every path, and
+*don't* fire on the paths that matter most. This file says what to do
+instead, the one place they're legitimate (package authorship), and the
+decision tree that draws the line. Building-block folder (see
 [../architecture/placement.md](../architecture/placement.md)).
 
-## Rule: do not put side effects in model observers
+## Rule: no model lifecycle hooks in application code
 
-Do not react to Eloquent lifecycle events (`creating`, `created`,
-`saved`, `deleted`, …) by running domain side effects — sending mail,
-dispatching jobs, mutating other models, calling services. Put the side
-effect where it belongs:
+Do not put behavior in a model observer, an `#[ObservedBy]` class, a
+`static::booted()` lifecycle closure, or a `$dispatchesEvents` mapping —
+anything that reacts to `creating`, `created`, `saving`, `updated`,
+`deleting`, …. Put the behavior where it is visible and runs on **every**
+write path:
 
 - **Domain side effect** → the [action](../actions/conventions.md) that
   owns the write does it explicitly, in order.
 - **Async/external work** → a [job](../jobs/conventions.md) the action
-  dispatches after commit.
+  dispatches after commit
+  ([../architecture/transactions.md](../architecture/transactions.md)).
+- **A required or derived value on every row** → set it in the action's
+  write payload and back it with a database constraint; for bulk writes the
+  action sets it per row
+  ([../actions/conventions.md](../actions/conventions.md),
+  [../database/schema.md](../database/schema.md)).
 
-(Events are *also* a guardrail here, not the fallback — see
+(Events are *also* a guardrail, not the fallback — see
 [../events/conventions.md](../events/conventions.md).)
 
-**Why:** an observer fires on *any* save from *any* code path —
-factories, seeders, tinker, an unrelated action — so the side effect runs
-in contexts you never intended and in an order you do not control.
-Reading the action tells you nothing about what the observer will do.
-Testing anything that touches the model now drags in the observer's
-effects. This is the single biggest source of "why did that happen?" in a
-Laravel codebase, which is exactly the risk the project avoids.
-
 ```php
-// Bad — hidden side effect on every save, from any path
+// Bad — hidden, fires on every save from any path, skipped by bulk writes
+#[ObservedBy(OrganizationObserver::class)]
+class Organization extends Model { /* ... */ }
+
 class OrganizationObserver
 {
     public function created(Organization $organization): void
@@ -53,42 +59,102 @@ final class RegisterOrganization
 }
 ```
 
-## Decision: is an observer ever acceptable?
+## Why: a hook is both too eager and too lazy
 
-Only for a side-effect-free, persistence-level concern that is intrinsic
-to *every* write of the model and has no domain meaning:
+**It fires when you don't want it.** An observer runs on *any* save from
+*any* code path — factories, seeders, tinker, an unrelated action, a test.
+The behavior runs in contexts you never intended, in an order you do not
+control, and by default **mid-transaction**: a `created` hook that
+dispatches a job can be picked up by a worker before `COMMIT` (model not
+found), or send mail and then have the transaction roll back. Reading the
+action tells you nothing about what fires — the single biggest source of
+"why did that happen?" in a Laravel codebase.
 
-- **Tolerable** — deriving a stored column purely from the model's own
-  attributes (a `slug` from a `name`, setting a `uuid` on `creating`).
-  Pure, no I/O, no other models, no dispatch.
-- **Not acceptable** — anything with a side effect or a collaborator:
-  mail, jobs, events, touching other records, calling a service.
+**It doesn't fire when you need it.** Model events come only from a
+hydrated model's `save()`/`delete()`. They fire on **none** of these —
+each goes straight to the query builder and never hydrates a model:
 
-Even for the tolerable case, prefer doing it in the action or a cast/
-mutator if it has any domain nuance; the observer is only for the truly
-mechanical, universal-to-every-write derivation.
+`Model::insert()` · `DB::table()->insert()` · mass `Model::query()->update()` ·
+`upsert()` · `insertOrIgnore()` · `withoutEvents()` · `saveQuietly()` · raw SQL.
 
-**Why:** a pure attribute derivation is safe to run on every save because
-it has no observable effect beyond the row itself. The moment an observer
-does something *other code can notice*, it becomes the hidden side effect
-this guardrail forbids.
+So any invariant you "guarantee" in a hook is silently false on exactly the
+bulk/eventless paths a large app relies on
+([../database/large-tables.md](../database/large-tables.md),
+[../actions/conventions.md](../actions/conventions.md)). Even `HasUuids`
+and timestamps are **not** observer logic — Laravel sets them inline in
+`performInsert()`, which is why they survive `saveQuietly()` yet *still*
+skip `insert()`/`upsert()`. A hand-rolled `creating` hook to set a `uuid`
+or `slug` is a worse version of that, broken on the same paths.
+
+## Decision: should this live in a model lifecycle hook?
+
+In **application** code the answer is **no** — it goes in the action. The
+tree is the reasoning; walk it in order and the first **stop** is your
+answer.
+
+1. **Does it do I/O or dispatch anything?** (write another table, cache,
+   queue a job, send mail, call an HTTP API, broadcast) → **stop.** It is a
+   side effect: the [action](../actions/conventions.md) owns it (a required
+   step), or a [job](../jobs/conventions.md) runs it after commit. A hook
+   would fire it mid-transaction, from seeders and tests, and skip it on
+   bulk writes.
+
+2. **Does it read or mutate any row other than the one being saved?**
+   (relations, counters, aggregates) → **stop.** Cross-aggregate
+   consistency is the action's transaction to own; a hook splits one
+   invariant across two invisible places and can recurse (`save()` inside a
+   `saved` handler loops; `saveQuietly()` "fixes" it only by silencing
+   *every* observer).
+
+3. **If the hook never ran, could a row be persisted invalid or incomplete
+   through *any* write path** — `insert`, `upsert`, mass `update`,
+   `withoutEvents`, query builder, raw SQL? → **stop.** The value must hold
+   where no event fires: set it in the action's payload (bulk writes too)
+   and back it with a DB constraint
+   ([../database/schema.md](../database/schema.md)). A hook gives false
+   confidence.
+
+4. **Is it a pure, deterministic derivation of *this row's own*
+   attributes, with no I/O?** → in app code, **still set it in the action**
+   (or a cast/mutator if it is presentation of a stored value). The
+   convenience of a hook does not buy back the invisibility, and gate 3
+   already showed it cannot be the guarantee.
+
+**Exception — package authorship.** If you are writing a reusable
+*package* (not application code), model events are the only decoupled seam
+into a host app you don't control, so an observer is legitimate — but it
+must run after commit (`ShouldHandleEventsAfterCommit`) and queue its work
+([../queues/conventions.md](../queues/conventions.md)). This exception does
+not transfer to application code, which owns every call site.
+
+## When a hook *is* the tool (and why that isn't you)
+
+| Legitimate use | Why it isn't application code |
+|---|---|
+| Key / timestamp assignment (`HasUuids`, `timestamps`) | a framework concern, set inline in `performInsert()` — you never write it |
+| Package extension points / decoupling | only a *package* needs a seam into an app it cannot edit |
+| Audit / search-index / cache sync via observer | legitimate only when *packaged*, after-commit, and queued — and it still misses bulk paths, so it is never your invariant |
 
 ## Edge cases
 
-- **Cascading deletes / cleanup.** Model this as an explicit action (or a
-  database/foreign-key strategy per
-  [../database/migrations.md](../database/migrations.md)), not a `deleting`
-  observer that fans out writes.
-- **Audit/timestamps.** Framework-level concerns (`timestamps`, dedicated
-  audit packages) are fine; hand-rolled audit logic with I/O is not — that
-  is an action or a job.
+- **Cascading deletes / cleanup.** An explicit action (or a foreign-key
+  strategy per [../database/migrations.md](../database/migrations.md)) —
+  never a `deleting` observer that fans out writes.
+- **Normalization** (downcase an email, trim) → set it in the action, or a
+  cast/mutator on the stored value — not a lifecycle hook.
+- **Audit/timestamps.** Framework `timestamps` and dedicated, packaged
+  audit tools are fine; hand-rolled audit logic with I/O is an action or a
+  job.
 
 ## Checklist
 
-- No domain side effects in observers — actions own them, jobs run the
-  async/external ones (events are not the fallback).
-- The only observer logic present is a pure, side-effect-free attribute
-  derivation intrinsic to every write (Decision above).
-- Deletes/cascades are explicit actions or DB constraints, not observers.
-- After-commit/dispatch rules still apply
-  ([../architecture/transactions.md](../architecture/transactions.md)).
+- No observers, `#[ObservedBy]`, `booted()` lifecycle closures, or
+  `$dispatchesEvents` in application code.
+- Side effects live in actions (required steps) or jobs (async/external),
+  dispatched after commit — events are not the fallback.
+- Required/derived values are set in the action's write payload and backed
+  by DB constraints; bulk writes set them per row
+  ([../actions/conventions.md](../actions/conventions.md)).
+- The only lifecycle hooks in the codebase are framework-provided
+  (`HasUuids`, timestamps) or inside a package you ship — after-commit and
+  queued.

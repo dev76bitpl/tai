@@ -1,5 +1,7 @@
 # Job Rules
 
+> **[Job](../../LANGUAGE.md)** is defined in `LANGUAGE.md`; this file owns the grammar.
+
 ## Purpose
 
 Jobs orchestrate queued execution only. They must not contain business logic.

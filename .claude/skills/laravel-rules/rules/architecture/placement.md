@@ -64,6 +64,12 @@ never restate the rule.
 **Why:** a rule stated in three files is a rule that will eventually
 contradict itself in two of them.
 
+The same discipline governs **definitions**: the meaning of a
+building-block term (what an Action *is*, what to call it, what not to)
+lives once in [../../LANGUAGE.md](../../LANGUAGE.md). Rule files carry the
+*grammar* — the `handle()` shape, the suffix rule — and link-stub to the
+definition; they never redefine the term.
+
 ## Checklist
 
 - New rule placed by running the test above (internals → architecture →
@@ -71,3 +77,5 @@ contradict itself in two of them.
 - "It's a pattern" was not used as a placement reason — the
   mandatory-vs-optional axis was.
 - The rule has one canonical home; every other mention is a link-stub.
+- A building-block term is *defined* once in `LANGUAGE.md`; rule files
+  link-stub to the definition rather than restating it.

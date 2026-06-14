@@ -42,7 +42,9 @@ branches that a `match` states in four lines.
 
 ## Rule: the contract is an interface; implementations are injected, never `new`-ed or resolved inline
 
-Define the contract as an interface. Consumers depend on the
+Define the contract as an interface in `app/Contracts/`
+([../architecture/structure.md](../architecture/structure.md) — it's a
+cross-cutting contract, not a block-internal seam). Consumers depend on the
 **interface**, injected via the constructor
 ([../architecture/dependency-injection.md](../architecture/dependency-injection.md)).
 Bind the implementation in a service provider — never `new

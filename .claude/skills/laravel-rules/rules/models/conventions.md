@@ -1,5 +1,7 @@
 # Model Rules
 
+> **[Model](../../LANGUAGE.md)** is defined in `LANGUAGE.md`; this file owns the grammar.
+
 ## Creation
 
 Always create new models with Artisan and include the related factory, migration, and seeder:
