@@ -45,7 +45,7 @@ Fix: CDN, caching, optimized backend, edge rendering
 
 <!-- ✅ Critical CSS inlined, rest deferred -->
 <style>/* Critical above-fold CSS */</style>
-<link rel="preload" href="/styles.css" as="style" 
+<link rel="preload" href="/styles.css" as="style"
       onload="this.onload=null;this.rel='stylesheet'">
 ```
 
@@ -310,7 +310,7 @@ CLS measures unexpected layout shifts. A shift occurs when a visible element cha
 
 <!-- ✅ Or use aspect-ratio container -->
 <div style="aspect-ratio: 16/9;">
-  <iframe src="https://youtube.com/embed/..." 
+  <iframe src="https://youtube.com/embed/..."
           style="width: 100%; height: 100%;"></iframe>
 </div>
 ```

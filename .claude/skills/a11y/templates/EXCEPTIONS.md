@@ -29,18 +29,18 @@ This document logs known deviations from accessibility standards (WCAG 2.2 AA / 
 *Blank copy (paste below as you create new exceptions):*
 
 ### 1. Basic Details
-- **Exception ID:** 
-- **Component / Page:** 
-- **WCAG Guideline Affected:** 
-- **Severity:** 
+- **Exception ID:**
+- **Component / Page:**
+- **WCAG Guideline Affected:**
+- **Severity:**
 
 ### 2. Technical Blockade Description
-- **What is broken?** 
-- **Why did it happen?** 
+- **What is broken?**
+- **Why did it happen?**
 
 ### 3. Workaround (Fallback / Remediation)
-- **How can the user still complete the task?** 
+- **How can the user still complete the task?**
 
 ### 4. Resolution Plan and Deadlines
-- **Expected Fix Date:** 
-- **Resolution Criterion:** 
+- **Expected Fix Date:**
+- **Resolution Criterion:**

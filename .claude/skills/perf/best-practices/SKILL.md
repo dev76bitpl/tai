@@ -37,9 +37,9 @@ Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
 
 ```html
 <!-- Basic CSP via meta tag -->
-<meta http-equiv="Content-Security-Policy" 
-      content="default-src 'self'; 
-               script-src 'self' https://trusted-cdn.com; 
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'self';
+               script-src 'self' https://trusted-cdn.com;
                style-src 'self' 'unsafe-inline';
                img-src 'self' data: https:;
                connect-src 'self' https://api.example.com;">
@@ -49,7 +49,7 @@ Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
 
 **CSP Header (recommended):**
 ```
-Content-Security-Policy: 
+Content-Security-Policy:
   default-src 'self';
   script-src 'self' 'nonce-abc123' https://trusted.com;
   style-src 'self' 'nonce-abc123';
@@ -365,15 +365,15 @@ try {
 ```jsx
 class ErrorBoundary extends React.Component {
   state = { hasError: false };
-  
+
   static getDerivedStateFromError(error) {
     return { hasError: true };
   }
-  
+
   componentDidCatch(error, info) {
     errorTracker.captureException(error, { extra: info });
   }
-  
+
   render() {
     if (this.state.hasError) {
       return <FallbackUI />;
@@ -583,11 +583,11 @@ findNearbyButton.addEventListener('click', async () => {
 
 ```html
 <!-- Restrict powerful features -->
-<meta http-equiv="Permissions-Policy" 
+<meta http-equiv="Permissions-Policy"
       content="geolocation=(), camera=(), microphone=()">
 
 <!-- Or allow for specific origins -->
-<meta http-equiv="Permissions-Policy" 
+<meta http-equiv="Permissions-Policy"
       content="geolocation=(self 'https://maps.example.com')">
 ```
 

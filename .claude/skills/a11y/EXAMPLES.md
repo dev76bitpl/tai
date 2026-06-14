@@ -12,8 +12,8 @@ The use of `div` with `onClick` makes it impossible for keyboard users or assist
 
 ```tsx
 // OverviewCard.tsx
-<div 
-  onClick={() => navigate('/components')} 
+<div
+  onClick={() => navigate('/components')}
   className="glass-panel p-6 cursor-pointer hover:border-blue-500"
 >
   <Puzzle className="w-5 h-5" />
@@ -27,7 +27,7 @@ Using a semantic tag (`button` or `a`) guarantees native focus, Enter/Space key 
 
 ```tsx
 // OverviewCard.tsx
-<button 
+<button
   onClick={() => navigate('/components')}
   aria-label="View component list (120 indexed)"
   className="glass-panel p-6 text-left hover:border-blue-500 focus:ring-2 focus:ring-blue-500 outline-none"
@@ -92,8 +92,8 @@ Mandatory use of `id` on the input and `htmlFor` on the label to create the sema
 
 ```tsx
 // AuthForm.tsx
-<label 
-  htmlFor="auth-email" 
+<label
+  htmlFor="auth-email"
   className="block text-xs font-semibold uppercase"
 >
   Email
@@ -132,8 +132,8 @@ Inclusion of ARIA attributes to ensure the state change is announced immediately
 ```tsx
 // Notification.tsx
 {error && (
-  <div 
-    role="alert" 
+  <div
+    role="alert"
     aria-live="assertive"
     className="p-3 bg-red-100 text-red-700 border border-red-500"
   >
