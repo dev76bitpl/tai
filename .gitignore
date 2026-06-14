@@ -10,3 +10,6 @@ __pycache__/
 
 # Personal AI profile (use docs/USER_PROFILE.example as template)
 docs/USER_PROFILE.md
+
+# Maintainer's private backlog — project-specific TODOs that must not ship in the template (13a)
+docs/*.local.md
