@@ -5,5 +5,8 @@ __pycache__/
 # Per-machine Claude Code settings (use settings.local.json.example as template)
 .claude/settings.local.json
 
+# Per-clone template-sync state (written by session-context hook; not a shared baseline)
+.claude/hooks/.sync-hash
+
 # Personal AI profile (use docs/USER_PROFILE.example as template)
 docs/USER_PROFILE.md

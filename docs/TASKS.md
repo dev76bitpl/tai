@@ -164,6 +164,12 @@ dry-run guardów tą samą treścią co commit; nie mieszaj sesji system/projekt
 
 ## Stan sesji
 
+- 2026-06-14: `.gitignore` — dodany `.claude/hooks/.sync-hash`. To per-klon stan synchronizacji
+  z template'em (`session-context.py` zapisuje hash HEAD template'u po auto-syncu, żeby przy
+  starcie sesji wykryć drift). Nie jest współdzielonym baseline'em — gdyby był commitowany, stan
+  synchronizacji jednego klonu nadpisywałby inny i każdy sync robiłby śmieciowy diff; dotąd wisiał
+  jako untracked w każdym klonie. Branch `chore/gitignore-sync-hash`. Pochodne projekty dostaną
+  wpis przez sync.
 - 2026-06-14: nowa reguła workflow w `CLAUDE.md` §3 — **sprzątanie brancha po merge'u**. Po
   potwierdzeniu merge'a przez usera AI od razu proponuje i wykonuje `checkout main` → `pull` →
   usunięcie zmergowanego brancha (lokalnie `git branch -d` + zdalnie); kolejne zadanie startuje
