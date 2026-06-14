@@ -3,6 +3,40 @@
 **Status:** accepted (wykonanie odłożone — patrz „Konsekwencje / Timing")
 **Data:** 2026-06-11
 
+## Korekta 2026-06-14 — wynik pilotażu: board zdegradowany do opcjonalnego
+
+Pierwszy pilotaż wykonania tej decyzji w realnym projekcie (model 1 właściciel + AI)
+podważył **§2 w części dotyczącej boardu jako widoku statusu**:
+
+- Kanban (kolumny Pomysł / Do zrobienia / W toku) ma sens, gdy zespół koordynuje
+  kto-co-trzyma. W modelu 1 właściciel + AI nikt na tablicę nie patrzy — sygnał startu
+  zadania to sesja, sygnał końca to merge PR-a.
+- Oczekiwany „automatyczny postęp na tablicy" **nie istnieje out-of-the-box**: kolumna
+  statusu nie przesuwa się sama z brancha/PR-a. Dobudowa takiego automatu dla projektu
+  jednoosobowego = przerost (reguła 5/17), niewarte.
+- Faktyczną potrzebę właściciela („wejść, zobaczyć czy projekt jest na czas") pokrywa
+  **strona Milestones**: faza + termin + pasek postępu (% zamkniętych issues), wypełniany
+  automatycznie merge'em PR-ów. Board dat w ogóle nie pokazuje — stąd częsta pomyłka
+  „dashboard nic nie daje" (patrzenie na zły ekran).
+
+**Zmiana:**
+
+- **Widok statusu = strona Milestones**, nie board. Board Projects staje się *opcjonalny*
+  (kto chce kanban — proszę bardzo), przestaje być wymaganym elementem wzorca i źródłem
+  oglądu dla właściciela.
+- §4: oś czasu faz opiera się na **milestones** (termin + auto-postęp), nie na widoku
+  „Roadmap" tablicy Projects.
+- **Kolumna „Up next"** (uporządkowana kolejność wykonania — lek na dryf rekomendacji,
+  §2 / wada 3) **zostaje**, ale jako mechanizm **niezweryfikowany pilotażem**: wymaga
+  własnego sprawdzenia w kolejnym projekcie zanim uznamy ją za udowodnioną. Kolejność
+  wykonania ≠ dashboard statusu — to osobny argument, którego ten pilotaż nie testował.
+- Ewentualny generowany `STATUS.md` (skrypt ciągnie dane z `gh` → jedna strona ze zbiorczym
+  „semaforem on-track") to kandydat na przyszłość **tylko jeśli** milestones okażą się
+  niewystarczające — nie buduje się go na zapas.
+
+Reszta decyzji (Issues = dane, `Closes #N` = stan z faktów, milestones = fazy, markdown
+fallback) stoi bez zmian — pilotaż jej nie podważył.
+
 ---
 
 ## Kontekst
@@ -64,6 +98,10 @@ guarda na pliku.
 
 ### 2. Widok = GitHub Project (tablica); jedna uporządkowana kolumna „Up next"
 
+> **Korekta 2026-06-14:** board jako widok *statusu* zdegradowany do opcjonalnego —
+> widok statusu dla właściciela = strona **Milestones**. Kolumna „Up next" zostaje, lecz
+> niezweryfikowana pilotażem. Patrz blok „Korekta" na górze ADR.
+
 Tablica Projects jest **widokiem** (status jako kolumny: Pomysł / Do zrobienia / W toku,
 grupowanie po priorytecie, filtry, drag&drop). Właściciel steruje nią kliknięciem —
 nie edycją pliku. Obowiązkowo istnieje **jedna uporządkowana lista „Up next"**: ranking
@@ -83,11 +121,14 @@ usuwania „zrobione". Powiązanie zadanie↔PR jest trwałe i widoczne.
 Stan backlogu staje się pochodną gita, a nie pamięci edytora. Spina też wadę 4 — zadanie
 i jego realizacja są jednym wątkiem.
 
-### 4. Roadmapa = Milestones (lub widok „Roadmap" w Projects)
+### 4. Roadmapa = Milestones (widok „Roadmap" Projects opcjonalny)
+
+> **Korekta 2026-06-14:** oś czasu faz opiera się na **milestones** (termin + auto-postęp).
+> Widok „Roadmap" tablicy Projects jest opcjonalny, nie obowiązkowy.
 
 Fazy roadmapy → **milestones** (zadanie należy do fazy przez przypisanie do milestone),
-a oś czasu faz → wbudowany widok „Roadmap" tablicy Projects. `docs/ROADMAP.md` przestaje
-być źródłem prawdy o statusie faz.
+a oś czasu faz → strona Milestones (termin + % zamkniętych zadań). `docs/ROADMAP.md`
+przestaje być źródłem prawdy o statusie faz.
 
 **Dlaczego:** milestone daje to, czego markdownowa roadmapa nie dawała — automatyczny
 postęp fazy (% zamkniętych zadań) i wymuszone powiązanie zadanie↔faza, zamiast ręcznie
@@ -132,8 +173,9 @@ to byłby koszt pod wymaganie którego nie ma.
 ## Konsekwencje
 
 **Ułatwia:**
-- Właściciel odzyskuje widok i kontrolę: priorytet/klasa/status jako pola, filtry,
-  tablica, drag&drop — odpowiedź „co MVP / co poza / co następne" jednym filtrem.
+- Właściciel odzyskuje widok i kontrolę: priorytet/klasa/status jako pola Issues i filtry —
+  odpowiedź „co MVP / co poza" jednym filtrem; status faz na stronie **Milestones**
+  (termin + auto-postęp). Board/drag&drop opcjonalne (patrz Korekta 2026-06-14).
 - Stan backlogu wynika z faktów (merge zamyka issue), nie z ręcznej higieny — znika
   klasa „lista się rozjechała".
 - Jedna kolumna „Up next" usuwa dryf rekomendacji — kolejność jest czytana, nie wymyślana.
