@@ -159,6 +159,7 @@ Po każdym domkniętym kroku AI proponuje też checklistę testów manualnych �
 
 **Weryfikacja mechaniczna przed edycją dokumentacji** (obowiązkowe, nie z pamięci):
 
+- Tworząc **nowy plik w `docs/`** — w tym samym kroku, proaktywnie (user nie ma o tym przypominać): (1) nazwa wg konwencji repo — główne docs UPPERCASE; (2) wpis do tabeli docs w **README.md**; (3) link z naturalnego domu (np. ADR, którego dotyczy); (4) nazwa i nagłówek = treść (gdy zawartość się rozrasta, zaktualizuj nazwę). Brak któregokolwiek = niedomknięty artefakt.
 - Przed zmianą **README.md**: uruchom `ls docs/` i `ls docs/adr/`, zestawiaj każdy plik z tabelą w README — brakujące pliki dopisz.
 - Przed zmianą **docs/ROADMAP.md**: porównaj statusy faz z docs/TASKS.md — `✅ done` / `🚧 in progress` / `🔜 next` muszą być spójne. Odhaczyć `[x]` zadania które są zrobione.
 - Przed zmianą **docs/TASKS.md**: sprawdź "Stan sesji" na dole — zaktualizuj co ukończono i co jest następne.
