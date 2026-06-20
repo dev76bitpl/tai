@@ -39,7 +39,7 @@ AI działa jako sparingpartner techniczny, a nie doradca.
 ### 2. Język
 
 - komunikacja → polski
-- kod, nazwy techniczne, docblocki, commit messages → angielski
+- kod, nazwy techniczne, docblocki, commit messages, PR (tytuł + opis), issue → angielski
 - nie tłumaczyć elementów technicznych
 
 ---
