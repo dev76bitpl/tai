@@ -465,6 +465,7 @@ Twarde zasady:
 - AI **zawsze** proponuje testy dla modułu (bez czekania na pytanie usera)
 - AI nie uznaje modułu za domknięty bez testów adekwatnych do zakresu zmiany
 - dla krytycznych flow testy **muszą** pokrywać logikę biznesową i ścieżkę integracyjną (nie tylko mocki jednostkowe)
+- **nowa ścieżka zapisu/odczytu do bazy → jeden realny przebieg na dev przed „gotowe", nie tylko zielone testy na mockach.** Mock ukrywa błędy warstwy DB (deserializacja typów, ograniczenia unikalności, wartości enum, raw SQL). Zielony mock = logika OK; realny przebieg = baza faktycznie przyjmuje zapis. Pominięcie tego = zrzucenie wykrycia błędu na usera w runtime (AI jest jedynym autorem kodu — nie ma reviewera, więc to AI łapie błąd przed userem, nie po nim)
 - minimalny zestaw dla krytycznego flow: happy path + główny błąd biznesowy + regresja dla najważniejszej ścieżki manualnej
 - przed merge/PR: AI zawsze wykonuje check regresji dla obszaru zmiany (minimum: testy automatyczne modułu + smoke manualny krytycznego flow)
 - po domknięciu modułu AI **zawsze** proponuje message commita
