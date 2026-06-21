@@ -179,6 +179,61 @@ W `.claude/settings.local.json` dodaj sekcję `env` z kluczem z [console.anthrop
 
 Plik jest w `.gitignore` — klucz nie trafia do repo. Pełna instrukcja + troubleshooting (Auth conflict, rotacja, cross-platform): [`CLAUDE_AUTH.md`](./CLAUDE_AUTH.md).
 
+**Krok 8d — opcjonalny lektor „Done" po turze (cross-platform):**
+
+Wygoda: system mówi na głos „Done", gdy Claude kończy turę — przydatne, gdy nie patrzysz na ekran.
+Realizuje to hook `Stop` w `~/.claude/settings.json`. Bramkowany **plikiem-przełącznikiem**
+`~/.claude/tts.on`: hook odzywa się tylko gdy plik istnieje, więc włączasz/wyłączasz bez edycji configu.
+Domyślnie **wyłączony** (nie twórz pliku, dopóki nie chcesz). Jest osobisty i per-maszyna — nie wpisuj go do repo.
+
+Wybierz wariant dla swojego OS i dołóż sekcję `hooks` do `~/.claude/settings.json` (scal z istniejącą,
+nie nadpisuj):
+
+```jsonc
+// macOS / Linux — używa pierwszego dostępnego: say (macOS), spd-say lub espeak (Linux)
+{
+  "hooks": {
+    "Stop": [
+      { "hooks": [ {
+        "type": "command",
+        "async": true,
+        "command": "[ -f \"$HOME/.claude/tts.on\" ] && { command -v say >/dev/null && say 'Done' || command -v spd-say >/dev/null && spd-say 'Done' || command -v espeak >/dev/null && espeak 'Done'; } || true"
+      } ] }
+    ]
+  }
+}
+```
+
+```jsonc
+// Windows — wbudowany lektor .NET (nic nie instalujesz). Podmień głos na zainstalowany w systemie.
+{
+  "hooks": {
+    "Stop": [
+      { "hooks": [ {
+        "type": "command",
+        "shell": "powershell",
+        "async": true,
+        "command": "if (Test-Path \"$env:USERPROFILE\\.claude\\tts.on\") { Add-Type -AssemblyName System.Speech; (New-Object System.Speech.Synthesis.SpeechSynthesizer).Speak('Done') }"
+      } ] }
+    ]
+  }
+}
+```
+
+Włącz / wyłącz (działa na każdym OS z basha; Windows — Git Bash):
+
+```bash
+touch ~/.claude/tts.on   # włącz
+rm -f ~/.claude/tts.on   # wyłącz
+```
+
+Dla wygody możesz opakować to w komendy slash (`~/.claude/commands/tts-on.md` / `tts-off.md`),
+które tworzą/usuwają plik-przełącznik — wtedy włączasz lektora wpisując `/tts-on`.
+
+Uwagi: hook odzywa się po **każdej** turze (zdarzenie `Stop`), nie tylko „koniec dużego tematu".
+Fraza „Done" jest celowo ASCII — znaki diakrytyczne potrafią się zepsuć w drodze do lektora;
+podmień na własną, jeśli Twój głos czyta lokalny język poprawnie.
+
 ---
 
 ## Krok 9 – Uruchom aplikację
