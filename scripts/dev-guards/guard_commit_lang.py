@@ -20,33 +20,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from stack import block, read_commit_msg
-
-POLISH_CHARS = re.compile(r"[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]")
-
-# Common Polish words / fragments — extend as new false-positives surface.
-# Match as whole words only to avoid English-word substring matches.
-POLISH_WORDS = re.compile(
-    r"\b("
-    r"dodaj|dodano|dodać|dodaje|"
-    r"usuń|usunięty|usunięto|usuwa|"
-    r"zmień|zmieniony|zmieniono|zmiana|"
-    r"napraw|naprawiono|naprawa|"
-    r"popraw|poprawka|poprawiono|"
-    r"refaktor|refaktoryzacja|"
-    r"obsługa|obsłuż|"
-    r"konfiguracja|konfig|"
-    r"uaktualnij|aktualizacja|"
-    r"weryfikacja|sprawdź|sprawdzanie|"
-    r"użytkownik|użytkownicy|"
-    r"nauczyciel|uczeń|szkoła|lekcja|"
-    r"wsparcie|wspiera|"
-    r"oraz|jest|nie|tak|gdzie|kiedy|jak|który|która|które|"
-    r"przed|przez|przy|"
-    r"plik|pliki|"
-    r"funkcja|funkcje"
-    r")\b",
-    re.IGNORECASE,
-)
+from lang import find_polish
 
 
 def main(argv: list[str]) -> None:
@@ -66,21 +40,10 @@ def main(argv: list[str]) -> None:
     )
     description = m.group(1) if m else subject
 
-    if POLISH_CHARS.search(description):
-        match = POLISH_CHARS.search(description).group()
+    found = find_polish(description)
+    if found:
         block(
-            f"❌ [BLOCK] Polish character '{match}' in commit subject:\n"
-            f"   '{subject}'\n"
-            f"\n"
-            f"   CLAUDE.md rule 2: commit messages must be in English.\n"
-            f"\n"
-            f"   Bypass (no audit): SKIP=guard-commit-lang git commit ..."
-        )
-
-    word_match = POLISH_WORDS.search(description)
-    if word_match:
-        block(
-            f"❌ [BLOCK] Polish word '{word_match.group()}' in commit subject:\n"
+            f"❌ [BLOCK] Polish text '{found}' in commit subject:\n"
             f"   '{subject}'\n"
             f"\n"
             f"   CLAUDE.md rule 2: commit messages must be in English.\n"

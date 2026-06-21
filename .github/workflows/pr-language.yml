@@ -1,0 +1,29 @@
+name: PR language
+
+# PR title + body must be in English (CLAUDE.md rule 2). The PR body only exists
+# on GitHub, so this is the server-side counterpart to the local commit-msg guard.
+# `edited` re-runs the check after a body fix, so correcting it clears the gate.
+on:
+  pull_request:
+    types: [opened, edited, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  language:
+    name: English title + body
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Check PR language
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: python3 scripts/dev-guards/check_pr_language.py

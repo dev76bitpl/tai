@@ -139,6 +139,11 @@ pre-commit run --all-files
 - `[skip-sync]` — sekcja project-specific, nie idzie do AI template
 - `SKIP=guard-lint,guard-tests git commit ...` — env var, nie ląduje w historii
 
+**Język artefaktów (CLAUDE.md reguła 2) — angielski, egzekwowany na dwóch warstwach:**
+- **subject commita** → lokalny guard `guard-commit-lang` (commit-msg stage); bypass `SKIP=guard-commit-lang`
+- **tytuł + opis PR** → CI workflow `PR language` (`pull_request`, bo PR body istnieje tylko na GitHubie — pre-commit go nie widzi); polskie stringi UI w opisie trzymaj w \`backtickach\` (bloki kodu są pomijane); bypass: `[skip-lang]` w body PR
+- wspólny detektor: `scripts/dev-guards/lang.py` (jedna lista, oba checki)
+
 ---
 
 ## Krok 8 – Claude Code hooks (per-maszyna)
