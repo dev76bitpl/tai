@@ -4,6 +4,12 @@ on:
   push:
     branches: [main]
 
+# Serialize release runs (never cancel a release mid-flight); prevents two
+# overlapping runs when merges land close together.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 permissions:
   contents: write
   pull-requests: write

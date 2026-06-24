@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [main]
 
+# Cancel superseded runs on the same branch/PR — rapid pushes during iteration
+# no longer spawn parallel duplicate runs, which conserves Actions minutes.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   # Server-side mirror of local .pre-commit-config.yaml — un-bypassable.
   # Branch protection rule should require this job to pass before merge.
