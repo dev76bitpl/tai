@@ -181,9 +181,10 @@ Plik jest w `.gitignore` — klucz nie trafia do repo. Pełna instrukcja + troub
 
 **Krok 8d — opcjonalny lektor „Done" po turze (cross-platform):**
 
-Wygoda: system mówi na głos „Done", gdy Claude kończy turę — przydatne, gdy nie patrzysz na ekran.
+Wygoda: system mówi na głos „Done" + nazwę projektu (folder roboczy), gdy Claude kończy turę —
+przydatne, gdy nie patrzysz na ekran i masz otwartych kilka projektów naraz.
 Realizuje to hook `Stop` w `~/.claude/settings.json`. Bramkowany **plikiem-przełącznikiem**
-`~/.claude/tts.on`: hook odzywa się tylko gdy plik istnieje, więc włączasz/wyłączasz bez edycji configu.
+`~/.claude/speak.on`: hook odzywa się tylko gdy plik istnieje, więc włączasz/wyłączasz bez edycji configu.
 Domyślnie **wyłączony** (nie twórz pliku, dopóki nie chcesz). Jest osobisty i per-maszyna — nie wpisuj go do repo.
 
 Wybierz wariant dla swojego OS i dołóż sekcję `hooks` do `~/.claude/settings.json` (scal z istniejącą,
@@ -197,7 +198,7 @@ nie nadpisuj):
       { "hooks": [ {
         "type": "command",
         "async": true,
-        "command": "[ -f \"$HOME/.claude/tts.on\" ] && { command -v say >/dev/null && say 'Done' || command -v spd-say >/dev/null && spd-say 'Done' || command -v espeak >/dev/null && espeak 'Done'; } || true"
+        "command": "[ -f \"$HOME/.claude/speak.on\" ] && { p=$(basename \"$PWD\"); command -v say >/dev/null && say \"Done $p\" || command -v spd-say >/dev/null && spd-say \"Done $p\" || command -v espeak >/dev/null && espeak \"Done $p\"; } || true"
       } ] }
     ]
   }
@@ -205,7 +206,8 @@ nie nadpisuj):
 ```
 
 ```jsonc
-// Windows — wbudowany lektor .NET (nic nie instalujesz). Podmień głos na zainstalowany w systemie.
+// Windows — wbudowany lektor .NET (nic nie instalujesz). Wybiera polski głos "Paulina" jeśli
+// jest w systemie, w przeciwnym razie używa domyślnego (try/catch nie wywala się przy jego braku).
 {
   "hooks": {
     "Stop": [
@@ -213,7 +215,7 @@ nie nadpisuj):
         "type": "command",
         "shell": "powershell",
         "async": true,
-        "command": "if (Test-Path \"$env:USERPROFILE\\.claude\\tts.on\") { Add-Type -AssemblyName System.Speech; (New-Object System.Speech.Synthesis.SpeechSynthesizer).Speak('Done') }"
+        "command": "if (Test-Path \"$env:USERPROFILE\\.claude\\speak.on\") { Add-Type -AssemblyName System.Speech; $s = New-Object System.Speech.Synthesis.SpeechSynthesizer; try { $s.SelectVoice('Microsoft Paulina Desktop') } catch {}; $proj = Split-Path -Leaf $PWD; $s.Speak(\"Gotowe. $proj\") }"
       } ] }
     ]
   }
@@ -223,16 +225,21 @@ nie nadpisuj):
 Włącz / wyłącz (działa na każdym OS z basha; Windows — Git Bash):
 
 ```bash
-touch ~/.claude/tts.on   # włącz
-rm -f ~/.claude/tts.on   # wyłącz
+touch ~/.claude/speak.on   # włącz
+rm -f ~/.claude/speak.on   # wyłącz
 ```
 
-Dla wygody możesz opakować to w komendy slash (`~/.claude/commands/tts-on.md` / `tts-off.md`),
-które tworzą/usuwają plik-przełącznik — wtedy włączasz lektora wpisując `/tts-on`.
+Dla wygody repo dostarcza gotowe komendy slash w `.claude/commands/speak-on.md` i `speak-off.md` —
+tworzą/usuwają plik-przełącznik, więc włączasz lektora wpisując `/speak-on`, a wyłączasz `/speak-off`
+(bez ręcznego `touch`/`rm`). Komendy są per-repo; skopiuj je do `~/.claude/commands/`, jeśli chcesz mieć
+je globalnie w każdym projekcie.
 
 Uwagi: hook odzywa się po **każdej** turze (zdarzenie `Stop`), nie tylko „koniec dużego tematu".
-Fraza „Done" jest celowo ASCII — znaki diakrytyczne potrafią się zepsuć w drodze do lektora;
-podmień na własną, jeśli Twój głos czyta lokalny język poprawnie.
+Nazwa projektu to nazwa folderu roboczego (`basename $PWD` / `Split-Path -Leaf $PWD`) — hooki nie mają
+dostępu do tytułu okna Claude, więc folder jest pewnym, cross-platformowym źródłem. Wariant macOS/Linux
+mówi „Done <projekt>" (celowo ASCII — `say`/`espeak` z domyślnym głosem potrafią zepsuć znaki
+diakrytyczne); wariant Windows z polskim głosem czyta „Gotowe. <projekt>" poprawnie. Podmień frazę
+i głos na własne, jeśli Twój lektor czyta lokalny język dobrze.
 
 ---
 

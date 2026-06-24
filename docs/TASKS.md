@@ -180,6 +180,18 @@ dry-run guardów tą samą treścią co commit; nie mieszaj sesji system/projekt
 
 ## Stan sesji
 
+- 2026-06-24: **Lektor „Gotowe" + nazwa projektu — przeniesiony do template'u (branch
+  `docs/speak-tts-announcer`).** Po ludzku: po skończonej turze komputer mówi „Gotowe" i nazwę
+  projektu, w którym pracujesz — przydatne przy kilku otwartych naraz. Wariant usera (głos Paulina,
+  fraza PL) był tylko w globalnym `~/.claude/settings.json`; do repo trafił uniwersalny rdzeń, nie
+  żywy hook (reguła 13a — personalny hook narzucałby głos każdemu klonowi). Technicznie:
+  `docs/SETUP.md` krok 8d — przełącznik `tts.on`→`speak.on`, Windows używa głosu „Microsoft Paulina
+  Desktop" (try/catch fallback) + fraza „Gotowe.", oba warianty (Win + mac/linux) doklejają nazwę
+  folderu roboczego (`Split-Path -Leaf $PWD` / `basename $PWD`) — tytułu okna Claude hooki nie widzą.
+  Nowe `.claude/commands/speak-on.md` + `speak-off.md` (tworzą/usuwają `~/.claude/speak.on`) jadą
+  z klonem, ale mówiący hook zostaje per-maszyna (do wklejenia z SETUP 8d). Globalny `settings.json`
+  usera zaktualizowany przy okazji (poza repo). User przetestował lektora na żywo.
+
 - 2026-06-14: **ADR-004 korekta — board zdegradowany do opcjonalnego (wynik pilotażu).**
   Pierwszy pilotaż wykonania metody Issues/Projects w projekcie pochodnym (model 1 właściciel
   + AI) obalił §2 w części „board = widok statusu": kanban bez wartości dla solo (nikt nie
