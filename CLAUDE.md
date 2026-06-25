@@ -725,6 +725,15 @@ Gdy w sesji pojawia się pytanie "dlaczego X działa tak" i odpowiedź nie jest 
 - **Decyzje i uzasadnienia** – co wybrano i **dlaczego** (co odrzucono i dlaczego też)
 - **Konsekwencje** – co to zmienia, czego pilnować, znane ograniczenia
 
+### Weryfikacja założeń ADR – fakt vs nadzieja
+
+ADR często opiera decyzję na założeniu. Trzeba rozróżnić dwa typy, bo pomylenie ich kładzie cały ADR:
+
+1. **Założenie o obecnym zachowaniu systemu** ("system robi X", "alokacja dzieje się przy zapisie", "ten endpoint zawsze waliduje Y") — AI **musi zweryfikować w kodzie i podać `file:line`** że to faktycznie egzekwowane. Jeśli kod tego nie pilnuje: albo guard w tym samym kroku, albo **jawne oznaczenie w ADR jako „założenie nieegzekwowane = ryzyko"**. Zapisanie zachowania kodu jako faktu bez weryfikacji to błąd — założenie którego kod nie gwarantuje to nie fundament, to nadzieja zapisana w dokumencie.
+2. **Założenie o przyszłym zachowaniu człowieka / biznesu** ("owner rozliczy przed zamknięciem", "porzucenia z długiem są rzadkie") — tego nie da się zweryfikować kodem, więc legalnie odkłada się z logiem (reguła 17).
+
+Failure mode do unikania: potraktowanie typu 1 jak typu 2 — odpuszczenie weryfikacji kodowej tam gdzie była obowiązkowa. Skutek: decyzja produktowa stoi na zachowaniu, którego implementacja nie wymusza, a bug wypływa dopiero gdy ktoś trafi na ścieżkę łamiącą założenie.
+
 ---
 
 ## 🗺️ Roadmap
