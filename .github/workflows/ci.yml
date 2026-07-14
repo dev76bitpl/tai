@@ -89,3 +89,28 @@ jobs:
   #     # - <setup toolchain + install deps>
   #     # - cache the build tool's cache dir across runs (.next/cache, target/, build/, …)
   #     - run: <build command>
+
+  # ── Security scanners (optional, recommended) ─────────────────────────────
+  # Two extra layers on top of the secret scan already in `guards` (gitleaks via
+  # pre-commit) — don't repeat secret scanning here. Rationale + the report-only
+  # exit-code trap: docs/AI_TEMPLATE_NOTES.md → "CI — skanery bezpieczeństwa".
+  #
+  # sast:                              # SAST on your OWN code — BLOCKING (your findings are fixable)
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     # - <run a SAST tool for your stack (e.g. semgrep), failing the job on findings;
+  #     #    suppress a confirmed false positive inline with a reason comment, not by
+  #     #    loosening the whole rule>
+  #
+  # dependency-cve:                    # third-party CVEs — REPORT-ONLY (unpatchable transitive must not wedge merges)
+  #   runs-on: ubuntu-latest
+  #   continue-on-error: true          # never block; flip to false once signal/noise is known
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     # - <scan your lockfile against a CVE database (e.g. osv-scanner)>
+  #     #   Wrap the run to swallow "vulnerabilities found" (exit 1) so an accepted CVE
+  #     #   doesn't paint a red annotation on every PR, but still surface exit >1 (a real
+  #     #   scanner failure). Findings stay in the job log either way. Example:
+  #     #     <scanner> <args> || code=$?
+  #     #     if [ "${code:-0}" -gt 1 ]; then exit "${code}"; fi; exit 0
