@@ -42,6 +42,18 @@ Każdy nowy projekt dokłada tu swoje obserwacje. Sekcje domenowe nie trafiają 
 - **Cache katalogu cache build-toola między runami** — `setup-*` cache'uje zwykle tylko menedżer pakietów (`~/.npm`, `~/.cache/pip`), nie cache samego builda (`.next/cache`, `target/`, `build/`, `.gradle/`…). Bez tego build leci od zera za każdym runem. `actions/cache` na katalogu cache build-toola z `restore-keys` na same zależności → build inkrementalny nawet gdy źródła się zmieniły. **Zysk widać dopiero od 2. runu** (1. populuje cache) — nie myl braku przyspieszenia na 1. runie z brakiem działania.
 - **Po zrównolegleniu krytyczną ścieżką jest najdłuższy job (zwykle build)** — reszta kończy wcześniej i nie wpływa już na wall-clock. Dalsze skracanie = przyspieszenie tego jednego joba (szybszy bundler/kompilator), nie kolejne tasowanie struktury.
 
+## CI — skanery bezpieczeństwa
+
+Trzy warstwy skanowania w CI, każda łapie inną klasę problemu:
+
+- **Sekrety** (np. gitleaks) — zwykle już pokryte: hook pre-commit odpalany server-side w jobie `guards` skanuje całe drzewo. Nie duplikuj osobnym jobem.
+- **SAST — własny kod** (np. semgrep z regułami pod stack) — szuka wzorców podatności w kodzie który sam piszesz (injection, XSS, brak walidacji). **Blokujący**: findings w twoim kodzie zawsze da się naprawić, więc czerwony build jest akcjonowalny. False-positive wyciszaj inline z komentarzem i uzasadnieniem (audit trail, jak bypass guarda) — nie luzuj całej reguły.
+- **CVE zależności** (np. skaner lockfile'a przeciwko bazie znanych dziur) — sprawdza cudze biblioteki które shippujesz. **Raportujący na start** (`continue-on-error`): CVE w niezałatywalnej transitive zależności nie może blokować każdego merge'a. Gdy poznasz realny stosunek sygnał/szum — możesz zacisnąć do blokującego.
+
+**Pułapka raportującego skanera**: narzędzie zwykle kończy kodem ≠0 gdy **cokolwiek** znajdzie, co maluje czerwoną adnotację „exit code 1" na każdym PR z zaakceptowanym/niezałatywalnym CVE — fałszywy alarm mimo `continue-on-error`. Obsłuż kod wyjścia jawnie: pochłoń „znaleziono podatność" (oczekiwany przypadek raportowania), ale **przepuść realny błąd narzędzia** (np. nieudane pobranie/parsowanie binarki) — inaczej po cichu chowasz awarię skanera. Findings zostają w logu joba niezależnie.
+
+**Nie ufaj automatycznemu „fix" na ślepo**: menedżer pakietów potrafi zaproponować jako naprawę **downgrade** kluczowej zależności, żeby dopiąć graf ograniczeń — co cofa łatkę bezpieczeństwa. Czytaj co narzędzie faktycznie zmienia. Major-bump zależności przez CVE weryfikuj przez breaking-changes vs realne użycie (mała powierzchnia użycia = niskie ryzyko mimo majora).
+
 ---
 
 <!-- Dodawaj nowe sekcje gdy pojawi się universalny wzorzec z projektu. -->
