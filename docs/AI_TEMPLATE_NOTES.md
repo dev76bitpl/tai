@@ -56,5 +56,18 @@ Trzy warstwy skanowania w CI, każda łapie inną klasę problemu:
 
 ---
 
+## Topologia domen / hostów — wzorce
+
+Gdy produkt ma jednocześnie publiczną twarz (marketing/sprzedaż) i zalogowaną aplikację, albo gdy jest jednym z wielu produktów jednej marki — topologia hostów to decyzja architektoniczna (ADR), nie detal DNS. Ustala się ją raz, bo determinuje auth, cookie i routing.
+
+- **Rozdziel warstwy hostem: marketing (indeksowany) osobno od aplikacji (noindex)** — publiczna strona sprzedażowa musi być w indeksie wyszukiwarki, zalogowana apka z danymi użytkowników nie może. Jeden host nie może być naraz `index` i `noindex`. Rozdzielenie subdomeną (marketing na jednym hoście, apka na drugim) rozwiązuje to u źródła i pozwala niezależnie deployować. **Pułapka:** globalny `noindex` w root layoucie apki obejmuje KAŻDĄ trasę — landing dodany jako route w tej samej apce odziedziczy noindex; marketing musi być osobnym deploymentem.
+- **Marka z wieloma produktami → namespace hostów per produkt** — `<produkt>.marka.tld` (marketing) + `panel.<produkt>.marka.tld` (apka). Płaski wspólny host apki (`panel.marka.tld`) staje się dwuznaczny przy drugim produkcie („panel czego?"). Namespace per produkt skaluje się bez przemianowań przy każdym kolejnym produkcie.
+- **SSO między subdomenami: dedykowany host tożsamości + redirect, NIE współdzielone cookie na domenie-matce** — cookie sesji ustawione na `.marka.tld` leci do wszystkich subdomen (też tych bez uprawnień) → wektor przejęcia sesji, plus łamie się o restrykcje third-party cookies w przeglądarkach. Wzorzec: osobny host auth (`konto.`/`auth.`/`accounts.`) trzyma sesję u siebie, aplikacje dostają tokeny przez OIDC redirect. Zarezerwuj ten host wcześnie, nawet jeśli SSO budujesz później. To typowy błąd amatorski — parent-cookie „bo działa lokalnie".
+- **Nazwa hosta apki jest user-facing — dobierz do odbiorcy, nie do konwencji deweloperskiej** — host, który użytkownik widzi przy logowaniu, komunikuje. Międzynarodowa/deweloperska konwencja (`app.`) nie zawsze jest najczytelniejsza dla nietechnicznego, lokalnego odbiorcy — sprawdź rodzimą konwencję rynku zanim zaklepiesz. Obie mogą być technicznie równorzędne; wygrywa rozpoznawalność u odbiorcy.
+- **Przy zmianie hosta rozróżnij env wypalany w build od czytanego w runtime** — zmienne inline'owane do bundla klienta na buildzie (prefiks typu `NEXT_PUBLIC_*` w Next i analogiczne w innych frameworkach) NIE zmienią się po samym restarcie procesu — wymagają rebuildu. Env czytany server-side w runtime wystarczy restartem. Przenosząc apkę na nowy host sprawdź które zmienne są które, inaczej część linków/URL-i (maile, kody QR, absolutne adresy) niesie stary host mimo „zmienionego env".
+- **Redirect starego hosta: 302 gdy host ma zmienić przeznaczenie, 301 gdy znika na stałe** — 301 (permanent) keszuje się trwale w przeglądarkach. Jeśli stary host ma później służyć czemu innemu (klasyk: apka przenosi się na nowy host, a stary staje się landing page), zakeszowany 301 będzie kierował userów w złe miejsce jeszcze długo po zmianie. Użyj 302, gdy przeznaczenie hosta jeszcze się zmieni.
+
+---
+
 <!-- Dodawaj nowe sekcje gdy pojawi się universalny wzorzec z projektu. -->
 <!-- Nie dodawaj tu wzorców domenowych (konkretny framework, biblioteka, biznes). -->
