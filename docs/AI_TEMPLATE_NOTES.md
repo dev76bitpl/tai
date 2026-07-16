@@ -69,5 +69,20 @@ Gdy produkt ma jednocześnie publiczną twarz (marketing/sprzedaż) i zalogowan�
 
 ---
 
+## Topologia środowisk (prod / staging / demo na współdzielonej infrze) — wzorce
+
+Gdy kilka środowisk tego samego produktu (produkcja + staging + demo) żyje na jednej maszynie, sposób ich współistnienia to decyzja architektoniczna (ADR), nie improwizacja przy pierwszym `deploy`. Ustala się ją zanim postawi się drugą instancję — inaczej druga koliduje z pierwszą.
+
+- **Pełna izolacja, nic współdzielonego** — każde środowisko ma własną bazę, własny proces, własny port, własny plik konfiguracji, własny katalog. NIE współdziel bazy ani sieci między środowiskami. Powód podwójny: (1) build/migracja na staging **nie może** tknąć produkcji (to cały sens stagingu — siatka przed dotknięciem żywych danych), (2) wspólna baza przecieka żywe dane (PII) do środowiska nieprodukcyjnego. „Kompletna samodzielna kopia" bije „prod, ale z paroma rzeczami wspólnymi".
+- **Deterministyczny schemat nazw/portów — wyprowadzany z nazwy środowiska** — port, nazwa procesu, katalog, subdomena, nazwa kontenera powstają mechanicznie z nazwy środowiska (`app` / `app-staging` / `app-demo`, porty `3000/3001/3002`, itd.). Wtedy postawienie N-tej instancji to podstawienie wartości do schematu, nie projektowanie od zera. Eliminuje klasę błędów „druga instancja nadpisała pierwszą".
+- **Zaszyty na sztywno port/nazwa procesu = blokada wielu instancji** — jeden hardcodowany port albo nazwa procesu w skrypcie deployu i w celach cronów sprawia, że druga instancja zderza się z pierwszą (kolizja portu, procesu, kontenera). Sparametryzuj wszystkie wartości zależne od środowiska (env-derived) ZANIM postawisz drugą instancję — to prerekwzyt, nie „poprawimy później".
+- **Środowiska nieprodukcyjne na danych syntetycznych, nie na zrzucie proda** — seed syntetyczny trzyma żywe PII wyłącznie na produkcji (RODO/prywatność). Test „czy migracja przejdzie" wystarcza na **strukturze** — realnego wolumenu potrzebuje dopiero test wydajności, którego zwykle na staging nie robisz. Zanonimizowany zrzut proda = niepotrzebny pipeline anonimizacji + ryzyko wycieku; odkładaj go aż pojawi się realna potrzeba testu na wolumenie.
+- **SMTP w próżnię (sink) na nieprodukcyjnych** — instancja nieprodukcyjna z produkcyjnym SMTP zacznie **wysyłać realne maile z syntetycznych zdarzeń**: zaplanowane zadania (przypomnienia, alerty) odpalają się same i uderzą w prawdziwą skrzynkę. Mail sink / wyłączona wysyłka to twardy warunek postawienia takiego środowiska, nie opcja. Ta sama logika dotyczy każdego wychodzącego kanału (SMS, webhooki, płatności) — nieprodukcyjne środowisko celuje w atrapę.
+- **Staging ma wartość tylko gdy jest wierną próbą wdrożenia** — musi używać tej samej ścieżki deployu i tej samej struktury konfiguracji co prod (parametryzowanej env). Staging, który deployuje się inaczej niż prod, nie dowodzi niczego o prodzie. Kolejność w CD: zmiana najpierw na staging, zielono → dopiero prod.
+- **Nieprodukcyjne instancje nie potrzebują backupów** — dane są zbywalne (syntetyczne, resetowane). Backup/retencję konfiguruj tylko na produkcji; instancja demo bywa dodatkowo czyszczona cyklicznym resetem do stanu pokazowego.
+- **Środowisko to nie tenant** — wiele środowisk (izolowane instancje tego samego produktu) to inny wymiar niż wielu najemców w jednej instancji (multi-tenancy). Nie mieszaj tych decyzji: adresowanie tenanta (subdomena vs ścieżka) jest ortogonalne do topologii środowisk.
+
+---
+
 <!-- Dodawaj nowe sekcje gdy pojawi się universalny wzorzec z projektu. -->
 <!-- Nie dodawaj tu wzorców domenowych (konkretny framework, biblioteka, biznes). -->
