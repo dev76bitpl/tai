@@ -117,6 +117,8 @@ Po utworzeniu PR AI sugeruje merge i **nie przechodzi do kolejnego zadania** dop
 
 **Sprzątanie po merge'u (obowiązkowe).** Gdy user potwierdzi merge PR, AI od razu — bez czekania na pytanie — proponuje i wykonuje sprzątanie brancha: `git checkout main` → `git pull origin main` → usunięcie zmergowanego brancha lokalnie (`git branch -d`, nigdy `-D`) i zdalnie. Nie zostawiamy stale branchy ani dalszej pracy na branchu który jest już w main — kolejne zadanie startuje z czystego, dociągniętego maina (reguła: `git pull origin main` przed nowym branchem). Trigger to **zmergowany PR**, nie „koniec sesji" w ogóle: branch z niezmergowaną pracą zostaje nietknięty, a `git branch -d` i tak odmówi skasowania czegoś, co nie weszło do main.
 
+**Wyjątek squash-merge.** Repo squashujące PR-y tworzy w main **jeden nowy commit**, więc `git branch -d` odmówi **nawet w pełni zmergowanego** brancha („not fully merged") — commity brancha nie są w historii main dosłownie. W tym trybie `-d` nie zadziała jako sprzątanie. AI wtedy zbiera dowód merge: PR = `MERGED` (`gh pr view <n> --json state`), remote brancha zniknął (auto-delete) i dociągnięty main zawiera zmianę — **pokazuje ten dowód i proponuje `git branch -D`, ale samego force-delete nie wykonuje bez zgody usera** (to nieodwracalna komenda, więc zostaje bramkowana potwierdzeniem, inaczej niż bezpieczne `-d`). Bez kompletu dowodu merge — nie kasujemy w ogóle (`-d` i STOP).
+
 ---
 
 ### 4. Aktualizacja dokumentacji po ukończeniu kroku
