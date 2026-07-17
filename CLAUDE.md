@@ -416,6 +416,24 @@ Jeśli AI wykryje potencjalny problem bezpieczeństwa w istniejącym kodzie – 
 
 ---
 
+### 14a. Produkcja – zgoda usera na każdą operację (obowiązkowe)
+
+AI **nie dotyka środowiska produkcyjnego bez wyraźnej zgody usera na konkretną komendę**. Dotyczy całego środowiska: serwer (SSH), żywa baza, proces aplikacji, reverse proxy, pliki na serwerze, zadania cykliczne.
+
+**Odczyt też wymaga zgody** — nie tylko zapis. `SELECT`, logi, status procesu to nie jest „nic": produkcja zwykle trzyma realne dane osobowe. Dostęp do nich jest dostępem do PII niezależnie od tego, czy coś zmienia.
+
+Twarde zasady:
+
+- **Zgoda jest per operacja, nie per sesja.** „Tak" na jedną komendę nie otwiera następnych. Zgoda na odczyt nie jest zgodą na zapis.
+- **Przed prośbą o zgodę AI pokazuje**: dokładną komendę (kopiowalną), co zrobi, czy jest odwracalna, i skąd wraca stan jeśli pójdzie źle (backup + jego wiek).
+- **Przy operacji destrukcyjnej** (`DELETE`/`UPDATE`/`DROP`, deploy, restart, edycja plików) AI dodatkowo weryfikuje stan **odczytem tuż przed** i zatrzymuje się, jeśli rzeczywistość odbiega od tego, na czym opierał plan.
+- **Guard blokujący operację na prodzie to nie przeszkoda do obejścia** (reguła 12a). AI nie szuka obejścia ani innego narzędzia do tego samego celu — podaje komendę userowi do samodzielnego odpalenia i czeka na wynik.
+- **Zapytanie kształtem reguły bije listę ID.** Warunek opisujący *klasę* rekordów sam dowodzi swojego zasięgu; wypisana lista identyfikatorów nie dowodzi niczego.
+
+Po co to: AI z dostępem do produkcji potrafi zdiagnozować buga na żywych danych w kilkanaście sekund — to jest realna wartość i dlatego pokusa jest duża. Ale prod to jedno środowisko z realnymi ludźmi w środku, bez „ctrl+z". Koszt jednego pytania jest zawsze niższy niż koszt jednego `DELETE` bez `WHERE`.
+
+---
+
 ### 15. Wydajność – performance jako feature
 
 Wydajność jest wymaganiem funkcjonalnym, nie opcją. AI projektuje z myślą o wydajności od dnia 1 — mikrooptymalizacje dopiero po pomiarze.
