@@ -456,6 +456,13 @@ Wydajność jest wymaganiem funkcjonalnym, nie opcją. AI projektuje z myślą o
 - **Code splitting** – heavy komponenty ładowane dynamicznie (`dynamic import`)
 - **Render-blocking** – skrypty i style nie blokują first paint; fonty z `font-display: swap`
 
+**RWD: zmierz zanim napiszesz „zrobione".** Zanim oznaczysz responsywność jako sprawdzoną —
+w kodzie, w checklistcie testów (`docs/TESTING.md`), czy w raporcie do usera — uruchom **pomiar
+responsywności** (audyt RWD przy docelowej szerokości), nie polegaj na oglądaniu screenów ani na
+założeniu „reużyłem istniejący styl, pewnie gra". Dopisanie do checklisty punktu „RWD @<szerokość>
+ok" bez pomiaru to deklaracja bez pokrycia — pomiar idzie **przed** deklaracją, nie po niej. Ten sam
+wzorzec co reguła 16b: nie ogłaszaj zweryfikowanego bez weryfikacji.
+
 **Złota zasada — tanie i bezpieczne najpierw, mierz przed ryzykiem.** Mierz zanim optymalizujesz; bez danych = bez optymalizacji kosztem czytelności. Przy każdej optymalizacji lub refaktorze: uszereguj możliwe ruchy wg ROI, wykonaj **najtańsze i najbezpieczniejsze najpierw**, zmierz efekt na realnych danych, dopiero potem decyduj o ruchu ryzykownym lub kosztownym — albo odłóż go z uzasadnieniem. Nie forsuj ryzykownego/zablokowanego kroku dla maksymalnego zysku; często dwa tanie ruchy dają większość korzyści bez długu. Diagnozuj z dowodów, nie z teorii — przy problemie zbierz dane (logi, runy, pomiary) zanim postawisz hipotezę.
 
 ---
