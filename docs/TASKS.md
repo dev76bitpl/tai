@@ -294,3 +294,25 @@ dry-run guardów tą samą treścią co commit; nie mieszaj sesji system/projekt
   + fresh git + init commit + instalacja guardów. 29/29 testów modułu, 2× e2e na
   realnym klonie. Powiązany fix `update-skills` (posix paths) → PR #54. Config
   canonicalizacja + błąd A świadomie odłożone na osobną sesję z ADR (backlog).
+- 2026-07-25: **Odwrócona domyślna rekomendacja CI — jeden job zamiast równoległych
+  (branch `chore/ci-cost-model`, #104).** Powód z pomiaru: trzy projekty na tym template'cie
+  wyczerpały wspólny darmowy limit 2000 min GitHub Actions w połowie miesiąca (lipiec: skolaro 986,
+  cdue 779, cdue-elearning 227 = 1992). Template zalecał „niezależne checki w równoległych jobach",
+  co pomijało jednostkę rozliczeniową: **Actions nalicza każdy JOB w górę do pełnej minuty** —
+  zmierzone 487 min pracy → 779 min naliczonych (37% to zaokrąglanie), a w drugim repo 152 z 227 min
+  to joby robiące po ~15 s. Do tego `push: main` po merge'u = duplikat wyniku z PR-a (połowa rachunku).
+  Zmiana: `AI_TEMPLATE_NOTES` → jeden job domyślnie, zrównoleglenie jako świadomy wyjątek gdy minut
+  jest w nadmiarze; dopisana metoda pomiaru (API rachunku bywa zerowe/bez scope'u — licz z czasów
+  jobów, filtruj joby z 0 kroków = te które nie wystartowały z braku minut). `ci.yml`: trigger tylko
+  `pull_request`, scaffold checków jako kroki w jobie `checks`, osobny job tylko dla skanera we
+  własnym kontenerze. Wdrożenia w projektach = osobne PR-y (cdue #327).
+- 2026-07-25 (cd.): **Korekta rekomendacji CI — nie „jeden job domyślnie", tylko trzy ruchy w kolejności
+  ROI (#104).** Pierwsza wersja tej zmiany ustawiała jeden sekwencyjny job jako domyślny; właściciel
+  odrzucił to w projekcie, bo wydłużało oczekiwanie na PR z ~2 do ~4-5 min. Wniosek dla template'u jest
+  inny niż pierwotny: **dwa pierwsze ruchy są darmowe czasowo i robimy je zawsze** (zdjęcie CI z
+  `push: main`; każde sprawdzenie krótsze niż minuta jako krok w jobie spoza ścieżki krytycznej —
+  skaner pracujący 8 s w osobnym jobie kosztuje tyle co minuta builda). **Trzeci ruch — scalenie
+  równoległych nóg — JUŻ kosztuje czas i nie ma domyślnej odpowiedzi**: policz obie strony i zapytaj
+  właściciela. `ci.yml`: scaffold matrycy i builda wrócił jako opcja obok, z ceną obu stron w komentarzu;
+  skan CVE opisany jako krok, nie job. Zostaje reguła zaokrąglania i metoda pomiaru (API rachunku bywa
+  zerowe; licz z czasów jobów, odrzuć joby z 0 kroków = te które nie wystartowały z braku minut).

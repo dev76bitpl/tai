@@ -1,8 +1,12 @@
 name: CI
 
+# PULL REQUESTS ONLY — deliberately no `push: [main]` trigger.
+# Re-running the identical commit after merge repeats a result the PR already
+# produced; measured on a real project it was HALF the Actions bill. Accepted
+# risk: if `main` moves between a green PR and its merge, a semantic conflict
+# lands unchecked — small for one maintainer, grows with parallel PRs.
+# Rationale: docs/AI_TEMPLATE_NOTES.md → "CI — wydajność pipeline'u".
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
 
@@ -13,15 +17,26 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Server-side mirror of local .pre-commit-config.yaml — un-bypassable.
-  # Branch protection rule should require this job to pass before merge.
-  guards:
-    name: Guards (pre-commit)
+  # Guards, plus anything that finishes in seconds.
+  #
+  # Actions bills each JOB rounded UP to a full minute, so a check doing 8 s of
+  # work costs the same minute as a build. Fold every sub-minute check in HERE as
+  # a step — this job is nowhere near the critical path, so it costs no waiting.
+  # That, plus the pull_request-only trigger above, is the free half of the bill.
+  #
+  # Collapsing the parallel legs below into this job saves more, but it DOES cost
+  # wall-clock (sum instead of slowest leg, first failure stops the rest). That is
+  # a trade to price out per project, not a default — see
+  # docs/AI_TEMPLATE_NOTES.md → "CI — wydajność pipeline'u".
+  checks:
+    name: Checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0  # gitlint needs full history to inspect PR commits
+
+      # ── Guards: server-side mirror of .pre-commit-config.yaml, un-bypassable ──
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -41,10 +56,10 @@ jobs:
       - name: Run pre-commit hooks on all files
         run: pre-commit run --all-files --show-diff-on-failure
         env:
-          # Skip stack-aware lint/tests here — projects should add their own
-          # native build/test job that runs after this one with full toolchain.
-          # Skip no-commit-to-branch — CI runs on main but isn't creating commits;
-          # the hook is for blocking local commits only.
+          # Skip stack-aware lint/tests here — the native steps below run them
+          # with the full toolchain.
+          # Skip no-commit-to-branch — CI isn't creating commits; the hook is for
+          # blocking local commits only.
           SKIP: guard-lint,guard-tests,no-commit-to-branch
 
       # Commit-msg hooks against each commit in the PR. Only format + language
@@ -52,7 +67,6 @@ jobs:
       # tests-with-src, adr, user-tested) were enforced locally at commit time
       # and cannot be replayed in CI without re-staging historical state.
       - name: Lint commit messages
-        if: github.event_name == 'pull_request'
         run: |
           git config user.name "ci-bot"
           git config user.email "ci@example.com"
@@ -63,12 +77,25 @@ jobs:
             pre-commit run guard-commit-lang --hook-stage commit-msg --commit-msg-filename /tmp/commit-msg || exit 1
           done
 
-  # Project-specific checks — adapt to your stack (node/python/php/etc.).
-  # Recommended: run independent checks as PARALLEL jobs so wall-clock ≈ the
-  # slowest leg, not the sum. Trade-off: each job repeats setup → more runner
-  # minutes. Rationale: docs/AI_TEMPLATE_NOTES.md → "CI — wydajność pipeline'u".
+      # Dependency CVE scan — third-party holes in what you ship. Belongs HERE as a
+      # step, not in a job of its own: it finishes in seconds, and a job would bill
+      # a full minute for them. REPORT-ONLY (`continue-on-error: true`) — an
+      # unpatchable transitive CVE must not wedge every merge. Trap + exit-code
+      # handling: docs/AI_TEMPLATE_NOTES.md → "CI — skanery bezpieczeństwa".
+      # - name: Dependency CVE scan
+      #   continue-on-error: true
+      #   run: |
+      #     <scanner> <args> || code=$?
+      #     if [ "${code:-0}" -gt 1 ]; then exit "${code}"; fi; exit 0
+
+  # ── Project-specific checks — adapt to your stack (node/python/php/…) ─────────
+  # Same setup, different final command → `strategy.matrix`, not copy-pasted jobs.
+  # Parallel legs keep wall-clock at the slowest leg instead of the sum; the price
+  # is a repeated setup and one rounded-up minute per leg. Price BOTH sides for
+  # your project before choosing — if minutes are the binding constraint, these
+  # legs become steps in `checks` above and you wait longer on every PR.
   #
-  # checks:                            # test / lint / typecheck — same setup, different command
+  # checks-stack:
   #   runs-on: ubuntu-latest
   #   strategy:
   #     fail-fast: false               # one red leg shouldn't cancel the others' feedback
@@ -82,35 +109,33 @@ jobs:
   #     # - <setup toolchain + cache package manager + install deps>
   #     - run: ${{ matrix.task.cmd }}
   #
-  # build:                             # own job — usually the longest; carries the build cache
-  #   runs-on: ubuntu-latest
+  # build:                             # own job — usually the longest leg, so it belongs
+  #   runs-on: ubuntu-latest           # BESIDE the matrix, not appended to it
   #   steps:
   #     - uses: actions/checkout@v4
   #     # - <setup toolchain + install deps>
-  #     # - cache the build tool's cache dir across runs (.next/cache, target/, build/, …)
+  #     # Cache the BUILD tool's cache dir (.next/cache, target/, build/, .gradle/…):
+  #     # `setup-*` caches only the package manager, so without it every build starts
+  #     # from scratch. Gains show from the 2nd run on — the 1st populates the cache.
+  #     # - uses: actions/cache@v4
+  #     #   with:
+  #     #     path: <build cache dir>
+  #     #     key: build-${{ runner.os }}-${{ hashFiles('<lockfile>') }}-${{ hashFiles('<sources>') }}
+  #     #     restore-keys: build-${{ runner.os }}-${{ hashFiles('<lockfile>') }}-
   #     - run: <build command>
 
-  # ── Security scanners (optional, recommended) ─────────────────────────────
-  # Two extra layers on top of the secret scan already in `guards` (gitleaks via
-  # pre-commit) — don't repeat secret scanning here. Rationale + the report-only
-  # exit-code trap: docs/AI_TEMPLATE_NOTES.md → "CI — skanery bezpieczeństwa".
+  # ── SAST on your OWN code — the one check that always earns a separate job ───
+  # BLOCKING (findings in code you wrote are always fixable). It gets its own job
+  # only because it runs inside the tool's container image, which cannot host the
+  # toolchain `checks` needs. Suppress a confirmed false positive inline with a
+  # reason comment (audit trail, like a guard bypass) — never loosen the rule.
+  # Secret scanning is NOT here: gitleaks already covers it in the guards above.
   #
-  # sast:                              # SAST on your OWN code — BLOCKING (your findings are fixable)
+  # sast:
+  #   name: SAST
   #   runs-on: ubuntu-latest
+  #   container:
+  #     image: <sast tool image, e.g. semgrep/semgrep>
   #   steps:
   #     - uses: actions/checkout@v4
-  #     # - <run a SAST tool for your stack (e.g. semgrep), failing the job on findings;
-  #     #    suppress a confirmed false positive inline with a reason comment, not by
-  #     #    loosening the whole rule>
-  #
-  # dependency-cve:                    # third-party CVEs — REPORT-ONLY (unpatchable transitive must not wedge merges)
-  #   runs-on: ubuntu-latest
-  #   continue-on-error: true          # never block; flip to false once signal/noise is known
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     # - <scan your lockfile against a CVE database (e.g. osv-scanner)>
-  #     #   Wrap the run to swallow "vulnerabilities found" (exit 1) so an accepted CVE
-  #     #   doesn't paint a red annotation on every PR, but still surface exit >1 (a real
-  #     #   scanner failure). Findings stay in the job log either way. Example:
-  #     #     <scanner> <args> || code=$?
-  #     #     if [ "${code:-0}" -gt 1 ]; then exit "${code}"; fi; exit 0
+  #     - run: <scan command, failing the job on findings>
