@@ -306,3 +306,13 @@ dry-run guardów tą samą treścią co commit; nie mieszaj sesji system/projekt
   jobów, filtruj joby z 0 kroków = te które nie wystartowały z braku minut). `ci.yml`: trigger tylko
   `pull_request`, scaffold checków jako kroki w jobie `checks`, osobny job tylko dla skanera we
   własnym kontenerze. Wdrożenia w projektach = osobne PR-y (cdue #327).
+- 2026-07-25 (cd.): **Korekta rekomendacji CI — nie „jeden job domyślnie", tylko trzy ruchy w kolejności
+  ROI (#104).** Pierwsza wersja tej zmiany ustawiała jeden sekwencyjny job jako domyślny; właściciel
+  odrzucił to w projekcie, bo wydłużało oczekiwanie na PR z ~2 do ~4-5 min. Wniosek dla template'u jest
+  inny niż pierwotny: **dwa pierwsze ruchy są darmowe czasowo i robimy je zawsze** (zdjęcie CI z
+  `push: main`; każde sprawdzenie krótsze niż minuta jako krok w jobie spoza ścieżki krytycznej —
+  skaner pracujący 8 s w osobnym jobie kosztuje tyle co minuta builda). **Trzeci ruch — scalenie
+  równoległych nóg — JUŻ kosztuje czas i nie ma domyślnej odpowiedzi**: policz obie strony i zapytaj
+  właściciela. `ci.yml`: scaffold matrycy i builda wrócił jako opcja obok, z ceną obu stron w komentarzu;
+  skan CVE opisany jako krok, nie job. Zostaje reguła zaokrąglania i metoda pomiaru (API rachunku bywa
+  zerowe; licz z czasów jobów, odrzuć joby z 0 kroków = te które nie wystartowały z braku minut).

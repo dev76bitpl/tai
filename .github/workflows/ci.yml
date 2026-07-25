@@ -17,17 +17,17 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # ONE job for everything that shares a checkout and a toolchain.
+  # Guards, plus anything that finishes in seconds.
   #
-  # Actions bills each JOB rounded UP to a full minute, so a 19-second job costs
-  # a minute and five 45-second jobs cost five. Splitting also repeats checkout +
-  # dependency install once per leg (~35 s each). Default to adding a STEP here
-  # rather than a new job; give a job of its own only to something that cannot
-  # share this environment (a scanner running inside its own container image).
+  # Actions bills each JOB rounded UP to a full minute, so a check doing 8 s of
+  # work costs the same minute as a build. Fold every sub-minute check in HERE as
+  # a step — this job is nowhere near the critical path, so it costs no waiting.
+  # That, plus the pull_request-only trigger above, is the free half of the bill.
   #
-  # Trade-off accepted: steps run sequentially, so wall-clock is the sum and the
-  # first failure stops the rest. Parallel legs buy faster feedback — worth it
-  # only when minutes are plentiful (public repo, self-hosted runner).
+  # Collapsing the parallel legs below into this job saves more, but it DOES cost
+  # wall-clock (sum instead of slowest leg, first failure stops the rest). That is
+  # a trade to price out per project, not a default — see
+  # docs/AI_TEMPLATE_NOTES.md → "CI — wydajność pipeline'u".
   checks:
     name: Checks
     runs-on: ubuntu-latest
@@ -77,38 +77,54 @@ jobs:
             pre-commit run guard-commit-lang --hook-stage commit-msg --commit-msg-filename /tmp/commit-msg || exit 1
           done
 
-      # ── Project-specific checks — adapt to your stack (node/python/php/…) ────
-      # Append them HERE as steps, cheapest-first, so one install serves them all
-      # and you pay one rounded-up minute instead of one per check.
-      #
-      # - <setup toolchain + cache the package manager (~/.npm, ~/.cache/pip, …)>
-      # - <install dependencies>
-      # - run: <lint command>
-      # - run: <typecheck command>
-      # - run: <test command>
-      #
-      # Build last — it is the longest and only worth reaching if the rest passed.
-      # Cache the BUILD tool's cache dir too (.next/cache, target/, build/, .gradle/…):
-      # `setup-*` caches only the package manager, so without it every build starts
-      # from scratch. Gains show from the 2nd run on — the 1st populates the cache.
-      # - uses: actions/cache@v4
-      #   with:
-      #     path: <build cache dir>
-      #     key: build-${{ runner.os }}-${{ hashFiles('<lockfile>') }}-${{ hashFiles('<sources>') }}
-      #     restore-keys: build-${{ runner.os }}-${{ hashFiles('<lockfile>') }}-
-      # - run: <build command>
-      #
-      # Dependency CVE scan — third-party holes in what you ship. REPORT-ONLY as a
-      # step with `continue-on-error: true`: an unpatchable transitive CVE must not
-      # wedge every merge. Trap + exit-code handling: docs/AI_TEMPLATE_NOTES.md →
-      # "CI — skanery bezpieczeństwa".
+      # Dependency CVE scan — third-party holes in what you ship. Belongs HERE as a
+      # step, not in a job of its own: it finishes in seconds, and a job would bill
+      # a full minute for them. REPORT-ONLY (`continue-on-error: true`) — an
+      # unpatchable transitive CVE must not wedge every merge. Trap + exit-code
+      # handling: docs/AI_TEMPLATE_NOTES.md → "CI — skanery bezpieczeństwa".
       # - name: Dependency CVE scan
       #   continue-on-error: true
       #   run: |
       #     <scanner> <args> || code=$?
       #     if [ "${code:-0}" -gt 1 ]; then exit "${code}"; fi; exit 0
 
-  # ── SAST on your OWN code — the one check that earns a separate job ──────────
+  # ── Project-specific checks — adapt to your stack (node/python/php/…) ─────────
+  # Same setup, different final command → `strategy.matrix`, not copy-pasted jobs.
+  # Parallel legs keep wall-clock at the slowest leg instead of the sum; the price
+  # is a repeated setup and one rounded-up minute per leg. Price BOTH sides for
+  # your project before choosing — if minutes are the binding constraint, these
+  # legs become steps in `checks` above and you wait longer on every PR.
+  #
+  # checks-stack:
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     fail-fast: false               # one red leg shouldn't cancel the others' feedback
+  #     matrix:
+  #       task:
+  #         - { name: test,      cmd: <test command> }
+  #         - { name: lint,      cmd: <lint command> }
+  #         - { name: typecheck, cmd: <typecheck command> }
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     # - <setup toolchain + cache package manager + install deps>
+  #     - run: ${{ matrix.task.cmd }}
+  #
+  # build:                             # own job — usually the longest leg, so it belongs
+  #   runs-on: ubuntu-latest           # BESIDE the matrix, not appended to it
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     # - <setup toolchain + install deps>
+  #     # Cache the BUILD tool's cache dir (.next/cache, target/, build/, .gradle/…):
+  #     # `setup-*` caches only the package manager, so without it every build starts
+  #     # from scratch. Gains show from the 2nd run on — the 1st populates the cache.
+  #     # - uses: actions/cache@v4
+  #     #   with:
+  #     #     path: <build cache dir>
+  #     #     key: build-${{ runner.os }}-${{ hashFiles('<lockfile>') }}-${{ hashFiles('<sources>') }}
+  #     #     restore-keys: build-${{ runner.os }}-${{ hashFiles('<lockfile>') }}-
+  #     - run: <build command>
+
+  # ── SAST on your OWN code — the one check that always earns a separate job ───
   # BLOCKING (findings in code you wrote are always fixable). It gets its own job
   # only because it runs inside the tool's container image, which cannot host the
   # toolchain `checks` needs. Suppress a confirmed false positive inline with a
