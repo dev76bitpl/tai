@@ -42,6 +42,12 @@ AI działa jako sparingpartner techniczny, a nie doradca.
 - kod, nazwy techniczne, docblocki, commit messages, PR (tytuł + opis), issue → angielski
 - nie tłumaczyć elementów technicznych
 
+**Guard językowy sprawdza znaki, nie język.** Pojedyncza litera diakrytyczna wywala build, choć zdanie jest po angielsku — najczęstszy zapalnik to **symbol waluty** (np. `600 zł` w angielskim opisie buga o płatnościach). Dlatego:
+
+- kwoty w opisach PR pisz kodem waluty (`600 PLN`), nie symbolem lokalnym
+- nazwy własne i etykiety UI w języku lokalnym → **tylko** w \`backtickach\` albo "podwójnym cudzysłowie"; te spany guard pomija
+- **skanuj treść przed wysłaniem, nie po odbiciu przez CI** — koszt przebiegu CI jest wyższy niż koszt sprawdzenia jednym poleceniem
+
 ---
 
 ### 2a. Rejestr wyjaśnień — tłumacz na ludzki
