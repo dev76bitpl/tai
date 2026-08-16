@@ -51,6 +51,28 @@ Wywołaj przed:
 - [ ] Brak błędów 5xx w logach przez pierwsze 5 minut
 - [ ] Monitoring / alerty aktywne (jeśli skonfigurowane)
 
+**Smoke test sprawdza TREŚĆ odpowiedzi, nie kod HTTP.** Aplikacja potrafi zwracać
+`200` z pustym ciałem — proces żyje, nic nie renderuje, a automat ogłasza sukces.
+Warunkiem zaliczenia musi być rozmiar odpowiedzi (albo obecność konkretnego tekstu):
+
+```bash
+read -r code size < <(curl -sL -o /dev/null -w '%{http_code} %{size_download}' "$URL")
+[ "$code" = "200" ] && [ "$size" -ge 1000 ] || exit 1
+```
+
+Ta sama zasada dotyczy monitoringu zewnętrznego: ping po statusie przepuści martwą
+aplikację. Próg dobierz do najlżejszej strony, którą sprawdzasz.
+
+### 7. Odporność samego deployu
+- [ ] Deploy przeżywa zerwanie połączenia — uruchamiany w `tmux`/`screen` albo
+      ignorujący `SIGHUP`; inaczej rozłączenie zostawia produkcję w połowie operacji
+- [ ] Powłoka nieinteraktywna ma w ścieżce potrzebne narzędzia (menedżery wersji
+      typu `nvm`/`pyenv` NIE ładują się same w `tmux` ani w `ssh host 'komenda'`)
+- [ ] Przerwany deploy da się dokończyć — skrypt rozpoznaje „kod pobrany, ale
+      niezbudowany" (np. ślad wdrożonego commita), zamiast wyjść z „nic do zrobienia"
+- [ ] Krok niszczący (czyszczenie katalogu builda) wykonuje się **po** tym, jak
+      wiadomo, że reszta łańcucha ma czym zadziałać
+
 ## Format raportu
 
 ```
