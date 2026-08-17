@@ -132,7 +132,10 @@ Po utworzeniu PR AI sugeruje merge i **nie przechodzi do kolejnego zadania** dop
 Kilka sesji AI pracujących w **tym samym katalogu** dzieli jeden indeks Gita i jeden HEAD. To nie jest
 niewygoda — to cicha utrata pracy:
 
-- `git checkout` w jednej sesji **przełącza branch pod drugą**, w środku jej zadania
+- **jeden katalog = jeden HEAD.** `git checkout` w jednej sesji zabiera z katalogu
+  **zacommitowaną** pracę drugiej — jej pliki siedzą na branchu, którego już tam nie ma.
+  Wygląda to jak utrata pracy i kosztuje pół godziny diagnozy, mimo że nic nie zginęło.
+  To najczęstszy objaw, nie `add -A`
 - `git add -A` w jednej sesji **wciąga niezacommitowane pliki drugiej** do commita o zupełnie innym
   temacie — i nikt tego nie zauważa, bo commit przechodzi guardy i wygląda poprawnie
 - `git stash`, `git reset` i `git restore` działają na cudzą pracę
@@ -148,11 +151,27 @@ git worktree remove ../<repo>-<temat>          # po zmergowaniu
 Worktree daje własny katalog roboczy, własny HEAD i własny indeks przy współdzielonej historii —
 sesje przestają sobie wchodzić w drogę, a `git branch -d` nadal widzi wszystko.
 
+**Worktree nie wystarczy — środowisko deweloperskie ma jednego właściciela.** Worktree rozdziela
+kod, ale kontener, port i baza są wspólne dla maszyny. Sesja, która podnosi środowisko, zapisuje
+to w `temp/DEV-ENV-OWNER.md` (nazwa sesji, port, godzina); druga **nie restartuje cudzego
+kontenera** — podnosi własny na innym porcie (`PORT=3001 docker compose up -d app`). Bez tej
+zasady restart jednej sesji wygląda u drugiej jak „stary bundle" i kosztuje ją pół godziny
+kasowania cache'u.
+
+**Kanał między sesjami: `temp/note-for-<sesja>.md`.** `temp/` jest w `.gitignore`, więc notatka
+nie wejdzie nikomu do commita. Sesje nie mają innego sposobu, żeby się dogadać — `SendMessage`
+adresuje wyłącznie podagentów uruchomionych przez tę samą sesję, nie niezależne sesje
+użytkownika.
+
 **Jak AI rozpoznaje, że dzieli drzewo z kimś innym** (sygnały, nie domysły):
 
 - `git branch --show-current` pokazuje branch, którego ta sesja nie tworzyła
 - narzędzie zgłasza „file has been modified since read" dla pliku, którego sesja nie ruszała
 - w `git status` są zmiany, których sesja nie wprowadziła
+- procesy: `Get-CimInstance Win32_Process | ? { $_.Name -match 'claude' }` (ile sesji żyje) oraz
+  `ls -t ~/.claude/projects/<projekt>/*.jsonl | head` (który transkrypt ruszał się przed chwilą).
+  Uwaga: znaczniki czasu w transkryptach są w UTC, a `mtime` plików w czasie lokalnym — łatwo
+  pomylić się o różnicę stref
 
 **Po wykryciu któregokolwiek sygnału AI:**
 
