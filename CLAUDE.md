@@ -127,6 +127,84 @@ Po utworzeniu PR AI sugeruje merge i **nie przechodzi do kolejnego zadania** dop
 
 ---
 
+### 3c. Równoległe sesje — każda we własnym worktree (obowiązkowe)
+
+Kilka sesji AI pracujących w **tym samym katalogu** dzieli jeden indeks Gita i jeden HEAD. To nie jest
+niewygoda — to cicha utrata pracy:
+
+- **`git status` nie odróżnia cudzej pracy od własnej.** Sesja, która zastaje „brudny" katalog,
+  domyślnie uzna te zmiany za swoje i może je w dobrej wierze zestashować, wycofać albo wciągnąć
+  do commita. To ryzyko **poprzedza** wszystkie poniższe — występuje w pierwszej minucie sesji,
+  zanim ktokolwiek cokolwiek zrobi z gitem
+- **zwykły commit sąsiada** sprząta pliki z Twojego `git status` między dwiema Twoimi komendami —
+  bez `checkout` i bez `add -A`
+- **jeden katalog = jeden HEAD.** `git checkout` w jednej sesji zabiera z katalogu
+  **zacommitowaną** pracę drugiej — jej pliki siedzą na branchu, którego już tam nie ma.
+  Wygląda to jak utrata pracy i kosztuje pół godziny diagnozy, mimo że nic nie zginęło.
+  To najczęstszy objaw, nie `add -A`
+- `git add -A` w jednej sesji **wciąga niezacommitowane pliki drugiej** do commita o zupełnie innym
+  temacie — i nikt tego nie zauważa, bo commit przechodzi guardy i wygląda poprawnie
+- `git stash`, `git reset` i `git restore` działają na cudzą pracę
+
+**Zasada: jedna sesja = jeden worktree.**
+
+```bash
+git worktree add ../<repo>-<temat> <branch>   # osobny katalog, ta sama historia
+git worktree list                              # co jest gdzie
+git worktree remove ../<repo>-<temat>          # po zmergowaniu
+```
+
+Worktree daje własny katalog roboczy, własny HEAD i własny indeks przy współdzielonej historii —
+sesje przestają sobie wchodzić w drogę, a `git branch -d` nadal widzi wszystko.
+
+**Worktree nie wystarczy — środowisko deweloperskie ma jednego właściciela.** Worktree rozdziela
+kod, ale kontener, port i baza są wspólne dla maszyny. Sesja, która podnosi środowisko, zapisuje
+to w `temp/DEV-ENV-OWNER.md` (nazwa sesji, port, godzina); druga **nie restartuje cudzego
+kontenera**. Bez tej zasady restart jednej sesji wygląda u drugiej jak „stary bundle" i kosztuje ją
+pół godziny kasowania cache'u.
+
+**Druga sesja pracuje bez środowiska dev** — pisze kod, testy i dokumentację, a podgląd w przeglądarce
+robi wtedy, gdy właściciel je zwolni. Podnoszenie drugiego środowiska „na innym porcie" **nie
+działa**: `PORT=3001 docker compose up -d` w tym samym projekcie compose nie tworzy drugiego
+kontenera, tylko przestawia istniejący — czyli zabiera port pierwszej sesji. Prawdziwie osobne
+środowisko wymaga osobnej nazwy projektu (`-p`), a to oznacza **osobny wolumen bazy**: pustą bazę do
+zaseedowania i rozjazd treści między sesjami. Przy pracy na treści CMS to gorsze niż problem, który
+rozwiązujemy.
+
+**Kanał między sesjami: `temp/note-for-<sesja>.md`.** `temp/` jest w `.gitignore`, więc notatka
+nie wejdzie nikomu do commita. Sesje nie mają innego sposobu, żeby się dogadać — `SendMessage`
+adresuje wyłącznie podagentów uruchomionych przez tę samą sesję, nie niezależne sesje
+użytkownika.
+
+**Jak AI rozpoznaje, że dzieli drzewo z kimś innym** (sygnały, nie domysły):
+
+- `git branch --show-current` pokazuje branch, którego ta sesja nie tworzyła
+- narzędzie zgłasza „file has been modified since read" dla pliku, którego sesja nie ruszała
+- w `git status` są zmiany, których sesja nie wprowadziła
+- procesy: `Get-CimInstance Win32_Process | ? { $_.Name -match 'claude' }` (ile sesji żyje) oraz
+  `ls -t ~/.claude/projects/<projekt>/*.jsonl | head` (który transkrypt ruszał się przed chwilą).
+  Uwaga: znaczniki czasu w transkryptach są w UTC, a `mtime` plików w czasie lokalnym — łatwo
+  pomylić się o różnicę stref
+
+**Po wykryciu któregokolwiek sygnału AI:**
+
+1. mówi o tym wprost, zamiast pracować dalej i liczyć na szczęście
+2. **nie używa `git add -A` ani `git add .`** — dodaje wyłącznie własne pliki po nazwie
+3. nie przełącza brancha ani nie robi `stash`/`reset`/`restore` bez zgody usera
+4. proponuje przeniesienie jednej z sesji do własnego worktree
+5. przed commitem sprawdza `git diff --cached --name-only` i potwierdza, że **każdy** plik należy do
+   jego zadania
+6. **nigdy nie sprząta automatycznie** — żadnego `stash`, `checkout .`, `reset` ani `restore` na
+   zmianach, których ta sesja nie napisała. Brudny katalog na starcie to **sygnał do sprawdzenia
+   sąsiada**, nie do posprzątania. `stash` jest odwracalny, `checkout .` nie — a jedno i drugie
+   wygląda tak samo w momencie wpisywania
+
+Ta zasada wyszła z realnego incydentu: druga sesja przełączyła branch w trakcie pracy pierwszej, a
+`git add -A` o kilka minut minęło się z pojawieniem się cudzych plików. Nic nie zginęło wyłącznie
+dzięki kolejności zdarzeń — nie dzięki jakiemukolwiek zabezpieczeniu.
+
+---
+
 ### 4. Aktualizacja dokumentacji po ukończeniu kroku
 
 Po każdym domkniętym kroku AI proponuje aktualizację dokumentacji — nie czeka aż user zapyta.
