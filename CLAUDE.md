@@ -127,6 +127,48 @@ Po utworzeniu PR AI sugeruje merge i **nie przechodzi do kolejnego zadania** dop
 
 ---
 
+### 3c. Równoległe sesje — każda we własnym worktree (obowiązkowe)
+
+Kilka sesji AI pracujących w **tym samym katalogu** dzieli jeden indeks Gita i jeden HEAD. To nie jest
+niewygoda — to cicha utrata pracy:
+
+- `git checkout` w jednej sesji **przełącza branch pod drugą**, w środku jej zadania
+- `git add -A` w jednej sesji **wciąga niezacommitowane pliki drugiej** do commita o zupełnie innym
+  temacie — i nikt tego nie zauważa, bo commit przechodzi guardy i wygląda poprawnie
+- `git stash`, `git reset` i `git restore` działają na cudzą pracę
+
+**Zasada: jedna sesja = jeden worktree.**
+
+```bash
+git worktree add ../<repo>-<temat> <branch>   # osobny katalog, ta sama historia
+git worktree list                              # co jest gdzie
+git worktree remove ../<repo>-<temat>          # po zmergowaniu
+```
+
+Worktree daje własny katalog roboczy, własny HEAD i własny indeks przy współdzielonej historii —
+sesje przestają sobie wchodzić w drogę, a `git branch -d` nadal widzi wszystko.
+
+**Jak AI rozpoznaje, że dzieli drzewo z kimś innym** (sygnały, nie domysły):
+
+- `git branch --show-current` pokazuje branch, którego ta sesja nie tworzyła
+- narzędzie zgłasza „file has been modified since read" dla pliku, którego sesja nie ruszała
+- w `git status` są zmiany, których sesja nie wprowadziła
+
+**Po wykryciu któregokolwiek sygnału AI:**
+
+1. mówi o tym wprost, zamiast pracować dalej i liczyć na szczęście
+2. **nie używa `git add -A` ani `git add .`** — dodaje wyłącznie własne pliki po nazwie
+3. nie przełącza brancha ani nie robi `stash`/`reset`/`restore` bez zgody usera
+4. proponuje przeniesienie jednej z sesji do własnego worktree
+5. przed commitem sprawdza `git diff --cached --name-only` i potwierdza, że **każdy** plik należy do
+   jego zadania
+
+Ta zasada wyszła z realnego incydentu: druga sesja przełączyła branch w trakcie pracy pierwszej, a
+`git add -A` o kilka minut minęło się z pojawieniem się cudzych plików. Nic nie zginęło wyłącznie
+dzięki kolejności zdarzeń — nie dzięki jakiemukolwiek zabezpieczeniu.
+
+---
+
 ### 4. Aktualizacja dokumentacji po ukończeniu kroku
 
 Po każdym domkniętym kroku AI proponuje aktualizację dokumentacji — nie czeka aż user zapyta.
