@@ -171,10 +171,15 @@ kontenera, tylko przestawia istniejący — czyli zabiera port pierwszej sesji. 
 zaseedowania i rozjazd treści między sesjami. Przy pracy na treści CMS to gorsze niż problem, który
 rozwiązujemy.
 
-**Kanał między sesjami: `temp/note-for-<sesja>.md`.** `temp/` jest w `.gitignore`, więc notatka
-nie wejdzie nikomu do commita. Sesje nie mają innego sposobu, żeby się dogadać — `SendMessage`
-adresuje wyłącznie podagentów uruchomionych przez tę samą sesję, nie niezależne sesje
-użytkownika.
+**Kanał między sesjami: `temp/note-for-<sesja>.md`.** Sesje nie mają innego sposobu, żeby się
+dogadać — `SendMessage` adresuje wyłącznie podagentów uruchomionych przez tę samą sesję, nie
+niezależne sesje użytkownika.
+
+> ⚠️ **Zanim użyjesz kanału, sprawdź, że `temp/` jest ignorowany:** `git check-ignore -v temp/x.md`.
+> Jeśli nie jest — **najpierw dopisz `temp/` do `.gitignore`**. Nieignorowana notatka ląduje
+> w `git status` sąsiada jako nieśledzony plik, czyli robi dokładnie to, przed czym ta reguła
+> ostrzega: podrzuca mu cudzą zmianę, którą w dobrej wierze wciągnie do commita albo sprzątnie.
+> Sprawdzone 17.08.2026: z dziewięciu repozytoriów **pięć nie miało tego wpisu**, łącznie z tym.
 
 **Jak AI rozpoznaje, że dzieli drzewo z kimś innym** (sygnały, nie domysły):
 

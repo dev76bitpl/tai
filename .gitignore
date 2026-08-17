@@ -13,3 +13,7 @@ docs/USER_PROFILE.md
 
 # Maintainer's private backlog — project-specific TODOs that must not ship in the template (13a)
 docs/*.local.md
+
+# Kanal miedzy rownoleglymi sesjami (CLAUDE.md 3c) — notatki nie moga trafic
+# do niczyjego commita ani zabrudzic cudzego `git status`.
+temp/
