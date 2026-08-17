@@ -132,6 +132,12 @@ Po utworzeniu PR AI sugeruje merge i **nie przechodzi do kolejnego zadania** dop
 Kilka sesji AI pracujących w **tym samym katalogu** dzieli jeden indeks Gita i jeden HEAD. To nie jest
 niewygoda — to cicha utrata pracy:
 
+- **`git status` nie odróżnia cudzej pracy od własnej.** Sesja, która zastaje „brudny" katalog,
+  domyślnie uzna te zmiany za swoje i może je w dobrej wierze zestashować, wycofać albo wciągnąć
+  do commita. To ryzyko **poprzedza** wszystkie poniższe — występuje w pierwszej minucie sesji,
+  zanim ktokolwiek cokolwiek zrobi z gitem
+- **zwykły commit sąsiada** sprząta pliki z Twojego `git status` między dwiema Twoimi komendami —
+  bez `checkout` i bez `add -A`
 - **jeden katalog = jeden HEAD.** `git checkout` w jednej sesji zabiera z katalogu
   **zacommitowaną** pracę drugiej — jej pliki siedzą na branchu, którego już tam nie ma.
   Wygląda to jak utrata pracy i kosztuje pół godziny diagnozy, mimo że nic nie zginęło.
@@ -154,9 +160,16 @@ sesje przestają sobie wchodzić w drogę, a `git branch -d` nadal widzi wszystk
 **Worktree nie wystarczy — środowisko deweloperskie ma jednego właściciela.** Worktree rozdziela
 kod, ale kontener, port i baza są wspólne dla maszyny. Sesja, która podnosi środowisko, zapisuje
 to w `temp/DEV-ENV-OWNER.md` (nazwa sesji, port, godzina); druga **nie restartuje cudzego
-kontenera** — podnosi własny na innym porcie (`PORT=3001 docker compose up -d app`). Bez tej
-zasady restart jednej sesji wygląda u drugiej jak „stary bundle" i kosztuje ją pół godziny
-kasowania cache'u.
+kontenera**. Bez tej zasady restart jednej sesji wygląda u drugiej jak „stary bundle" i kosztuje ją
+pół godziny kasowania cache'u.
+
+**Druga sesja pracuje bez środowiska dev** — pisze kod, testy i dokumentację, a podgląd w przeglądarce
+robi wtedy, gdy właściciel je zwolni. Podnoszenie drugiego środowiska „na innym porcie" **nie
+działa**: `PORT=3001 docker compose up -d` w tym samym projekcie compose nie tworzy drugiego
+kontenera, tylko przestawia istniejący — czyli zabiera port pierwszej sesji. Prawdziwie osobne
+środowisko wymaga osobnej nazwy projektu (`-p`), a to oznacza **osobny wolumen bazy**: pustą bazę do
+zaseedowania i rozjazd treści między sesjami. Przy pracy na treści CMS to gorsze niż problem, który
+rozwiązujemy.
 
 **Kanał między sesjami: `temp/note-for-<sesja>.md`.** `temp/` jest w `.gitignore`, więc notatka
 nie wejdzie nikomu do commita. Sesje nie mają innego sposobu, żeby się dogadać — `SendMessage`
@@ -181,6 +194,10 @@ użytkownika.
 4. proponuje przeniesienie jednej z sesji do własnego worktree
 5. przed commitem sprawdza `git diff --cached --name-only` i potwierdza, że **każdy** plik należy do
    jego zadania
+6. **nigdy nie sprząta automatycznie** — żadnego `stash`, `checkout .`, `reset` ani `restore` na
+   zmianach, których ta sesja nie napisała. Brudny katalog na starcie to **sygnał do sprawdzenia
+   sąsiada**, nie do posprzątania. `stash` jest odwracalny, `checkout .` nie — a jedno i drugie
+   wygląda tak samo w momencie wpisywania
 
 Ta zasada wyszła z realnego incydentu: druga sesja przełączyła branch w trakcie pracy pierwszej, a
 `git add -A` o kilka minut minęło się z pojawieniem się cudzych plików. Nic nie zginęło wyłącznie
