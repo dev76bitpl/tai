@@ -56,12 +56,27 @@ Wywołaj przed:
 Warunkiem zaliczenia musi być rozmiar odpowiedzi (albo obecność konkretnego tekstu):
 
 ```bash
-read -r code size < <(curl -sL -o /dev/null -w '%{http_code} %{size_download}' "$URL")
-[ "$code" = "200" ] && [ "$size" -ge 1000 ] || exit 1
+smoke=$(curl -sL -o /dev/null -w '%{http_code} %{size_download}' "$URL" || true)
+code=${smoke%% *}
+size=${smoke##* }
+[ "$code" = "200" ] && [ "${size:-0}" -ge 1000 ] || exit 1
 ```
 
 Ta sama zasada dotyczy monitoringu zewnętrznego: ping po statusie przepuści martwą
 aplikację. Próg dobierz do najlżejszej strony, którą sprawdzasz.
+
+**Nie czytaj wyniku przez `read ... < <(curl ...)`.** `curl -w` nie kończy wypisu
+znakiem nowej linii, więc `read` trafia na koniec strumienia bez separatora i zwraca
+kod 1. Pod `set -e` zabija to skrypt **dokładnie w tym miejscu i tylko wtedy, gdy
+wszystko poszło dobrze** — bez komunikatu, bo nikt tego błędu nie obsłużył. Skutek
+jest podstępny: smoke nigdy się nie wykonuje, kroki po nim (zapis śladu wdrożenia)
+też nie, a deploy kończy się kodem 1, wyglądając na urwany w połowie. Podstawienie
+`$(...)` obcina końcowe nowe linie z definicji, więc wynik nie zależy od tego, czym
+narzędzie kończy wypis.
+
+> Zaobserwowane na żywo: zabezpieczenie dodane po awarii „200 z pustą treścią" nie
+> zadziałało ani razu od dnia wdrożenia — właśnie z tego powodu. Poprawka, której
+> nikt nie uruchomił na ścieżce sukcesu, jest hipotezą, nie poprawką.
 
 ### 7. Odporność samego deployu
 - [ ] Deploy przeżywa zerwanie połączenia — uruchamiany w `tmux`/`screen` albo
