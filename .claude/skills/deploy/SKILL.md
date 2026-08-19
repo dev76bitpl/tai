@@ -87,6 +87,19 @@ narzędzie kończy wypis.
       niezbudowany" (np. ślad wdrożonego commita), zamiast wyjść z „nic do zrobienia"
 - [ ] Krok niszczący (czyszczenie katalogu builda) wykonuje się **po** tym, jak
       wiadomo, że reszta łańcucha ma czym zadziałać
+- [ ] Skrypt, który sam siebie aktualizuje, wie o tym — i Ty też
+
+**Skrypt deployu pobiera własny kod, więc aktualizuje sam siebie.** Powłoka czyta skrypt
+partiami w trakcie wykonywania, więc nadpisanie pliku w locie potrafi go uszkodzić w
+połowie. Standardowa obrona to wykonanie z kopii zrobionej na starcie — a to znaczy, że
+uruchomienie pobierające nową wersję **dobiega końca na starej**:
+
+1. przebieg nr 1 — kopiuje starą wersję, pobiera nową na dysk, wykonuje się ze starej
+2. przebieg nr 2 — kopiuje nową i dopiero teraz zachowuje się po nowemu
+
+Po każdej zmianie w samym skrypcie uruchom deploy **dwa razy**; drugi przebieg jest tani
+(nic nowego do pobrania) i jest jedynym, który dowodzi, że zmiana działa. Bez tej wiedzy
+pierwszy przebieg wygląda na dowód, że poprawka nie zadziałała — i wysyła w ślepą diagnozę.
 
 ## Format raportu
 
