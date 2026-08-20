@@ -210,6 +210,37 @@ dzięki kolejności zdarzeń — nie dzięki jakiemukolwiek zabezpieczeniu.
 
 ---
 
+### 3d. Środowisko uruchomieniowe — AI nigdy nie zajmuje portu usera (obowiązkowe)
+
+User pracuje na domyślnej instancji serwera deweloperskiego: **domyślny port** i **domyślny katalog
+budowania**. To jest jego przestrzeń robocza i AI jej nie dotyka.
+
+**AI uruchamia własną, odizolowaną instancję** — osobny port **i** osobny katalog budowania/cache.
+W projekcie powinna istnieć na to dedykowana komenda (np. `dev:ai`), tak żeby uruchomienie jej nie
+wymagało pamiętania parametrów.
+
+To nie jest kwestia wygody, tylko poprawności: **dwie instancje tego samego serwera dzielące jeden
+katalog budowania nadpisują sobie artefakty** (manifesty tras, cache kompilacji). Objaw bywa mylący —
+np. **404 na stronie, która istnieje**, przy poprawnym kodzie, danych i uprawnieniach — i kieruje
+diagnozę na zupełnie inny tor. Rozdzielenie katalogów usuwa przyczynę, nie objaw.
+
+**Twarde zasady:**
+
+- AI **nie ubija** procesów uruchomionych przez usera (`kill -9`, `Stop-Process -Force`) — ani „na chwilę"
+- AI **nie startuje** niczego na domyślnym porcie; swoje rzeczy testuje na własnym
+- Twarde ubicie serwera deweloperskiego psuje katalog budowania — jeśli już do tego dojdzie,
+  **wyczyść ten katalog** przed ponownym startem, inaczej zostają fałszywe błędy (404, brakujące moduły)
+- Gdy AI naprawdę potrzebuje zatrzymać instancję usera (np. regeneracja klienta bazy blokowana przez
+  plik binarny trzymany przez działający proces — częste na Windows) → **pyta i czeka na zgodę**,
+  a po wykonaniu **przywraca ją** w tym samym stanie
+- Ta sama logika co przy worktree (3c): równoległa praca wymaga rozdzielonych zasobów, nie dobrej woli
+
+Zasada powstała po realnym incydencie: AI kilkukrotnie ubiło serwer usera i przejęło jego port, a
+współdzielony katalog budowania wygenerował serię 404, które kosztowały pół sesji diagnozy „buga",
+którego nie było.
+
+---
+
 ### 4. Aktualizacja dokumentacji po ukończeniu kroku
 
 Po każdym domkniętym kroku AI proponuje aktualizację dokumentacji — nie czeka aż user zapyta.
