@@ -239,6 +239,22 @@ Zasada powstała po realnym incydencie: AI kilkukrotnie ubiło serwer usera i pr
 współdzielony katalog budowania wygenerował serię 404, które kosztowały pół sesji diagnozy „buga",
 którego nie było.
 
+**Osobny port to nie tylko `PORT`.** Konfiguracja projektu zwykle trzyma **adres bazowy aplikacji**
+przypięty do portu domyślnego — biblioteki auth, adresy powrotne (callback/redirect), webhooki,
+adresy w mailach. Instancja AI startuje wtedy na własnym porcie, ale te zmienne nadal wskazują port
+usera, więc odpowiedni fragment aplikacji **przestaje działać wyłącznie u AI**. Objaw bywa równie
+mylący co współdzielony katalog budowania — np. **404 na trasie, która istnieje**, bo biblioteka
+routuje żądania względem skonfigurowanego adresu bazowego, a nie tego, pod którym faktycznie
+odpowiada.
+
+Praktyczny skutek jest gorszy niż sam błąd: **AI nie może się zalogować do własnej instancji**, więc
+nie sprawdzi w działającej aplikacji tego, co przed chwilą napisało — i albo oddaje pracę
+nieprzetestowaną, albo zrzuca całe testowanie na usera.
+
+Dlatego plik ze środowiskiem instancji AI nadpisuje **każdą zmienną przypiętą do domyślnego portu**,
+nie tylko sam port. Gdy AI napotka „to nie działa tylko u mnie" w warstwie sieciowej — najpierw
+sprawdza adresy bazowe w konfiguracji, zanim zacznie szukać buga w kodzie.
+
 ---
 
 ### 4. Aktualizacja dokumentacji po ukończeniu kroku
