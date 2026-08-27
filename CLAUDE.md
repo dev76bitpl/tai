@@ -256,19 +256,21 @@ którego nie było.
 
 **Osobny port to nie tylko `PORT`.** Konfiguracja projektu zwykle trzyma **adres bazowy aplikacji**
 przypięty do portu domyślnego — biblioteki auth, adresy powrotne (callback/redirect), webhooki,
-adresy w mailach. Instancja AI startuje wtedy na własnym porcie, ale te zmienne nadal wskazują port
-usera, więc odpowiedni fragment aplikacji **przestaje działać wyłącznie u AI**. Objaw bywa równie
-mylący co współdzielony katalog budowania — np. **404 na trasie, która istnieje**, bo biblioteka
-routuje żądania względem skonfigurowanego adresu bazowego, a nie tego, pod którym faktycznie
-odpowiada.
+adresy w mailach. Instancja AI startuje na własnym porcie, ale te zmienne nadal wskazują port usera,
+więc adresy, które aplikacja **generuje**, prowadzą do cudzego serwera. Dlatego plik ze środowiskiem
+instancji AI nadpisuje **każdą zmienną przypiętą do domyślnego portu**, nie tylko sam port.
 
-Praktyczny skutek jest gorszy niż sam błąd: **AI nie może się zalogować do własnej instancji**, więc
-nie sprawdzi w działającej aplikacji tego, co przed chwilą napisało — i albo oddaje pracę
-nieprzetestowaną, albo zrzuca całe testowanie na usera.
+**Czego to nie tłumaczy — i skąd ta korekta.** Kuszące jest przypisać adresowi bazowemu każdy objaw
+sieciowy, w szczególności **404 na trasie, która istnieje**. Ten objaw ma zwykle inną przyczynę:
+rozjechany katalog budowania (akapit wyżej), leczony jego skasowaniem i restartem. W realnym
+przypadku 404 na całej obsłudze logowania został przypisany zmiennej z adresem — bo **naprawiono
+dwie rzeczy naraz**, nadpisanie zmiennej i wyczyszczenie katalogu, i nie rozdzielono, która pomogła.
+Ten sam objaw wrócił tego samego dnia na instancji usera, gdzie adres bazowy był poprawny.
 
-Dlatego plik ze środowiskiem instancji AI nadpisuje **każdą zmienną przypiętą do domyślnego portu**,
-nie tylko sam port. Gdy AI napotka „to nie działa tylko u mnie" w warstwie sieciowej — najpierw
-sprawdza adresy bazowe w konfiguracji, zanim zacznie szukać buga w kodzie.
+Stąd zasada ogólniejsza niż sam port: **przy diagnozie zmieniaj jedną rzecz na raz**, a jeśli się nie
+da — **nie zapisuj przyczyny w regułach, dopóki jej nie rozdzielisz**. Błędna przyczyna w regułach
+jest gorsza niż jej brak: kolejna sesja ufa opisowi, przestawia zmienną i szuka dalej, zamiast
+sięgnąć po naprawę, która zajmuje dziesięć sekund.
 
 ---
 
