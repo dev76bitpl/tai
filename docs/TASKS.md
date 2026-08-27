@@ -28,6 +28,25 @@ Checklisty implementacyjne per faza znajdują się wyłącznie w [docs/ROADMAP.m
 
 ## Backlog
 
+- [ ] **PR czysto dokumentacyjny nie powinien palić pełnego CI** (do przemyślenia, nie zdecydowane)
+
+  > Po ludzku: zmiana dwóch akapitów w dokumentacji odpala dziś build, testy, typecheck i skan
+  > bezpieczeństwa — czyli pełny rachunek za tekst, w którym nie ma czego zbudować. Przy jednej
+  > puli minut na wszystkie repo to realny koszt, nie teoria.
+
+  Kierunek: ograniczyć ciężkie joby do zmian dotykających kodu (`paths` / `paths-ignore`), zostawiając
+  lekkie sprawdzenia bez zmian. **Dwa zastrzeżenia, bez których to szkodzi:**
+  (1) `paths-ignore` na checku **wymaganym** przez branch protection blokuje PR **na zawsze** —
+  GitHub raportuje „expected", status nigdy nie przychodzi, merge stoi; bezpieczny wariant to job
+  zwracający sukces dla ścieżek dokumentacyjnych, nie wycięcie workflow;
+  (2) **nie pomijamy wszystkiego** — walidacja tytułu i opisu PR ma działać zawsze, bo sprawdza
+  tekst PR-a, a przy zmianie dokumentacyjnej jest najbardziej potrzebna.
+
+  Do przemyślenia zanim to powstanie: co dokładnie liczy się jako „tylko dokumentacja" (czy
+  `.github/**` i pliki konfiguracyjne też, skoro potrafią zepsuć build); jak to się zachowa w repo
+  z wieloma pakietami; czy wpływa na wersjonowanie release'ów. Weryfikacja wymaga odpalenia CI —
+  czyli tego zasobu, którego oszczędzanie jest celem; robić, gdy budżet minut na to pozwala.
+
 - [ ] **Lekki tor dla zmian trywialnych — wpiąć w `CLAUDE.md`** (uzgodnione, nie zakodowane)
 
   > Po ludzku: trywialna decyzja (np. „board: tak/nie") nie może kosztować godziny i 4 PR-ów.
