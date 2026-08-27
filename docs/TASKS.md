@@ -15,6 +15,8 @@ Checklisty implementacyjne per faza znajdują się wyłącznie w [docs/ROADMAP.m
       bypassu przez `git commit -F`; flagi `[no-template]`/`[template-done]` czytane też z pliku)
 - [x] `session-context` + `update-skills`: wymuszenie utf-8 (koniec crashy cp1250 na Windows)
 - [x] skille `copywriting` + `cro` zwendorowane do template'u (manifest + `.claude/skills/` + `docs/SKILLS.md`)
+- [x] `CLAUDE.md` 3d — korekta: 404 na istniejącej trasie to katalog budowania, nie adres bazowy;
+      przy okazji zasada „zmieniaj jedną rzecz na raz, inaczej nie zapisuj przyczyny w regułach"
 - [x] `CLAUDE.md` 2a: instrukcja obsługi aplikacji prowadzi tym, co user widzi na ekranie
       (adres, układ), nigdy etykietami wyczytanymi z kodu — user nie ma jak ich zweryfikować
 - [x] `CLAUDE.md` 3d: instancja AI nadpisuje **każdą** zmienną przypiętą do domyślnego portu
