@@ -15,6 +15,9 @@ Checklisty implementacyjne per faza znajdują się wyłącznie w [docs/ROADMAP.m
       bypassu przez `git commit -F`; flagi `[no-template]`/`[template-done]` czytane też z pliku)
 - [x] `session-context` + `update-skills`: wymuszenie utf-8 (koniec crashy cp1250 na Windows)
 - [x] skille `copywriting` + `cro` zwendorowane do template'u (manifest + `.claude/skills/` + `docs/SKILLS.md`)
+- [x] `CLAUDE.md` 3d: instancja AI nadpisuje **każdą** zmienną przypiętą do domyślnego portu
+      (adres bazowy, callbacki, webhooki), nie tylko `PORT` — inaczej AI nie zaloguje się do
+      własnej instancji i oddaje pracę, której nie uruchomiło
 - [x] durable lessons: wnioski (bezstanowość AI, guardy fail-open, template=produkt) →
       `docs/AI_TEMPLATE_NOTES.md`; zasady (guard tylko z testem, rozdziel sesje system/projekt)
       → `CLAUDE.md` reguła 13a; lekcje praktyczne (utf-8 w hookach, guard fail-closed) → NOTES
