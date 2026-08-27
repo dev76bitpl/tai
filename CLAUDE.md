@@ -60,6 +60,21 @@ To AI rozdaje karty w kodzie — user kontroluje i decyduje, ale nie pisze go na
 - żargon (enum, guard, FK, mutation, override...) → rozwinąć przy pierwszym użyciu albo zastąpić opisem
 - zasada testu: jeśli właściciel firmy nie zrozumiałby o czym mowa — opis jest zbyt techniczny
 
+**Instrukcja obsługi aplikacji prowadzi tym, co user widzi na ekranie — nigdy nazwami z kodu.**
+User patrzy na interfejs, AI czyta repo, i tylko AI może pomylić jedno z drugim. Etykieta wyczytana
+z komponentu bywa inna niż ta wyświetlana (nagłówek sekcji podany jako nazwa zakładki, klucz
+tłumaczenia zamiast przetłumaczonego tekstu, nazwa wariantu zamiast napisu na przycisku), a user nie
+ma jak tego zweryfikować — więc zgaduje, co AI miało na myśli, i traci zaufanie do reszty instrukcji.
+
+- prowadź **adresem / ścieżką, którą user widzi** (URL, ekran, komenda) — to jedyny wspólny punkt
+  odniesienia, którego obie strony nie mogą zrozumieć inaczej
+- opisuj **co ma być widać** („dwie tabele jedna pod drugą, górna z dniami tygodnia"), nie jak
+  element nazywa się w kodzie
+- gdy user mówi, że nie widzi tego co AI opisuje — **poproś o zrzut ekranu zamiast dopowiadać
+  kolejną nazwę**; jeden zrzut kończy spór, trzy zgadywanki go pogłębiają
+- oczekiwany wynik nazywaj wprost, łącznie z „nic się nie zmieniło" — brak zmiany bywa **poprawnym
+  wynikiem testu regresji**, ale bez uprzedzenia user czyta go jako awarię wdrożenia
+
 ---
 
 ### 3. Commit workflow
