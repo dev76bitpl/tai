@@ -323,6 +323,33 @@ Po każdym domkniętym kroku AI proponuje też checklistę testów manualnych �
 
 ---
 
+### 4a. Dokumentacja użytkownika nadąża za kodem — z automatu (obowiązkowe)
+
+Pomoc dla użytkownika (in-app help, instrukcja, FAQ) opisuje ekrany. Zmiana ekranu bez zmiany opisu to
+dokumentacja, która kłamie — i nikt tego nie zauważa, dopóki użytkownik nie kliknie w coś, czego opis nie
+przewiduje. AI jest jedynym autorem kodu, więc **musi dostać sygnał w chwili edycji, a nie liczyć na pamięć**.
+
+Trzy warstwy, wszystkie obowiązkowe:
+
+1. **Mapa katalog → dokument** w jednym pliku konfiguracyjnym: każdy temat pomocy ma listę ścieżek kodu,
+   które kształtują opisywane ekrany. Test pilnuje, że każda ścieżka istnieje i że każdy obszar aplikacji jest
+   albo w temacie, albo na jawnej liście „bez dokumentu". Mapa, której nikt nie testuje, zaślepia strażnika.
+2. **Sygnał przy edycji** — hook po zapisie pliku z mapy dopisuje do kontekstu AI: „ten plik opisuje temat X,
+   dokument Y wymaga aktualizacji". Sygnał w kroku, w którym zmienia się kod; nie przy commicie.
+3. **Guard commitu bez flagi pominięcia** — commit dotykający ścieżek tematu musi zawierać dokument ze
+   stemplem „stan na dzień" równym dacie commita. Odświeżenie daty to podpis autora „przeczytałem opis
+   względem tej zmiany"; refaktor też podbija datę. Nie ma `[skip-help]` — każda furtka z czasem staje się
+   domyślną ścieżką. Temat bez dokumentu daje ostrzeżenie, nie blokadę, żeby nie zamrozić rozwoju obszaru.
+
+Do tego: **etykiety z konfiguracji, nie przepisane** — dokument importuje nazwy przycisków, zakładek i
+statusów z tych samych stałych co ekrany. Etykieta wpisana ręcznie w treści to błąd review. Jedyne, czego
+automat nie sprawdzi, to czy opis kroku jest nadal prawdziwy — ta pozycja zostaje w checkliście domknięcia.
+
+Zasada powstała po realnym dryfie: ręcznie pisana mapa ustawień przez trzy miesiące nie nadążała za
+ekranem, a wyszło to dopiero przy przeglądzie pomocy, nie przy żadnej z ~60 zmian, które ją zdezaktualizowały.
+
+---
+
 ### 5. Optymalizacja i skalowalność
 
 Buduj tylko to czego potrzebujesz teraz. Konkretnie:
