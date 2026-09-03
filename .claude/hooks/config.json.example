@@ -6,6 +6,9 @@
   "lint": "composer lint",
   "test": "composer test",
 
+  "_dev_user_ports_comment": "Porty serwera dev usera — guard-process-kill.py blokuje kill wymierzony w te porty (CLAUDE.md 3d). Domyślnie [3000].",
+  "dev_user_ports": [3000],
+
   "_adr_patterns_comment": "Dodatkowe wzorce plików sugerujące decyzję architektoniczną (regex, opis). Zostaw pasujące do projektu, resztę usuń.",
   "_adr_patterns_categories": "Baza/schemat | Infrastruktura | Architektura | WordPress | PrestaShop | Magento",
   "adr_patterns": [

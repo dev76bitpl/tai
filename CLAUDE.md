@@ -254,6 +254,17 @@ Zasada powstała po realnym incydencie: AI kilkukrotnie ubiło serwer usera i pr
 współdzielony katalog budowania wygenerował serię 404, które kosztowały pół sesji diagnozy „buga",
 którego nie było.
 
+**Gaszenie własnej instancji — tylko po tym, co ją jednoznacznie identyfikuje.** AI zatrzymuje swój serwer
+wyłącznie **po jego porcie** (np. `fuser -k <port-ai>/tcp`) albo **po numerze procesu** zapisanym przy starcie.
+**Nigdy po nazwie ani wzorcu** (`pkill -f "<komenda serwera>"`, `killall node`, `taskkill /IM node.exe`,
+`Stop-Process -Name node`) — wzorzec nie odróżnia instancji AI od instancji usera i zabija obie. Sama reguła „nie
+ubijaj serwera usera" nie wystarcza — była łamana wielokrotnie, zwykle przy sprzątaniu własnej instancji „na
+szybko" — dlatego pilnuje jej **hook bez flagi pominięcia** `.claude/hooks/guard-process-kill.py` (PreToolUse na
+`Bash|PowerShell`): blokuje kill po nazwie, kill po porcie usera (`dev_user_ports` w `.claude/hooks/config.json`,
+domyślnie `[3000]`) i kill z nierozwiązanym celem (podstawienie, `xargs`); przepuszcza kill po numerze PID, po pliku
+`.pid` i po porcie innym niż usera. Treść w heredocach i cudzysłowach (commit message, edycja dokumentacji) hook
+ignoruje — liczy się samo polecenie. Gdy serwer usera naprawdę musi stanąć — komendę odpala user (akapit wyżej).
+
 **Osobny port to nie tylko `PORT`.** Konfiguracja projektu zwykle trzyma **adres bazowy aplikacji**
 przypięty do portu domyślnego — biblioteki auth, adresy powrotne (callback/redirect), webhooki,
 adresy w mailach. Instancja AI startuje na własnym porcie, ale te zmienne nadal wskazują port usera,

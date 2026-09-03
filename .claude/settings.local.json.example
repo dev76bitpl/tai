@@ -18,6 +18,10 @@
         "hooks": [
           {
             "type": "command",
+            "command": "INTERPRETER ${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-process-kill.py"
+          },
+          {
+            "type": "command",
             "command": "INTERPRETER ${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-ai-template.py"
           },
           {
