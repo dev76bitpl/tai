@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.1.19](https://github.com/dev76bitpl/tai/compare/v0.1.18...v0.1.19) (2026-09-04)
+
+
+### Bug Fixes
+
+* **deploy:** Drop the read pattern that kills a deploy script silently ([#111](https://github.com/dev76bitpl/tai/issues/111)) ([2d82f33](https://github.com/dev76bitpl/tai/commit/2d82f33fe6dc211e027ad06aa5111ef6f87e6487))
+* **guards:** A failed check is not a confirmed violation ([#109](https://github.com/dev76bitpl/tai/issues/109)) ([e4ccecf](https://github.com/dev76bitpl/tai/commit/e4ccecf9d4f5df02d19616e4a89fdae4774498e8))
+* **guards:** Exempt double-quoted strings in PR language check ([#93](https://github.com/dev76bitpl/tai/issues/93)) ([cc2cd57](https://github.com/dev76bitpl/tai/commit/cc2cd57a33318c1ecf0772f7725cd375c653e237))
+* **tooling:** Run doctor once and stop faking a missing py launcher ([#120](https://github.com/dev76bitpl/tai/issues/120)) ([83c6855](https://github.com/dev76bitpl/tai/commit/83c6855441993327bbd21ba726028ef4560ed034))
+* **workflow:** The note channel promised an ignore that was not there ([#110](https://github.com/dev76bitpl/tai/issues/110)) ([1815cd5](https://github.com/dev76bitpl/tai/commit/1815cd537ad9dae8689e1a34032cc71f55c5328b))
+
 ## [0.1.18](https://github.com/dev76bitpl/tai/compare/v0.1.17...v0.1.18) (2026-06-13)
 
 
