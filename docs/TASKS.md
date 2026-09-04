@@ -206,6 +206,19 @@ dry-run guardów tą samą treścią co commit; nie mieszaj sesji system/projekt
 
 ## Stan sesji
 
+- 2026-09-04: **`npm run doctor` przestał straszyć brakującym `py`.** Po ludzku: po każdym
+  czerwonym raporcie doktora na Linuksie/WSL na końcu wyskakiwało `py: not found`, jakby brakowało
+  narzędzia — nic nie brakowało, komunikat był fałszywy; na Windows ten sam błąd wypisywał raport
+  dwa razy. Przyczyna: `python3 scripts/doctor.py || py scripts/doctor.py` — doctor kończy się
+  kodem 1 celowo (znalazł problem), a `||` brał to za brak interpretera i odpalał windowsowy
+  launcher. Technicznie: nowy `scripts/doctor.mjs` sprawdza, który interpreter odpowiada na
+  `--version` (Windows: `py`, `python`, `python3`; reszta: `python3`, `python`), odpala doctor raz
+  i oddaje jego kod wyjścia bez zmian; brak Pythona = jeden jasny komunikat. Test
+  `tests/test_doctor_launcher.py` podstawia fałszywy `python3` (raport czerwony i zielony) oraz
+  pusty PATH. `new-project.py` kopiuje cały `scripts/`, więc nowe projekty dostają wrapper
+  automatycznie; istniejące projekty dociągają go ręcznie (plik + jedna linia w `package.json`).
+  Pierwszy raz wdrożone w projekcie produkcyjnym (PR #201 tam), stąd przeniesione do template'u.
+
 - 2026-06-24: **Lektor „Gotowe" + nazwa projektu — przeniesiony do template'u (branch
   `docs/speak-tts-announcer`).** Po ludzku: po skończonej turze komputer mówi „Gotowe" i nazwę
   projektu, w którym pracujesz — przydatne przy kilku otwartych naraz. Wariant usera (głos Paulina,
