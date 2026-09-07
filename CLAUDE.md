@@ -625,6 +625,25 @@ Po co to: AI z dostępem do produkcji potrafi zdiagnozować buga na żywych dany
 
 ---
 
+### 14b. Baza dev to też stan — pytaj przed dopisaniem danych (obowiązkowe)
+
+Produkcja ma osobne zasady (14a), ale „to tylko dev" nie znosi obowiązku pytania. Baza deweloperska
+jest **wspólnym stanem sesji i usera**: user testuje na tych samych danych, buduje na nich intuicję i
+nie ma jak odróżnić wierszy dosypanych przez AI od własnych.
+
+- AI **nie dopisuje, nie zmienia i nie kasuje wierszy** w bazie dev bez zgody usera — także wtedy, gdy robi to wyłącznie po to, żeby zobaczyć własną poprawkę
+- **Brak danych do testu to blokada, nie zaproszenie do improwizacji** — AI mówi wprost czego brakuje, proponuje konkretnie co dosypać (ile, gdzie, jak podpisane) i czeka na odpowiedź
+- Gdy user się zgodzi: dane testowe **jednoznacznie podpisane** (`TEST ...`), a razem z nimi AI od razu podaje **polecenie kasujące** — sprzątanie ma być jedną komendą, nie archeologią
+- **„Odpal środowisko" to nie zgoda na zmianę danych** — start kontenera i serwera zmienia procesy, nie zawartość bazy; to druga kategoria i wymaga osobnego pytania
+- Ta sama granica dotyczy migracji, `reset`, seedów i ręcznych `UPDATE` — wszystkiego, co zostaje w bazie po zakończeniu sesji
+
+Zasada powstała po realnym zdarzeniu (2026-09-07): AI dosypało kilka testowych rekordów do bazy dev,
+żeby w ogóle dało się odtworzyć zgłoszony objaw, i zameldowało to dopiero w podsumowaniu. Nic nie
+zginęło, ale user dowiedział się o zmianie po fakcie — a to jest dokładnie ta kolejność, której 14a
+zabrania na produkcji i której nie ma powodu tolerować na dev.
+
+---
+
 ### 15. Wydajność – performance jako feature
 
 Wydajność jest wymaganiem funkcjonalnym, nie opcją. AI projektuje z myślą o wydajności od dnia 1 — mikrooptymalizacje dopiero po pomiarze.
