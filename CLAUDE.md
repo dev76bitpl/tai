@@ -299,8 +299,31 @@ Co aktualizować:
 - **docs/adr/** – jeśli pojawiła się decyzja architektoniczna
 - **docs/TESTING.md** – jeśli pojawił się nowy krytyczny flow wymagający testu manualnego
 - **docs/DELIVERY_CHECKLIST.md** – jeśli zmienia się standard domykania funkcjonalności
+- **dziennik wdrożeń** – jeśli w projekcie działa cykliczny agent doradczy (raport, audyt, przegląd), każda wdrożona zmiana z jego obszaru dostaje wiersz w pliku w repo; wiersz powstaje w tym samym commicie co zmiana
 
 Kolejność: kod + dokumentacja razem w jednym commicie na końcu kroku.
+
+**Dziennik wdrożeń — gdy w projekcie działa cykliczny agent doradczy:**
+
+Agent, który co tydzień pisze raport albo przegląd, zwykle nie ma pamięci między uruchomieniami:
+czyta repozytorium i tyle. Bez zapisu, co z jego rekomendacji zostało wdrożone, każdy cykl zaczyna
+od zera — nie rozlicza efektu poprzedniej rady, tylko wymyśla następną. Po kilku tygodniach zostaje
+lista pobożnych życzeń zamiast doradztwa.
+
+Lekarstwo jest tanie: jeden plik w repo, jeden wiersz na wdrożoną zmianę.
+
+- **data wdrożenia** (nie data merge'a) — bo skutek zmiany widać z opóźnieniem i bez daty agent
+  przypisze go do złego okresu albo ogłosi porażkę, zanim cokolwiek zdążyło zadziałać
+- **czego dotyczy** i **co się zmieniło** — językiem użytkownika, nie nazwami plików
+- **na czyją rekomendację** — z którego raportu, albo „własna inicjatywa"
+- **tylko wdrożone na produkcji** — dziennik obietnic nie rozlicza niczego
+
+Instrukcja agenta (skill, prompt) musi kazać mu **przeczytać dziennik przed pisaniem** i nazwać
+wprost rekomendację, której w nim nie ma, zamiast po cichu zastąpić ją nową.
+
+Zasada jest ogólniejsza niż jeden raport: **każdy odbiorca bez pamięci potrzebuje kanału w repo**
+— cudzy agent, sesja w chmurze, nowy człowiek w projekcie. Kanałem nie może być czat ani system
+zadań, do którego ten odbiorca nie ma dostępu.
 
 **Język dokumentacji — zasada dwóch warstw:**
 
@@ -873,6 +896,7 @@ grep -r "title=" src/app --include="*.tsx" | head -5     # czy jest natywny titl
 - docs/SETUP.md – instrukcja środowiska deweloperskiego (wymagania, instalacja, komendy)
 - docs/TESTING.md – checklisty testów manualnych dla krytycznych flow
 - docs/DELIVERY_CHECKLIST.md – standard domknięcia kroku (testy auto/manualne, regresja, docs, commit)
+- dziennik wdrożeń – zapis wdrożonych zmian dla cyklicznego agenta doradczego (data, czego dotyczy, na czyją rekomendację)
 - README.md – wizytówka projektu (stack, struktura, komendy, linki do docs)
 
 ---
@@ -917,6 +941,7 @@ Po zmianie AI sprawdza i aktualizuje jeśli potrzeba:
 - docs/SETUP.md – gdy zmienił się proces instalacji, nowe narzędzie, nowa pułapka, nowa komenda
 - docs/TESTING.md – gdy pojawia się nowy krytyczny flow wymagający testu manualnego
 - docs/DELIVERY_CHECKLIST.md – gdy zmienia się sposób domykania funkcjonalności
+- dziennik wdrożeń – gdy zmiana z obszaru cyklicznego agenta doradczego trafiła na produkcję
 
 ---
 
