@@ -7,6 +7,12 @@ Checklisty implementacyjne per faza znajdują się wyłącznie w [docs/ROADMAP.m
 
 ## Aktualny fokus
 
+- [x] `CLAUDE.md` 4: dziennik wdrożeń dla cyklicznego agenta doradczego — agent bez pamięci
+      między uruchomieniami (raport tygodniowy, przegląd) czyta wyłącznie repo, więc bez zapisu
+      „co z jego rad zostało wdrożone" każdy cykl zaczyna od zera i wymyśla nową radę zamiast
+      rozliczyć poprzednią; wiersz w tym samym commicie co zmiana, data = dzień wdrożenia
+      (skutek widać z opóźnieniem), tylko produkcja. Wyszło z projektu, w którym cotygodniowy
+      raport analityki trzy razy z rzędu nie wiedział o własnych wdrożonych rekomendacjach
 - [x] `update-skills`: klucze manifestu cross-platform (`rel.as_posix()`)
 - [x] `new-project --init`: reset wersjonowania (usuwa CHANGELOG, manifest → 0.0.0)
 - [x] `new-project --init`: świeży git + automatyczny init commit (`--no-git` opt-out)
