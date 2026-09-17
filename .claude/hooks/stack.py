@@ -2,10 +2,17 @@
 """
 Autodetekcja stacku i komendy lint/test.
 
-Kolejność rozstrzygania:
-1. .claude/hooks/config.json (override projektu)
+Kolejność rozstrzygania (stack):
+1. .claude/hooks/config.json + config.local.json (override projektu / maszyny)
 2. Autodetekcja na podstawie plików w repo
 3. Nieznany stack → ostrzeżenie, brak blokowania
+
+Kolejność rozstrzygania (ścieżka do template — resolve_template_source):
+1. $AI_TEMPLATE_PATH        — jeden export na maszynę, obsługuje wszystkie projekty
+2. config.local.json        — per-klon, gitignored
+3. config.json              — commitowany (opcjonalny)
+4. autodetekcja klona obok  — po markerze is_template, nigdy po nazwie katalogu
+5. DEFAULT_TEMPLATE_URL     — działa bez żadnej konfiguracji
 
 config.json przykład:
 {
@@ -17,6 +24,7 @@ config.json przykład:
 }
 """
 import json
+import os
 import platform
 import re
 import subprocess
@@ -25,6 +33,9 @@ from pathlib import Path
 
 sys.stdout.reconfigure(encoding="utf-8")
 sys.stderr.reconfigure(encoding="utf-8")
+
+DEFAULT_TEMPLATE_URL = "https://github.com/dev76bitpl/tai.git"
+_TEMPLATE_URL_PREFIXES = ("http://", "https://", "git@", "ssh://")
 
 STACKS: dict[str, dict] = {
     "node": {
@@ -155,13 +166,88 @@ def chdir_to_project_root(command: str = "") -> None:
 
 
 def load_config() -> dict:
-    config_path = Path(__file__).resolve().parent / "config.json"
-    if config_path.is_file():
+    """config.json + config.local.json (per-maszyna, gitignored) — local nadpisuje."""
+    hooks_dir = Path(__file__).resolve().parent
+    config: dict = {}
+    for name in ("config.json", "config.local.json"):
+        path = hooks_dir / name
+        if not path.is_file():
+            continue
         try:
-            return json.loads(config_path.read_text(encoding="utf-8"))
+            data = json.loads(path.read_text(encoding="utf-8"))
         except Exception:
-            return {}
-    return {}
+            continue
+        if isinstance(data, dict):
+            config.update(data)
+    return config
+
+
+def is_template_url(value: str) -> bool:
+    return value.startswith(_TEMPLATE_URL_PREFIXES)
+
+
+def _is_template_root(path: Path) -> bool:
+    """Klon template rozpoznawany po zawartosci, nie po nazwie.
+
+    Repo bylo juz przemianowane (ai -> tai), a katalog na dysku moze nazywac sie
+    dowolnie — dopasowanie po nazwie rozwala sie przy kazdej takiej zmianie.
+    Markerem jest is_template: true w jego wlasnym configu + skills-manifest.json.
+    """
+    try:
+        if not (path / "skills-manifest.json").is_file():
+            return False
+        config_path = path / ".claude" / "hooks" / "config.json"
+        if not config_path.is_file():
+            return False
+        data = json.loads(config_path.read_text(encoding="utf-8"))
+    except Exception:
+        return False
+    return isinstance(data, dict) and data.get("is_template") is True
+
+
+def _autodetect_template_root() -> Path | None:
+    """Szuka klona template wsrod rodzenstwa katalogu projektu."""
+    project_root = get_hooks_root()
+    try:
+        siblings = sorted(project_root.parent.iterdir())
+    except Exception:
+        return None
+    for candidate in siblings:
+        if candidate == project_root or not candidate.is_dir():
+            continue
+        if _is_template_root(candidate):
+            return candidate
+    return None
+
+
+def resolve_template_source(config: dict | None = None) -> tuple[str, str]:
+    """Zwraca (wartosc, zrodlo) sciezki/URL template.
+
+    Kolejnosc: $AI_TEMPLATE_PATH > config.local.json > config.json >
+    autodetekcja klona obok > DEFAULT_TEMPLATE_URL.
+
+    Dzieki temu zaden klon nie wymaga wpisywania sciezki z konkretnej maszyny
+    do commitowanego configu: jeden export w ~/.bashrc obsluguje wszystkie
+    projekty, a bez niego dziala publiczny URL template.
+    """
+    env_value = os.environ.get("AI_TEMPLATE_PATH", "").strip()
+    if env_value:
+        return env_value, "$AI_TEMPLATE_PATH"
+
+    cfg = load_config() if config is None else config
+    cfg_value = str(cfg.get("ai_template_path", "") or "").strip()
+    if cfg_value:
+        return cfg_value, "config.json"
+
+    detected = _autodetect_template_root()
+    if detected:
+        return str(detected), "autodetekcja"
+
+    return DEFAULT_TEMPLATE_URL, "default"
+
+
+def resolve_template_path(config: dict | None = None) -> str:
+    return resolve_template_source(config)[0]
 
 
 def detect_stack() -> str:

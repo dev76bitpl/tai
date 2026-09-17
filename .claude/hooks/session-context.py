@@ -23,15 +23,8 @@ HOOKS_DIR = Path(__file__).resolve().parent
 MONOREPO_ROOT = HOOKS_DIR.parent.parent
 SESSION_DIR = Path(tempfile.gettempdir()) / "gv-claude-sessions"
 
-
-def load_config() -> dict:
-    config_path = HOOKS_DIR / "config.json"
-    if config_path.is_file():
-        try:
-            return json.loads(config_path.read_text(encoding="utf-8"))
-        except Exception:
-            return {}
-    return {}
+sys.path.insert(0, str(HOOKS_DIR))
+from stack import DEFAULT_TEMPLATE_URL, load_config, resolve_template_path, resolve_template_source  # noqa: E402
 
 
 def get_session_id() -> str:
@@ -132,8 +125,8 @@ def read_tasks(config: dict) -> list[tuple[str, str]]:
 
 def check_template_sync(config: dict) -> list[str]:
     """Zwraca listę plików .py które różnią się między hooks/ a template."""
-    template_path = config.get("ai_template_path", "")
-    if not template_path:
+    template_path = resolve_template_path(config)
+    if not template_path or _is_git_url(template_path):
         return []
 
     template_hooks = Path(template_path) / ".claude" / "hooks"
@@ -219,7 +212,7 @@ def _local_desynced(template_root: Path) -> tuple[list[str], list[str], list[str
 
 def check_template_skills_sync(config: dict) -> str | None:
     """Detects desync with t-ai template and auto-syncs if needed."""
-    template_path = config.get("ai_template_path", "")
+    template_path = resolve_template_path(config)
     if not template_path:
         return None
 
@@ -352,20 +345,16 @@ def check_skills_staleness() -> str | None:
 
 
 def check_template_path_configured(config: dict) -> str | None:
-    """Warns if ai_template_path is missing or points to a non-existent local path."""
-    value = config.get("ai_template_path", "")
-    if not value:
-        return (
-            "⚠️  [t-ai] ai_template_path nie jest ustawione w .claude/hooks/config.json.\n"
-            "  Auto-sync i wykrywanie zmian w template nie będą działać.\n"
-            "  Dodaj: \"ai_template_path\": \"git@github.com:dev76bitpl/tai.git\""
-        )
-    if not _is_git_url(value) and not Path(value).exists():
-        return (
-            f"⚠️  [t-ai] ai_template_path wskazuje na nieistniejący katalog: {value}\n"
-            "  Zaktualizuj ścieżkę lub użyj git URL: \"git@github.com:dev76bitpl/tai.git\""
-        )
-    return None
+    """Warns only about a local path that does not exist — a missing setting is no
+    longer an error, because resolve_template_source() falls back to the public URL."""
+    value, source = resolve_template_source(config)
+    if _is_git_url(value) or Path(value).exists():
+        return None
+    return (
+        f"⚠️  [t-ai] ścieżka do template nie istnieje: {value}\n"
+        f"  Źródło: {source}\n"
+        f"  Popraw ją, albo usuń — bez niej zadziała {DEFAULT_TEMPLATE_URL}"
+    )
 
 
 def main():

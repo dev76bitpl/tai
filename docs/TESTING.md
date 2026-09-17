@@ -93,3 +93,30 @@ Checklisty testów manualnych dla krytycznych flow.
 - [ ] Po merge feat/fix commitów do main, workflow `Release Please` runs
 - [ ] Auto-utworzony Release PR z `CHANGELOG.md` + version bump
 - [ ] Merge Release PR → tag + GitHub Release
+
+---
+
+## Rozstrzyganie ścieżki do template (`resolve_template_source`)
+
+Kontekst: `ai_template_path` był czytany tylko z commitowanego `config.json`, więc
+każdy klon wymagał wpisania ścieżki z konkretnej maszyny — i ta ścieżka wjeżdżała
+do repo. Resolver dokłada warstwy i autodetekcję po markerze.
+
+### Scenariusz 12 — kolejność warstw
+
+- [ ] `export AI_TEMPLATE_PATH=/tmp/z-env` + `ai_template_path` w `config.json` → w nowej sesji auto-sync używa `/tmp/z-env` (ostrzeżenie o nieistniejącej ścieżce wskazuje źródło `$AI_TEMPLATE_PATH`)
+- [ ] `unset AI_TEMPLATE_PATH`, `.claude/hooks/config.local.json` z inną ścieżką → wygrywa `config.local.json`
+- [ ] Usuń `config.local.json` → wygrywa `config.json`
+- [ ] Usuń `ai_template_path` z `config.json`, klon template leży obok projektu → autodetekcja go znajduje, auto-sync skilli działa
+- [ ] Przenieś klon template gdzie indziej → `python3 scripts/update-skills.py` ciągnie z `https://github.com/dev76bitpl/tai.git` (bez żadnej konfiguracji)
+
+### Scenariusz 13 — autodetekcja nie zależy od nazwy
+
+- [ ] Zmień nazwę katalogu klona template (np. `tai` → `szablon`) → autodetekcja nadal go znajduje (marker `is_template` w jego `config.json`)
+- [ ] Katalog obok bez `is_template: true` (zwykły projekt z template'a) → **nie** jest brany za template
+- [ ] Projekt, który sam jest template'm (`is_template: true`) → nie wskazuje sam na siebie
+
+### Scenariusz 14 — config.local.json nie trafia do repo
+
+- [ ] Utwórz `.claude/hooks/config.local.json`, `git status` → plik nie pojawia się jako untracked
+- [ ] `git add .claude/hooks/config.local.json` → git odmawia (ignored)
