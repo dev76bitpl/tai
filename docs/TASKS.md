@@ -7,6 +7,15 @@ Checklisty implementacyjne per faza znajdują się wyłącznie w [docs/ROADMAP.m
 
 ## Aktualny fokus
 
+- [x] CI: pakiet testów repo odpalany na PR (`pytest` jako **krok** w istniejącym jobie
+      `checks`, nie osobny job — job jest rozliczany w górę do pełnej minuty, a ten już
+      instaluje Pythona, więc krok nie dokłada ani jednej naliczonej minuty). Wcześniej
+      `SKIP: guard-lint,guard-tests` wyłączał guardy w mirrorze, a `checks-stack`, który
+      miał je zastąpić, został zakomentowanym szablonem — 182 testy nie były bramkowane
+      nigdzie. Przegląd 16 projektów: `SKIP` jest wszędzie i jest celowy (5 projektów
+      dokłada własny krok z testami, m.in. `domeny.bydgoszcz.com` z wypełnionym
+      `checks-stack`), a z pozostałych 11 tylko `tai` i `skolaro` mają realne testy
+
 - [x] `config.json`: `lint` i `test` wskazane jawnie (`compileall`, `pytest`) — repo jest
       pythonowe, ale ma `package.json` (doctor, setup-hooks), więc autodetekcja stacku
       wybierała node i guardy odpalały `npm run lint` / `npm run test`, których nie ma.
