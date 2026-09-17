@@ -61,6 +61,31 @@ Checklisty implementacyjne per faza znajdują się wyłącznie w [docs/ROADMAP.m
 
 ## Backlog
 
+- [ ] 🔴 **Narzędzie audytu RWD rozeszło się na cztery ręczne kopie — sprawa nr 1 (właściciel, 2026-09-17)**
+
+  > Po ludzku: skrypt, który mierzy, czy interfejs nie rozjeżdża się na telefonie, żyje w czterech
+  > projektach w czterech różnych wersjach. Nie roznosi go ten szablon — kopiowano go z repo do repo
+  > ręcznie, więc każda wersja zatrzymała się w innym momencie i wie co innego.
+
+  - **Stan 2026-09-17:** `cdue-elearning` 748 linii (12.09) · `mim` 470 (23.08) ·
+    `new.cdue.edu.pl` 369 (16.09) · `skolaro` 355 (17.07). Tylko pierwsza mierzy **sumę wysokości
+    pasków przyklejonych do krawędzi** i **kontrast WCAG 1.4.3** — czyli dokładnie te dwie rzeczy,
+    które w audycie 17.09 znalazły obie najpoważniejsze usterki. Pozostałe trzy projekty są na nie
+    ślepe, a każda poprawka narzędzia to cztery osobne zmiany.
+  - **Czego to dotyczy w tym repo:** szablon **nie ma dziś `rwd-audit` ani w `skills-manifest.json`,
+    ani w `docs/SKILLS.md`** — czyli nie jest kanałem dystrybucji tego narzędzia i nie zapobiegł
+    rozjazdowi. Do rozstrzygnięcia: czy narzędzia tej klasy (mierzące, nie generujące) roznosi
+    szablon, czy wspólny skill poza szablonem.
+  - **Kierunek do rozstrzygnięcia z właścicielem:** rozdzielić **silnik** (pomiary, detektory,
+    raport) od **profilu** (adres, logowanie, lista tras, kliknięcia otwierające szuflady).
+    Silnik do jednego miejsca — kandydat: skill `audyt-ux` w `grupavist/claude-skills`, obok
+    `web.mjs`, który już tak działa. W repo projektu zostaje sam profil.
+  - **Przy tej samej decyzji:** `ux:audit` analogiczny do `rwd:audit` nie istnieje w żadnym
+    projekcie — cele dotykowe, kolejność i widoczność fokusu, struktura nagłówków, etykiety pól
+    i nazwy dostępne nie są mierzone automatycznie nigdzie.
+  - **Wersja źródłowa:** `76bit/cdue-elearning/scripts/rwd-audit.mjs`.
+
+
 - [ ] **PR czysto dokumentacyjny nie powinien palić pełnego CI** (do przemyślenia, nie zdecydowane)
 
   > Po ludzku: zmiana dwóch akapitów w dokumentacji odpala dziś build, testy, typecheck i skan
