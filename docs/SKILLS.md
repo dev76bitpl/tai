@@ -35,6 +35,7 @@ krótkie słowo które wpisujesz świadomie. Nie używaj składni `/command` (to
 | `nextjs` | nextjs-app-router | Next.js App Router, RSC, Server Actions, streaming, caching |
 | `copywriting` | copywriting | Pisanie/poprawa marketingowego copy (landing, hero, CTA, pricing) |
 | `cro` | cro | Optymalizacja konwersji strony/formularza |
+| `audyt` | audyt *(poza repo)* | **Pomiar** RWD i dostępności na żywej aplikacji — `npm run audit:rwd` / `audit:uix` |
 
 ## Skille zewnętrzne (vendored)
 
@@ -71,6 +72,26 @@ krótkie słowo które wpisujesz świadomie. Nie używaj składni `/command` (to
 | `nextjs` | [mileson/agent-skills](https://github.com/mileson/agent-skills) | Next.js App Router, RSC, Server Actions, streaming, caching, parallel routes |
 | `copywriting` | [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) | Konwersyjne copy: formuły nagłówków, CTA, wartość, frameworki sekcja-po-sekcji dla landingów |
 | `cro` | [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) | Conversion Rate Optimization: optymalizacja stron i formularzy pod konwersję |
+
+## Skille spoza repo (wspólny zestaw roboczy)
+
+Skill, który jest **narzędziem pomiarowym**, a nie wiedzą tematyczną, nie jest wendorowany do repo.
+Mieszka raz, w `76bit/claude-setup`, a `install.sh` podpina go symlinkiem do `~/.claude/skills/`,
+więc widzi go każdy projekt na tej maszynie. Dzięki temu poprawka detektora działa wszędzie
+naraz — zamiast wymagać czterech osobnych zmian w czterech kopiach.
+
+| Skill | Trigger | Co robi | Co zostaje w repo projektu |
+|-------|---------|---------|----------------------------|
+| **audyt** | `audyt` | Uruchamia przeglądarkę na żywej aplikacji i mierzy: rozjazd układu, ucinaną treść, paski przyklejone do krawędzi, kontrast WCAG, cele dotykowe, widoczność fokusu, etykiety pól, strukturę nagłówków | `audyt.config.mjs` (adres, logowanie, trasy) + dwa wpisy w `package.json` |
+
+**Instalacja:** `claude-setup/install.sh` — raz na maszynę, nie per projekt.
+
+**Nie myl z `a11y` i `perf`:** tamte to skille **doradcze** (co sprawdzić, jakie kryterium WCAG,
+jak czytać Lighthouse). `audyt` niczego nie doradza — **mierzy** i zwraca liczby z konkretnych
+tras. Reguła 15 w `CLAUDE.md` żąda pomiaru przed napisaniem „zrobione"; to jest to narzędzie.
+
+**Nie kopiuj silnika do repo.** Cztery ręczne kopie, które rozjechały się o miesiące i trzy
+detektory, wzięły się dokładnie z tego odruchu (szczegóły w `docs/TASKS.md`).
 
 ## Pluginy (instalowane per developer, poza repo)
 

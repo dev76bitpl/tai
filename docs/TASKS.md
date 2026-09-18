@@ -57,34 +57,34 @@ Checklisty implementacyjne per faza znajdują się wyłącznie w [docs/ROADMAP.m
       `docs/AI_TEMPLATE_NOTES.md`; zasady (guard tylko z testem, rozdziel sesje system/projekt)
       → `CLAUDE.md` reguła 13a; lekcje praktyczne (utf-8 w hookach, guard fail-closed) → NOTES
 
+- [x] **Narzędzie audytu RWD i UX — jeden silnik dla wszystkich projektów (2026-09-18)**
+
+  > Po ludzku: skrypt, który mierzy, czy interfejs nie rozjeżdża się na telefonie i czy da się go
+  > obsłużyć, żył w czterech projektach w czterech wersjach — każda ślepa na co innego. Teraz jest
+  > jeden, wspólny. W projekcie zostaje sama kartka z adresem i listą ekranów do zmierzenia.
+
+  - **Rozstrzygnięcie:** silnik (pomiary, detektory, raport) mieszka w skillu `audyt`
+    w `76bit/claude-setup`, a `install.sh` podpina go symlinkiem do `~/.claude/skills/audyt` —
+    dzięki temu jest widoczny z każdego projektu bez kopiowania czegokolwiek do repo. W repo
+    projektu zostaje sam profil `audyt.config.mjs`: adres bazowy, nazwy zmiennych z danymi
+    logowania, lista tras, kliknięcia otwierające szuflady.
+  - **Komendy w projekcie:** `npm run audit:rwd` (rozjazd układu) i `npm run audit:uix`
+    (dostępność i użyteczność). Oba wskazują ten sam plik i różnią się flagą — kolejne rodzaje
+    audytu (`--seo`, `--perf`) wchodzą jako **tryby silnika**, nie jako nowe skille.
+  - **Odrzucone i dlaczego:** `grupavist/claude-skills` (kandydat z pierwotnej notatki) — to zbiór
+    skillów tematycznych, a narzędzie mierzące należy do zestawu roboczego · dystrybucja przez ten
+    szablon — roznosiłaby kopie zamiast likwidować rozjazd · paczka npm — wersjonowanie narzędzia
+    pomiarowego kosztuje więcej, niż daje.
+  - **Wdrożone w:** `cdue-elearning`, `skolaro` (ADR-071), `new.cdue.edu.pl` (ADR-052).
+    Pełne uzasadnienie: `cdue-elearning/docs/adr/ADR-057-shared-rwd-audit-engine.md`.
+  - **Czego szablon nie roznosi i nie powinien:** samego silnika. Rolą szablonu jest **wskazać,
+    gdzie on jest** (reguła 15) — nie trzymać własnej kopii. Stąd łatka w `CLAUDE.md`: reguła
+    „RWD: zmierz zanim napiszesz «zrobione»" żądała pomiaru i nie nazywała narzędzia — wymóg
+    bez wskazówki, skąd wziąć narzędzie, rodzi czwartą ręczną kopię.
+
 ---
 
 ## Backlog
-
-- [ ] 🔴 **Narzędzie audytu RWD rozeszło się na cztery ręczne kopie — sprawa nr 1 (właściciel, 2026-09-17)**
-
-  > Po ludzku: skrypt, który mierzy, czy interfejs nie rozjeżdża się na telefonie, żyje w czterech
-  > projektach w czterech różnych wersjach. Nie roznosi go ten szablon — kopiowano go z repo do repo
-  > ręcznie, więc każda wersja zatrzymała się w innym momencie i wie co innego.
-
-  - **Stan 2026-09-17:** `cdue-elearning` 748 linii (12.09) · `mim` 470 (23.08) ·
-    `new.cdue.edu.pl` 369 (16.09) · `skolaro` 355 (17.07). Tylko pierwsza mierzy **sumę wysokości
-    pasków przyklejonych do krawędzi** i **kontrast WCAG 1.4.3** — czyli dokładnie te dwie rzeczy,
-    które w audycie 17.09 znalazły obie najpoważniejsze usterki. Pozostałe trzy projekty są na nie
-    ślepe, a każda poprawka narzędzia to cztery osobne zmiany.
-  - **Czego to dotyczy w tym repo:** szablon **nie ma dziś `rwd-audit` ani w `skills-manifest.json`,
-    ani w `docs/SKILLS.md`** — czyli nie jest kanałem dystrybucji tego narzędzia i nie zapobiegł
-    rozjazdowi. Do rozstrzygnięcia: czy narzędzia tej klasy (mierzące, nie generujące) roznosi
-    szablon, czy wspólny skill poza szablonem.
-  - **Kierunek do rozstrzygnięcia z właścicielem:** rozdzielić **silnik** (pomiary, detektory,
-    raport) od **profilu** (adres, logowanie, lista tras, kliknięcia otwierające szuflady).
-    Silnik do jednego miejsca — kandydat: skill `audyt-ux` w `grupavist/claude-skills`, obok
-    `web.mjs`, który już tak działa. W repo projektu zostaje sam profil.
-  - **Przy tej samej decyzji:** `ux:audit` analogiczny do `rwd:audit` nie istnieje w żadnym
-    projekcie — cele dotykowe, kolejność i widoczność fokusu, struktura nagłówków, etykiety pól
-    i nazwy dostępne nie są mierzone automatycznie nigdzie.
-  - **Wersja źródłowa:** `76bit/cdue-elearning/scripts/rwd-audit.mjs`.
-
 
 - [ ] **PR czysto dokumentacyjny nie powinien palić pełnego CI** (do przemyślenia, nie zdecydowane)
 

@@ -696,6 +696,15 @@ założeniu „reużyłem istniejący styl, pewnie gra". Dopisanie do checklisty
 ok" bez pomiaru to deklaracja bez pokrycia — pomiar idzie **przed** deklaracją, nie po niej. Ten sam
 wzorzec co reguła 16b: nie ogłaszaj zweryfikowanego bez weryfikacji.
 
+**Czym mierzyć — silnik jest wspólny, kopii się nie robi.** `npm run audit:rwd` sprawdza rozjazd
+układu (przewijanie w bok, ucinana treść, ściskany tekst, sumaryczna wysokość pasków przyklejonych
+do krawędzi), `npm run audit:uix` — dostępność i użyteczność (cele dotykowe, widoczność fokusu,
+etykiety pól, nazwy dostępne, struktura nagłówków, kontrast WCAG). Silnik mieszka **poza repo** —
+w skillu `audyt` (`~/.claude/skills/audyt/cli.mjs`, podpinany przez `claude-setup/install.sh`);
+w projekcie trzymamy wyłącznie profil `audyt.config.mjs` i dwa wpisy w `package.json`.
+**Nie kopiuj silnika do repo projektu** — właśnie z tego wzięły się cztery rozjechane wersje,
+z których trzy były ślepe na kontrast i na paski przyklejone do krawędzi.
+
 **Złota zasada — tanie i bezpieczne najpierw, mierz przed ryzykiem.** Mierz zanim optymalizujesz; bez danych = bez optymalizacji kosztem czytelności. Przy każdej optymalizacji lub refaktorze: uszereguj możliwe ruchy wg ROI, wykonaj **najtańsze i najbezpieczniejsze najpierw**, zmierz efekt na realnych danych, dopiero potem decyduj o ruchu ryzykownym lub kosztownym — albo odłóż go z uzasadnieniem. Nie forsuj ryzykownego/zablokowanego kroku dla maksymalnego zysku; często dwa tanie ruchy dają większość korzyści bez długu. Diagnozuj z dowodów, nie z teorii — przy problemie zbierz dane (logi, runy, pomiary) zanim postawisz hipotezę.
 
 ---
