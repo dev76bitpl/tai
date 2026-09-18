@@ -57,6 +57,31 @@ Checklisty implementacyjne per faza znajdują się wyłącznie w [docs/ROADMAP.m
       `docs/AI_TEMPLATE_NOTES.md`; zasady (guard tylko z testem, rozdziel sesje system/projekt)
       → `CLAUDE.md` reguła 13a; lekcje praktyczne (utf-8 w hookach, guard fail-closed) → NOTES
 
+- [x] **Narzędzie audytu RWD i UX — jeden silnik dla wszystkich projektów (2026-09-18)**
+
+  > Po ludzku: skrypt, który mierzy, czy interfejs nie rozjeżdża się na telefonie i czy da się go
+  > obsłużyć, żył w czterech projektach w czterech wersjach — każda ślepa na co innego. Teraz jest
+  > jeden, wspólny. W projekcie zostaje sama kartka z adresem i listą ekranów do zmierzenia.
+
+  - **Rozstrzygnięcie:** silnik (pomiary, detektory, raport) mieszka w skillu `audyt`
+    w `76bit/claude-setup`, a `install.sh` podpina go symlinkiem do `~/.claude/skills/audyt` —
+    dzięki temu jest widoczny z każdego projektu bez kopiowania czegokolwiek do repo. W repo
+    projektu zostaje sam profil `audyt.config.mjs`: adres bazowy, nazwy zmiennych z danymi
+    logowania, lista tras, kliknięcia otwierające szuflady.
+  - **Komendy w projekcie:** `npm run audit:rwd` (rozjazd układu) i `npm run audit:uix`
+    (dostępność i użyteczność). Oba wskazują ten sam plik i różnią się flagą — kolejne rodzaje
+    audytu (`--seo`, `--perf`) wchodzą jako **tryby silnika**, nie jako nowe skille.
+  - **Odrzucone i dlaczego:** `grupavist/claude-skills` (kandydat z pierwotnej notatki) — to zbiór
+    skillów tematycznych, a narzędzie mierzące należy do zestawu roboczego · dystrybucja przez ten
+    szablon — roznosiłaby kopie zamiast likwidować rozjazd · paczka npm — wersjonowanie narzędzia
+    pomiarowego kosztuje więcej, niż daje.
+  - **Wdrożone w:** `cdue-elearning`, `skolaro` (ADR-071), `new.cdue.edu.pl` (ADR-052).
+    Pełne uzasadnienie: `cdue-elearning/docs/adr/ADR-057-shared-rwd-audit-engine.md`.
+  - **Czego szablon nie roznosi i nie powinien:** samego silnika. Rolą szablonu jest **wskazać,
+    gdzie on jest** (reguła 15) — nie trzymać własnej kopii. Stąd łatka w `CLAUDE.md`: reguła
+    „RWD: zmierz zanim napiszesz «zrobione»" żądała pomiaru i nie nazywała narzędzia — wymóg
+    bez wskazówki, skąd wziąć narzędzie, rodzi czwartą ręczną kopię.
+
 ---
 
 ## Backlog
