@@ -288,18 +288,23 @@ def clone_template(url: str) -> Path:
 
 
 def find_template_ref() -> "Path | str | None":
-    """Returns local Path or git URL from .claude/hooks/config.json."""
-    config_path = ROOT / ".claude" / "hooks" / "config.json"
-    if not config_path.exists():
+    """Returns local Path or git URL, resolved by stack.resolve_template_source().
+
+    Kolejność: $AI_TEMPLATE_PATH > config.local.json > config.json >
+    autodetekcja klona obok > publiczny URL template.
+    """
+    hooks_dir = ROOT / ".claude" / "hooks"
+    if not (hooks_dir / "stack.py").is_file():
         return None
+    sys.path.insert(0, str(hooks_dir))
     try:
-        config = json.loads(config_path.read_text(encoding="utf-8"))
-        value = config.get("ai_template_path", "")
-        if not value:
-            return None
-        return value if is_git_url(value) else Path(value)
+        from stack import resolve_template_path
     except Exception:
         return None
+    value = resolve_template_path()
+    if not value:
+        return None
+    return value if is_git_url(value) else Path(value)
 
 
 def sync_from_template(template_root: Path, apply: bool) -> None:

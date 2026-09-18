@@ -9,8 +9,9 @@ Zasada: każdy uniwersalny wzorzec wymyślony w projekcie musi trafić do templa
 Sekcje project-specific i świadome odejścia od template zostają w projekcie —
 przy commicie świadoma decyzja przez bypass [skip-sync].
 
-Konfiguracja w .claude/hooks/config.json (kanoniczny, ADR-002):
-{ "ai_template_path": "<lokalna-ścieżka-do-klona-template>" }   # opcjonalne
+Ścieżkę template rozstrzyga stack.resolve_template_source():
+$AI_TEMPLATE_PATH > config.local.json > config.json > autodetekcja klona obok > URL.
+Wpisywanie ścieżki z konkretnej maszyny do commitowanego configu jest opcjonalne.
 
 Model (ADR-002): brak lokalnego klona (brak ścieżki / URL / nieistniejący katalog)
 NIE pomija się cicho — bramkuje na CLAUDE.md (sync reguł uniwersalnych, reguła 13a)
@@ -27,7 +28,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from stack import chdir_to_project_root, get_commit_message, get_staged_files, is_foreign_repo, is_git_commit_command, load_config
+from stack import chdir_to_project_root, get_commit_message, get_staged_files, is_foreign_repo, is_git_commit_command, load_config, resolve_template_path
 
 
 def get_command() -> str:
@@ -92,7 +93,7 @@ def main():
     if config.get("is_template"):
         sys.exit(0)  # to repo JEST template'm — nie ma czego synchronizować wyżej (ADR-002)
 
-    template_root = _local_template_root(config.get("ai_template_path", ""))
+    template_root = _local_template_root(resolve_template_path(config))
     staged = get_staged_files(command)
 
     if template_root is None:

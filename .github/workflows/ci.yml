@@ -77,6 +77,17 @@ jobs:
             pre-commit run guard-commit-lang --hook-stage commit-msg --commit-msg-filename /tmp/commit-msg || exit 1
           done
 
+      # Repo's own test suite. A STEP here, not a job of its own: Actions bills every
+      # job rounded UP to a full minute, so a 1-second suite in its own job costs the
+      # same minute as a build (docs/AI_TEMPLATE_NOTES.md → "CI — wydajność pipeline'u").
+      # This job already sets up Python, so the step adds no billed minute at all.
+      # guard-tests stays in SKIP above — it would run this same command through stack
+      # autodetection, which picks node here because of package.json.
+      - name: Run tests
+        run: |
+          pip install pytest
+          python3 -m pytest -q
+
       # Dependency CVE scan — third-party holes in what you ship. Belongs HERE as a
       # step, not in a job of its own: it finishes in seconds, and a job would bill
       # a full minute for them. REPORT-ONLY (`continue-on-error: true`) — an

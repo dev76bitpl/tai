@@ -38,5 +38,6 @@
   "repos": [
     {"name": "my-project", "tasks": "docs/TASKS.md"}
   ],
-  "ai_template_path": "/abs/path/to/ai-template-repo"
+  "_ai_template_path_comment": "Opcjonalne. Kolejnosc: $AI_TEMPLATE_PATH > config.local.json > to pole > autodetekcja klona obok > publiczny URL. Sciezke z konkretnej maszyny trzymaj w config.local.json (gitignored) albo w $AI_TEMPLATE_PATH, nie tutaj.",
+  "ai_template_path": "https://github.com/dev76bitpl/tai.git"
 }

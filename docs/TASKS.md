@@ -7,6 +7,31 @@ Checklisty implementacyjne per faza znajdują się wyłącznie w [docs/ROADMAP.m
 
 ## Aktualny fokus
 
+- [x] CI: pakiet testów repo odpalany na PR (`pytest` jako **krok** w istniejącym jobie
+      `checks`, nie osobny job — job jest rozliczany w górę do pełnej minuty, a ten już
+      instaluje Pythona, więc krok nie dokłada ani jednej naliczonej minuty). Wcześniej
+      `SKIP: guard-lint,guard-tests` wyłączał guardy w mirrorze, a `checks-stack`, który
+      miał je zastąpić, został zakomentowanym szablonem — 182 testy nie były bramkowane
+      nigdzie. Przegląd 16 projektów: `SKIP` jest wszędzie i jest celowy (5 projektów
+      dokłada własny krok z testami, m.in. `domeny.bydgoszcz.com` z wypełnionym
+      `checks-stack`), a z pozostałych 11 tylko `tai` i `skolaro` mają realne testy
+
+- [x] `config.json`: `lint` i `test` wskazane jawnie (`compileall`, `pytest`) — repo jest
+      pythonowe, ale ma `package.json` (doctor, setup-hooks), więc autodetekcja stacku
+      wybierała node i guardy odpalały `npm run lint` / `npm run test`, których nie ma.
+      Skutek był dotąd taki, że guardów nie dało się używać lokalnie: `.git/hooks` w klonie
+      był pusty, a `pre-commit install` blokował każdy commit. CI tego nie łapało, bo mirror
+      ustawia `SKIP: guard-lint,guard-tests`, a `checks-stack` jest zakomentowany
+
+- [x] `stack.py`: ścieżka do template rozstrzygana warstwowo (`$AI_TEMPLATE_PATH` >
+      `config.local.json` > `config.json` > autodetekcja klona obok > publiczny URL) — wcześniej
+      `ai_template_path` istniało tylko w commitowanym `config.json`, więc każdy nowy klon
+      wymagał wklejenia ścieżki z konkretnej maszyny i ta ścieżka wjeżdżała do repo; jeden
+      `export` w `~/.bashrc` obsługuje teraz wszystkie projekty, a bez niego działa URL.
+      Autodetekcja rozpoznaje klon po markerze `is_template`, nigdy po nazwie katalogu —
+      repo zostało przemianowane `ai` → `tai` i dopasowanie po nazwie rozwala się przy
+      każdej takiej zmianie (wyszło z projektu, w którym obok siebie stały dwa klony)
+
 - [x] `CLAUDE.md` 4: dziennik wdrożeń dla cyklicznego agenta doradczego — agent bez pamięci
       między uruchomieniami (raport tygodniowy, przegląd) czyta wyłącznie repo, więc bez zapisu
       „co z jego rad zostało wdrożone" każdy cykl zaczyna od zera i wymyśla nową radę zamiast
