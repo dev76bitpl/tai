@@ -219,6 +219,18 @@ niezależne sesje użytkownika.
    sąsiada**, nie do posprzątania. `stash` jest odwracalny, `checkout .` nie — a jedno i drugie
    wygląda tak samo w momencie wpisywania
 
+**Commit to też zmiana katalogu — nie w trakcie testu usera.** Instancja dev działa z tego samego
+katalogu co repo, a hooki commitu (np. pre-commit) na chwilę **chowają i przywracają** niezacommitowane
+pliki. Serwer z przeładowaniem na gorąco widzi to jako edycję: przebudowuje się w połowie testu, raz
+na starym kodzie, raz na nowym, i odświeża otwarte karty. User widzi „zawieszone logowanie” albo
+losowy błąd, którego w kodzie nie ma — a diagnoza schodzi na zły tor.
+
+- gdy user testuje na instancji z tego katalogu, AI **najpierw czeka na jego wynik, potem commituje** —
+  także `git stash`, `checkout` i `rebase`, bo robią to samo
+- jeśli commit musi pójść w trakcie testu → powiedz o tym userowi i poproś o powtórzenie testu po commicie
+- zgłoszenie błędu w trakcie commitu AI → najpierw sprawdź log serwera pod kątem przebudowy
+  („Compiled”) w tej samej minucie, zanim zaczniesz szukać buga w kodzie
+
 Ta zasada wyszła z realnego incydentu: druga sesja przełączyła branch w trakcie pracy pierwszej, a
 `git add -A` o kilka minut minęło się z pojawieniem się cudzych plików. Nic nie zginęło wyłącznie
 dzięki kolejności zdarzeń — nie dzięki jakiemukolwiek zabezpieczeniu.
