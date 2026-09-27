@@ -216,3 +216,36 @@ class TestCollectFiles:
         assert "root.md" in result
         assert "src/file.txt" in result
         assert not any("__pycache__" in k or "node_modules" in k for k in result)
+
+
+# ── main: manifest writes ─────────────────────────────────────────────────────
+
+class TestManifestWrite:
+    """Only --apply may write skills-manifest.json; a dry run must leave the tree clean."""
+
+    @pytest.fixture
+    def manifest(self, tmp_path, monkeypatch):
+        path = tmp_path / "skills-manifest.json"
+        original = '{"skills": {"demo": {"repo": "x", "local_path": "y", "remote_path": "."}}}'
+        path.write_text(original, encoding="utf-8")
+        monkeypatch.setattr(mod, "MANIFEST_PATH", path)
+
+        def fake_check(name, skill, apply):
+            skill["checked"] = "2026-09-28"
+            return False, True
+
+        monkeypatch.setattr(mod, "check_skill", fake_check)
+        return path, original
+
+    @pytest.mark.parametrize("argv", [[], ["--scan-only"]])
+    def test_should_not_write_manifest_when_not_applying(self, manifest, monkeypatch, argv):
+        path, original = manifest
+        monkeypatch.setattr("sys.argv", ["update-skills.py", *argv])
+        mod.main()
+        assert path.read_text(encoding="utf-8") == original
+
+    def test_should_write_manifest_when_applying(self, manifest, monkeypatch):
+        path, original = manifest
+        monkeypatch.setattr("sys.argv", ["update-skills.py", "--apply"])
+        mod.main()
+        assert '"checked": "2026-09-28"' in path.read_text(encoding="utf-8")
