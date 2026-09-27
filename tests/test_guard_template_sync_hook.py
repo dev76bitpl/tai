@@ -32,6 +32,13 @@ def _load():
 h = _load()
 
 
+@pytest.fixture(autouse=True)
+def _no_machine_template_path(monkeypatch):
+    # $AI_TEMPLATE_PATH wins over every config file (stack.resolve_template_source), so a machine
+    # that sets it made the "no clone" cases find one and fail. Each test states its own setup.
+    monkeypatch.delenv("AI_TEMPLATE_PATH", raising=False)
+
+
 # ── _local_template_root ──────────────────────────────────────────────────────
 
 class TestLocalTemplateRoot:

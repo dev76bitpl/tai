@@ -262,6 +262,16 @@ dry-run guardów tą samą treścią co commit; nie mieszaj sesji system/projekt
 
 ## Stan sesji
 
+- 2026-09-28: **`update-skills.py` bez `--apply` przestał zapisywać manifest.** Po ludzku: sprawdzenie
+  „tylko pokaż, co jest do aktualizacji" zostawiało zmieniony `skills-manifest.json`, który w projekcie
+  potrafił wjechać do zupełnie innego commita. Przyczyna: `check_skill()` stempluje `checked`
+  każdemu skillowi, a `main()` zapisywał manifest bezwarunkowo. Teraz zapis tylko przy `--apply`;
+  test w `tests/test_update_skills.py` (dry-run i `--scan-only` nie ruszają pliku, `--apply` pisze).
+  Przy okazji: `--scan-only` nie zmienia niczego w działaniu względem zwykłego dry-runu (flaga nie jest
+  nigdzie czytana). Naprawione w tym samym commicie: 3 testy `test_guard_template_sync_hook.py` padały
+  na maszynie z ustawionym `$AI_TEMPLATE_PATH` (od #123 wygrywa z configiem) i blokowały każdy commit;
+  fixture w testach czyści zmienną.
+
 - 2026-09-04: **`npm run doctor` przestał straszyć brakującym `py`.** Po ludzku: po każdym
   czerwonym raporcie doktora na Linuksie/WSL na końcu wyskakiwało `py: not found`, jakby brakowało
   narzędzia — nic nie brakowało, komunikat był fałszywy; na Windows ten sam błąd wypisywał raport

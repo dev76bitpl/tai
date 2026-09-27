@@ -494,7 +494,10 @@ def main() -> None:
             if not is_safe:
                 updates_blocked += 1
 
-    save_manifest(manifest)
+    # Dry-run and --scan-only only report. check_skill() stamps `checked` on the manifest, and
+    # writing it here left a dirty skills-manifest.json after a run that promised to change nothing.
+    if args.apply:
+        save_manifest(manifest)
 
     print(f"\n{'═' * 50}")
     print(f"📊 Podsumowanie:")
