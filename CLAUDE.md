@@ -910,6 +910,31 @@ grep -r "title=" src/app --include="*.tsx" | head -5     # czy jest natywny titl
 
 ---
 
+### 19a. Każda zmiana wizualna = audyt (obowiązkowe)
+
+Każda zmiana, którą widać na ekranie, w wydruku albo w mailu (nowy element, kolor, układ, okienko,
+odstępy), kończy się przebiegiem audytu RWD + dostępności (skill `audyt`, patrz reguła 15 — „czym
+mierzyć”) na zmienionych ekranach — **zanim** AI powie „gotowe, możesz testować”. Nie na końcu paczki,
+nie „przy okazji”, nie dopiero gdy user poprosi.
+
+- audyt na **własnej instancji AI** (reguła 3d), na danych, na których element naprawdę się pojawia
+  (np. dokument z kwotą, okienko otwarte kliknięciem); trasy zależne od konkretnych rekordów → profil
+  tymczasowy w katalogu roboczym sesji, bez zmian w `audyt.config.mjs` projektu
+- telefon i ciemny motyw (jeśli projekt go ma) zawsze; przy okienkach i długich formularzach także
+  **niski ekran (~640 px)** — typowa wysokość profilu nie pokaże okna uciętego u góry i u dołu
+- w raporcie AI rozdziela: **co wprowadziła ta zmiana** (naprawia od razu) i **co było wcześniej**
+  (mówi wprost, nie naprawia po cichu, dług trafia do `docs/TASKS.md`)
+- usterkę widoczną na zrzucie usera, której audyt nie złapał, AI zgłasza jako **lukę silnika** (nowy
+  detektor ze stroną-atrapą w samoteście), zamiast poprzestać na poprawce w projekcie
+
+Zasada powstała z realnej sesji: AI dołożyło kolorowe ramki, przełącznik z ostrzeżeniem i ramkę
+podsumowania w okienku wysyłki — bez audytu. User dopiero zrzutem z telefonu pokazał okienko ucięte
+z obu stron (wspólny komponent okna bez limitu wysokości, więc problem dotyczył każdego długiego okna
+w aplikacji), a audyt zlecony po fakcie znalazł jeszcze kontrast 2,3:1 na nowym przycisku i zlewające
+się ramki. Każda z tych usterek była do złapania jednym przebiegiem przed oddaniem.
+
+---
+
 ### 20. Rozmiar komponentów i plików logiki
 
 **Komponent UI: max 300 linii.** Powyżej — wyciągnij:
