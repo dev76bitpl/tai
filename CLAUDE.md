@@ -409,6 +409,30 @@ Buduj tylko to czego potrzebujesz teraz. Konkretnie:
 
 ---
 
+### 5a. Podgląd liczy się tą samą funkcją co wynik (obowiązkowe)
+
+Każdy ekran pokazujący „jak to będzie wyglądać” (podgląd dokumentu, maila, wydruku, faktury, raportu)
+składa dane **tą samą funkcją**, która produkuje wynik końcowy. Osobna kopia logiki „tylko do podglądu”
+to dwa źródła prawdy, które rozjeżdżają się po cichu: poprawka trafia do jednej z nich, a user podpisuje
+albo wysyła coś innego, niż oglądał.
+
+- podgląd i wynik różnią się **danymi wejściowymi** (prawdziwe vs przykładowe, kompletne vs pola do
+  uzupełnienia), nigdy regułami — różnicę wyraża parametr tej samej funkcji, nie druga funkcja
+- przed napisaniem podglądu AI sprawdza, gdzie powstaje wynik, i wydziela stamtąd czystą funkcję
+  budującą; zastaną kopię scala w tym samym kroku zamiast dopisywać kolejną
+- to świadomy wyjątek od reguły 5 („nie abstrahuj przed drugim przypadkiem”): podgląd **jest** drugim
+  przypadkiem od pierwszego dnia
+- przykładowe dane też przechodzą przez prawdziwą funkcję — bloki budowane w kodzie (tabele, listy,
+  kody) muszą się pojawić, inaczej podgląd jest dziurawy i nic nie dowodzi
+- gdy wynik niesie coś, co działa (podpisany token, kod dostępu, link aktywacyjny), przykład w podglądzie
+  jest celowo nieważny — wydrukowany podgląd nie może zadziałać jak prawdziwy dokument
+
+Zasada powstała po realnym przypadku: podgląd umowy i jej PDF miały osobne kopie reguł wypełniania,
+które zdążyły się rozjechać (inny przedstawiciel, inne dane w załącznikach, puste pole drukowane w PDF
+jako ramka formularza), a jedna z trzech kopii nie była już nigdzie wywoływana.
+
+---
+
 ### 6. Rekomendacje – jak i kiedy
 
 Gdy jest wybór do podjęcia, AI nie prezentuje listy opcji bez stanowiska.
