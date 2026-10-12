@@ -144,6 +144,25 @@ pre-commit run --all-files
 - **tytuł + opis PR** → CI workflow `PR language` (`pull_request`, bo PR body istnieje tylko na GitHubie — pre-commit go nie widzi); polskie stringi UI w opisie trzymaj w \`backtickach\` (bloki kodu są pomijane); bypass: `[skip-lang]` w body PR
 - wspólny detektor: `scripts/dev-guards/lang.py` (jedna lista, oba checki)
 
+**Dane osobowe — strażnik `guard-pii` (pre-commit stage):**
+
+> Po ludzku: commit, który dodaje dane prawdziwej osoby, nie przechodzi. Z historii Gita takich
+> danych nie da się potem wygodnie usunąć, więc zatrzymujemy je przed wejściem.
+
+- łapie w **dodanych liniach**: PESEL (z sumą kontrolną), numer konta (26 cyfr, mod 97), telefon
+  komórkowy, e-mail w publicznej domenie pocztowej (gmail, wp, onet…) oraz nazwiska z lokalnej listy;
+  w komunikacie wartości są zamaskowane
+- **lista nazwisk nie istnieje, dopóki jej nie założysz** — bez niej strażnik łapie numery i e-maile,
+  ale nazwisk nie. Plik `~/.config/76bit/pii-names.txt`, jedno nazwisko w linii (min. 3 znaki, `#` =
+  komentarz). Inna ścieżka: zmienna `PII_NAMES_FILE`. Lista zostaje na maszynie, nigdy w repo
+- publiczne dane firmowe (telefon biura, adres kontaktowy w prywatnej domenie pocztowej) dopisz do
+  `~/.config/76bit/pii-public.txt` (albo `PII_PUBLIC_FILE`) — przestają być zgłaszane
+- zmyślone dane w testach i przykładach: dopisz `pii-ok` w tej samej linii
+- fałszywy alarm, który sprawdziłeś: `SKIP=guard-pii git commit ...`
+- gdy strażnik nie umie odczytać zmian, **blokuje** commit zamiast przepuścić
+- pomija pliki binarne i lockfile; detektor `scripts/dev-guards/pii.py` da się zaimportować osobno
+  (np. do cyklicznego skanu całego repo)
+
 ---
 
 ## Krok 8 – Claude Code hooks (per-maszyna)

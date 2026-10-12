@@ -17,6 +17,8 @@ Checklisty implementacyjne per faza znajdują się wyłącznie w [docs/ROADMAP.m
       z polskimi znakami lub spacją w nazwie są skanowane jak każde inne. Detektor
       `scripts/dev-guards/pii.py` da się zaimportować osobno, np. do cyklicznego skanu repo.
       Projekty dostaną strażnika przy najbliższej synchronizacji z szablonem.
+      Obsługa (lista nazwisk, dane testowe, fałszywy alarm): `docs/SETUP.md`, sekcja o `guard-pii`;
+      test ręczny: `docs/TESTING.md`, scenariusz 11a.
 - [x] CI: pakiet testów repo odpalany na PR (`pytest` jako **krok** w istniejącym jobie
       `checks`, nie osobny job — job jest rozliczany w górę do pełnej minuty, a ten już
       instaluje Pythona, więc krok nie dokłada ani jednej naliczonej minuty). Wcześniej
