@@ -1,14 +1,31 @@
 name: CI
 
-# PULL REQUESTS ONLY — deliberately no `push: [main]` trigger.
-# Re-running the identical commit after merge repeats a result the PR already
-# produced; measured on a real project it was HALF the Actions bill. Accepted
-# risk: if `main` moves between a green PR and its merge, a semantic conflict
-# lands unchecked — small for one maintainer, grows with parallel PRs.
-# Rationale: docs/AI_TEMPLATE_NOTES.md → "CI — wydajność pipeline'u".
+# Heavy, project-specific checks: tests of your stack, lint, typecheck, build, SAST.
+# The guards (pre-commit, commit messages, secrets) are NOT here — they live in
+# guards.yml and run on every PR.
+#
+# PULL REQUESTS ONLY — deliberately no `push: [main]` trigger; rationale in
+# guards.yml and docs/AI_TEMPLATE_NOTES.md → "CI — wydajność pipeline'u".
+#
+# DOCS-ONLY PRs DO NOT START THIS WORKFLOW (`paths-ignore`). None of the jobs below
+# reads documentation, so a two-paragraph docs fix would pay the full bill for
+# nothing. A PR that touches at least one path outside the list runs everything.
+#
+# Two traps before you touch the list:
+#   1. A path a job READS must not be ignored. Check what your tests, build and
+#      linters actually load (test include globs, build inputs, content rendered
+#      from Markdown) before adding a pattern. `.claude/**` is deliberately absent:
+#      a project that tests its own hooks reads that directory.
+#   2. A skipped workflow never reports a status. If a job from this file is a
+#      REQUIRED check in branch protection, a docs-only PR waits for it forever.
+#      With required checks, drop `paths-ignore` and let the job succeed early
+#      for docs-only changes instead.
 on:
   pull_request:
     branches: [main]
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
 
 # Cancel superseded runs on the same branch/PR — rapid pushes during iteration
 # no longer spawn parallel duplicate runs, which conserves Actions minutes.
@@ -17,94 +34,23 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Guards, plus anything that finishes in seconds.
-  #
-  # Actions bills each JOB rounded UP to a full minute, so a check doing 8 s of
-  # work costs the same minute as a build. Fold every sub-minute check in HERE as
-  # a step — this job is nowhere near the critical path, so it costs no waiting.
-  # That, plus the pull_request-only trigger above, is the free half of the bill.
-  #
-  # Collapsing the parallel legs below into this job saves more, but it DOES cost
-  # wall-clock (sum instead of slowest leg, first failure stops the rest). That is
-  # a trade to price out per project, not a default — see
-  # docs/AI_TEMPLATE_NOTES.md → "CI — wydajność pipeline'u".
-  checks:
-    name: Checks
+  # A workflow file needs at least one job to be valid. This one never starts a
+  # runner (`if: false` → skipped, not billed). DELETE it once the first real job
+  # below is enabled.
+  placeholder:
+    name: No project checks enabled yet
+    if: false
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # gitlint needs full history to inspect PR commits
-
-      # ── Guards: server-side mirror of .pre-commit-config.yaml, un-bypassable ──
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Cache pre-commit envs
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pre-commit
-          key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
-
-      - name: Install pre-commit
-        run: pip install pre-commit
-
-      # File-level hooks (whitespace, secrets, etc.) across whole tree.
-      - name: Run pre-commit hooks on all files
-        run: pre-commit run --all-files --show-diff-on-failure
-        env:
-          # Skip stack-aware lint/tests here — the native steps below run them
-          # with the full toolchain.
-          # Skip no-commit-to-branch — CI isn't creating commits; the hook is for
-          # blocking local commits only.
-          SKIP: guard-lint,guard-tests,no-commit-to-branch
-
-      # Commit-msg hooks against each commit in the PR. Only format + language
-      # enforcement here — guards that need staging context (tasks-staged,
-      # tests-with-src, adr, user-tested) were enforced locally at commit time
-      # and cannot be replayed in CI without re-staging historical state.
-      - name: Lint commit messages
-        run: |
-          git config user.name "ci-bot"
-          git config user.email "ci@example.com"
-          git fetch origin ${{ github.base_ref }}
-          for sha in $(git rev-list origin/${{ github.base_ref }}..HEAD); do
-            git log -1 --format=%B "$sha" > /tmp/commit-msg
-            pre-commit run gitlint --hook-stage commit-msg --commit-msg-filename /tmp/commit-msg || exit 1
-            pre-commit run guard-commit-lang --hook-stage commit-msg --commit-msg-filename /tmp/commit-msg || exit 1
-          done
-
-      # Repo's own test suite. A STEP here, not a job of its own: Actions bills every
-      # job rounded UP to a full minute, so a 1-second suite in its own job costs the
-      # same minute as a build (docs/AI_TEMPLATE_NOTES.md → "CI — wydajność pipeline'u").
-      # This job already sets up Python, so the step adds no billed minute at all.
-      # guard-tests stays in SKIP above — it would run this same command through stack
-      # autodetection, which picks node here because of package.json.
-      - name: Run tests
-        run: |
-          pip install pytest
-          python3 -m pytest -q
-
-      # Dependency CVE scan — third-party holes in what you ship. Belongs HERE as a
-      # step, not in a job of its own: it finishes in seconds, and a job would bill
-      # a full minute for them. REPORT-ONLY (`continue-on-error: true`) — an
-      # unpatchable transitive CVE must not wedge every merge. Trap + exit-code
-      # handling: docs/AI_TEMPLATE_NOTES.md → "CI — skanery bezpieczeństwa".
-      # - name: Dependency CVE scan
-      #   continue-on-error: true
-      #   run: |
-      #     <scanner> <args> || code=$?
-      #     if [ "${code:-0}" -gt 1 ]; then exit "${code}"; fi; exit 0
+      - run: "true"
 
   # ── Project-specific checks — adapt to your stack (node/python/php/…) ─────────
   # Same setup, different final command → `strategy.matrix`, not copy-pasted jobs.
   # Parallel legs keep wall-clock at the slowest leg instead of the sum; the price
   # is a repeated setup and one rounded-up minute per leg. Price BOTH sides for
   # your project before choosing — if minutes are the binding constraint, these
-  # legs become steps in `checks` above and you wait longer on every PR.
+  # legs become steps in the `checks` job of guards.yml and you wait longer on
+  # every PR (and lose the docs-only skip, because guards.yml has no path filter).
   #
   # checks-stack:
   #   runs-on: ubuntu-latest
@@ -138,9 +84,10 @@ jobs:
   # ── SAST on your OWN code — the one check that always earns a separate job ───
   # BLOCKING (findings in code you wrote are always fixable). It gets its own job
   # only because it runs inside the tool's container image, which cannot host the
-  # toolchain `checks` needs. Suppress a confirmed false positive inline with a
-  # reason comment (audit trail, like a guard bypass) — never loosen the rule.
-  # Secret scanning is NOT here: gitleaks already covers it in the guards above.
+  # toolchain the `checks` job in guards.yml needs. Suppress a confirmed false
+  # positive inline with a reason comment (audit trail, like a guard bypass) —
+  # never loosen the rule.
+  # Secret scanning is NOT here: gitleaks already covers it in guards.yml.
   #
   # sast:
   #   name: SAST
