@@ -94,6 +94,14 @@ Checklisty testów manualnych dla krytycznych flow.
 - [ ] Na gałęzi próbnej dodaj plik z fałszywym kluczem (jak w scenariuszu 7), wypchnij z `--no-verify` → krok czerwony, w logu nazwa pliku i reguły, wartość zamaskowana; gałąź próbną usuń
 - [ ] Lokalnie: `python3 -m pytest -q tests/test_ci_secret_scan.py` → 5 zielonych (wersja obrazu = `rev` hooka `gitleaks`)
 
+### Scenariusz 10b — doctor widzi niepodpięte hooki Claude Code
+
+- [ ] Bez `.claude/settings.local.json`: `npm run doctor` → w sekcji „Claude Code hooks” ostrzeżenie o braku pliku, raport kończy się „All required checks passed”
+- [ ] `cp .claude/settings.local.json.example .claude/settings.local.json`, `npm run doctor` → błąd o znaczniku `INTERPRETER`, raport kończy się błędem (kod wyjścia `1`)
+- [ ] Podmień `INTERPRETER` na `python3` / `py`, `npm run doctor` → „Claude Code hooks wired (N guard hook(s))”
+- [ ] Usuń z pliku wpis jednego strażnika, `npm run doctor` → ostrzeżenie z jego nazwą; przywróć wpis
+- [ ] Bez `pytest` na maszynie: ostrzeżenie z poleceniem instalacji, raport nadal kończy się sukcesem
+
 ### Scenariusz 11 — release-please creates Release PR
 
 - [ ] Po merge feat/fix commitów do main, workflow `Release Please` runs

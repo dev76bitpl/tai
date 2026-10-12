@@ -8,6 +8,8 @@ Reports prerequisites:
   - Node ≥ 22
   - pre-commit installed + hooks linked into .git/hooks
   - .pre-commit-config.yaml present and parseable
+  - pytest available (optional — runs the guard tests)
+  - Claude Code hooks wired in .claude/settings.local.json (per machine)
   - ai_template_path configured in .claude/hooks/config.json (optional)
   - Docker running (optional but recommended)
 
@@ -16,6 +18,7 @@ failing the overall exit code). Exit code 1 if any required check fails.
 """
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -192,6 +195,90 @@ def check_config_yaml() -> bool:
     return True
 
 
+def check_pytest() -> None:
+    code, out = run([sys.executable, "-m", "pytest", "--version"])
+    if code != 0:
+        warn(
+            "pytest not available (optional) — guard tests cannot run on this machine",
+            "Install via: python3 -m pip install --user pytest"
+            "  (Ubuntu 24.04+, where pip is blocked by PEP 668: sudo apt install python3-pytest)",
+        )
+        return
+    ok(out.splitlines()[0] if out else "pytest available")
+
+
+_INTERPRETER_PLACEHOLDER = re.compile(r"\bINTERPRETER\b")
+
+
+def _hook_commands(node) -> list[str]:
+    """Every hook `command` string found anywhere in a parsed settings file."""
+    if isinstance(node, dict):
+        found = [v for k, v in node.items() if k == "command" and isinstance(v, str)]
+        for value in node.values():
+            found.extend(_hook_commands(value))
+        return found
+    if isinstance(node, list):
+        return [cmd for item in node for cmd in _hook_commands(item)]
+    return []
+
+
+def check_claude_hooks() -> bool:
+    """Claude Code layer: are the guard hooks from .claude/hooks/ wired on this machine?
+
+    The commit layer (pre-commit) can be fully green while this one is dead, because the
+    hook commands live in a per-machine, gitignored file.
+    """
+    claude_dir = REPO_ROOT / ".claude"
+    local = claude_dir / "settings.local.json"
+    if not local.is_file():
+        warn(
+            ".claude/settings.local.json missing — no Claude Code hook runs on this machine",
+            "Run: cp .claude/settings.local.json.example .claude/settings.local.json"
+            "  then replace INTERPRETER (python3 / py) — see docs/SETUP.md step 8a.",
+        )
+        return True
+
+    try:
+        local_data = json.loads(local.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        fail(
+            ".claude/settings.local.json unreadable — no Claude Code hook can run",
+            "Fix the JSON or recreate the file from .claude/settings.local.json.example.",
+        )
+        return False
+
+    commands = _hook_commands(local_data.get("hooks", {}) if isinstance(local_data, dict) else {})
+    healthy = True
+
+    if any(_INTERPRETER_PLACEHOLDER.search(cmd) for cmd in commands):
+        fail(
+            ".claude/settings.local.json still contains the INTERPRETER placeholder — every hook fails to start",
+            "Replace INTERPRETER with python3 (Ubuntu/macOS) or py (Windows) — see docs/SETUP.md step 8a.",
+        )
+        healthy = False
+
+    # Hooks may also be wired in the shared settings.json; a guard counts when either file runs it.
+    shared = claude_dir / "settings.json"
+    if shared.is_file():
+        try:
+            shared_data = json.loads(shared.read_text(encoding="utf-8"))
+            if isinstance(shared_data, dict):
+                commands += _hook_commands(shared_data.get("hooks", {}))
+        except (json.JSONDecodeError, OSError):
+            pass
+
+    guards = sorted(path.name for path in (claude_dir / "hooks").glob("guard-*.py"))
+    unwired = [name for name in guards if not any(name in cmd for cmd in commands)]
+    if unwired:
+        warn(
+            f"Guard hooks present in .claude/hooks/ but not wired: {', '.join(unwired)}",
+            "Copy their entries from .claude/settings.local.json.example into .claude/settings.local.json.",
+        )
+    elif healthy:
+        ok(f"Claude Code hooks wired ({len(guards)} guard hook(s))")
+    return healthy
+
+
 def check_claude_template_path() -> None:
     config = REPO_ROOT / ".claude" / "hooks" / "config.json"
     if not config.is_file():
@@ -257,6 +344,10 @@ def main() -> int:
     required.append(check_pre_commit())
     required.append(check_hooks_installed())
     required.append(check_config_yaml())
+    check_pytest()
+
+    header("Claude Code hooks")
+    required.append(check_claude_hooks())
 
     header("Optional integrations")
     check_claude_template_path()

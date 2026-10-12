@@ -192,6 +192,17 @@ Nowy strażnik bez pliku testów wywala `test_every_guard_has_tests.py` /
 `scripts/dev-guards/tests/harness.py` i `.claude/hooks/tests/hook_harness.py` (tymczasowe
 repozytorium, kopia strażników, `run_guard` / `run_hook`).
 
+`npm run doctor` sprawdza, czy `pytest` jest dostępny, i przy braku podaje polecenie instalacji
+(ostrzeżenie, nie błąd — bez `pytest` strażnicy działają, nie da się tylko uruchomić ich testów).
+
+**Projekt o innym stosie niż Python** (np. node): testy strażników są w Pythonie, a
+`guard-tests` przy commicie odpala wyłącznie komendę testów wykrytego stosu — więc **przy
+commicie test własnego strażnika nie uruchamia się sam**. Pilnuje go CI: krok `Run tests`
+w `.github/workflows/guards.yml` (`python3 -m pytest -q`) jedzie z szablonem i chodzi przy każdym
+PR. Lokalnie, po zmianie strażnika albo dopisaniu nowego, uruchom `python3 -m pytest -q` ręcznie
+przed commitem. Katalog `tests/` (testy narzędzi szablonu) znika przy `new-project.py --init`;
+wpis `tests` w `pytest.ini` może zostać — `pytest` pomija nieistniejący katalog.
+
 ---
 
 ## Krok 8 – Claude Code hooks (per-maszyna)
@@ -203,6 +214,17 @@ cp .claude/settings.local.json.example .claude/settings.local.json
 ```
 
 Zamień `INTERPRETER` na właściwy: `python3` (Ubuntu/macOS) lub `py` (Windows).
+
+Sprawdzenie: `npm run doctor`, sekcja „Claude Code hooks”. Ten plik jest per-maszyna i poza
+repozytorium, więc warstwa commita może być cała zielona, gdy żaden hook Claude Code nie działa:
+
+| Co widać w raporcie | Co to znaczy | Skutek |
+|---|---|---|
+| `⚠ .claude/settings.local.json missing` | pliku nie skopiowano — żaden hook się nie odpala | ostrzeżenie |
+| `✗ ... still contains the INTERPRETER placeholder` | znacznik niepodmieniony — każdy hook wywala się przy starcie | błąd, kod wyjścia `1` |
+| `✗ .claude/settings.local.json unreadable` | plik nie jest poprawnym JSON-em | błąd, kod wyjścia `1` |
+| `⚠ Guard hooks present ... but not wired: <nazwy>` | strażnik `guard-*.py` jest w `.claude/hooks/`, ale nie ma go w pliku (np. doszedł z szablonu później) — dopisz wpis z `settings.local.json.example` | ostrzeżenie |
+| `✓ Claude Code hooks wired (N guard hook(s))` | wszystkie strażniki z repo są podpięte | — |
 
 **Krok 8b — ścieżka do AI template repo:**
 
