@@ -65,7 +65,8 @@ nie zapytało, jak dysk jest podłączony. Nic nie zginęło poza zaufaniem, że
 ### 2. Język
 
 - komunikacja → polski
-- kod, nazwy techniczne, docblocki, commit messages, PR (tytuł + opis), issue → angielski
+- issue (tytuł + treść) → polski — to kolejka pracy, którą czyta właściciel, nie narzędzia; nazwy plików, funkcji i cytaty z kodu zostają w oryginale
+- kod, nazwy techniczne, docblocki, commit messages, PR (tytuł + opis) → angielski
 - nie tłumaczyć elementów technicznych
 
 **Guard językowy sprawdza znaki, nie język.** Pojedyncza litera diakrytyczna wywala build, choć zdanie jest po angielsku — najczęstszy zapalnik to **symbol waluty** (np. `600 zł` w angielskim opisie buga o płatnościach). Dlatego:

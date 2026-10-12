@@ -151,6 +151,11 @@ Historia (zrobione przed przejściem):
 
 ## Stan sesji
 
+- 2026-10-12: **Issues po polsku — reguła 2 w `CLAUDE.md` (#131, pierwszy krok).** Po ludzku: zadania
+  i sprawy do decyzji czyta właściciel, więc mają być w języku, w którym rozmawiamy; dotąd reguła
+  kazała pisać je po angielsku i przeczyła praktyce. Kod, opisy commitów i PR zostają po angielsku
+  (pilnuje ich strażnik języka). Decyzja właściciela 2026-10-12. Pozostałe kroki #131 (odesłania do
+  `docs/TASKS.md` w regułach 4, 10, 16a, komunikat `guard-tasks-staged`) nieruszone.
 - 2026-10-12: **Otwarta praca przeniesiona do issues (#158).** Po ludzku: lista zadań szablonu jest
   teraz w jednym miejscu, na GitHubie, a ten plik jest tylko dziennikiem. Z 8 otwartych pozycji
   backlogu 4 dostały issues (#154–#157), 1 była już w #140, 3 zamknięte jako nieaktualne (lista
