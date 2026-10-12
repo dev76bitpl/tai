@@ -330,7 +330,8 @@ Po każdym domkniętym kroku AI proponuje aktualizację dokumentacji — nie cze
 
 Co aktualizować:
 
-- **docs/TASKS.md** – odhaczyć ukończone zadanie, dodać nowe jeśli wyszły w sesji; każde wyjście poza główny temat sesji odnotować w "Stan sesji" z dopiskiem dlaczego — żeby zawsze było wiadomo co było celem a co dygresją
+- **issue zadania** – odhaczyć domknięty krok na liście kroków (całość zamyka `Closes #N` w PR); praca, która wyszła w sesji → nowe issue, nie wpis w pliku
+- **docs/TASKS.md** – log sesji: wpis w "Stan sesji" o tym, co się wydarzyło i dlaczego; każde wyjście poza główny temat sesji odnotować z dopiskiem dlaczego — żeby zawsze było wiadomo co było celem a co dygresją
 - **docs/SETUP.md** – jeśli pojawiły się nowe komendy, pułapki lub zmieniło się "done when"
 - **docs/ROADMAP.md** – jeśli faza została ukończona lub zmienił się zakres
 - **docs/CONVENTIONS.md** – jeśli powstała nowa konwencja kodu
@@ -364,9 +365,11 @@ Zasada jest ogólniejsza niż jeden raport: **każdy odbiorca bez pamięci potrz
 — cudzy agent, sesja w chmurze, nowy człowiek w projekcie. Kanałem nie może być czat ani system
 zadań, do którego ten odbiorca nie ma dostępu.
 
+**Gdzie żyje otwarta praca.** W projekcie na GitHubie otwarta praca to **issues**: zadanie = issue, kroki jako lista `- [ ]`, stan zamyka `Closes #N` w PR. `docs/TASKS.md` jest wtedy wyłącznie **logiem sesji** (co się wydarzyło i dlaczego), a `docs/ROADMAP.md` definiuje fazy i nie trzyma stanu. Dwie listy tej samej pracy rozjeżdżają się przy pierwszej zmianie, dlatego w pliku nie prowadzimy otwartych checkboxów. Projekt bez GitHuba zostaje przy `docs/TASKS.md` jako liście zadań (ADR-004) — wtedy wszystko, co te reguły mówią o issue, dotyczy wpisu w tym pliku.
+
 **Język dokumentacji — zasada dwóch warstw:**
 
-Każde zadanie w `docs/TASKS.md` i `docs/ROADMAP.md` musi mieć dwie warstwy opisu:
+Każde zadanie (issue, a w projekcie bez GitHuba wpis w `docs/TASKS.md`) i każda faza w `docs/ROADMAP.md` musi mieć dwie warstwy opisu:
 
 1. **Warstwa ludzka** — potocznie, bez żargonu, co user zobaczy / czym grozi brak. **Zwięzła** — reguła 7 obowiązuje tę warstwę.
 2. **Warstwa techniczna** — konkretne pliki, funkcje, `file:line`, root-cause, pułapki. **Kompletna maszynowo, bez limitu zwięzłości** — user ją pomija, a pełny detal oszczędza tokeny przy następnym dotknięciu zadania (zero re-discovery grepem). Cap na zwięzłość (reguła 7) dotyczy warstwy ludzkiej, nie technicznej.
@@ -391,8 +394,8 @@ Po każdym domkniętym kroku AI proponuje też checklistę testów manualnych �
 
 - Tworząc **nowy plik w `docs/`** — w tym samym kroku, proaktywnie (user nie ma o tym przypominać): (1) nazwa wg konwencji repo — główne docs UPPERCASE; (2) wpis do tabeli docs w **README.md**; (3) link z naturalnego domu (np. ADR, którego dotyczy); (4) nazwa i nagłówek = treść (gdy zawartość się rozrasta, zaktualizuj nazwę). Brak któregokolwiek = niedomknięty artefakt.
 - Przed zmianą **README.md**: uruchom `ls docs/` i `ls docs/adr/`, zestawiaj każdy plik z tabelą w README — brakujące pliki dopisz.
-- Przed zmianą **docs/ROADMAP.md**: porównaj statusy faz z docs/TASKS.md — `✅ done` / `🚧 in progress` / `🔜 next` muszą być spójne. Odhaczyć `[x]` zadania które są zrobione.
-- Przed zmianą **docs/TASKS.md**: sprawdź "Stan sesji" na dole — zaktualizuj co ukończono i co jest następne.
+- Przed zmianą **docs/ROADMAP.md**: porównaj statusy faz ze stanem issues (w projekcie bez GitHuba: z docs/TASKS.md) — `✅ done` / `🚧 in progress` / `🔜 next` muszą być spójne. Odhaczyć `[x]` zadania które są zrobione.
+- Przed zmianą **docs/TASKS.md**: sprawdź "Stan sesji" — dopisz co ukończono i dlaczego; otwartej pracy tu nie dopisuj, ona idzie do issue.
 
 ---
 
@@ -530,7 +533,8 @@ Kontekst okna jest skończony i drogi. AI nie marnuje go na powtórki.
 Na początku sesji AI czyta selektywnie — na podstawie tematu, nie wszystko na raz:
 
 - **CLAUDE.md** → zawsze (mały, zasady pracy)
-- **docs/TASKS.md** → zawsze (bieżący kontekst, co jest w toku)
+- **docs/TASKS.md** → zawsze (log sesji: co się ostatnio wydarzyło i dlaczego)
+- **otwarte issues** (`gh issue list`) → zawsze (co jest w toku i co czeka; w projekcie bez GitHuba tę rolę pełni docs/TASKS.md)
 - **docs/AI_TEMPLATE_NOTES.md** → zawsze (meta-zasady pracy z AI, pułapki narzędzi — uzupełnia CLAUDE.md o wnioski z praktyki)
 - **docs/PROJECT_SCOPE.md** → gdy sesja dotyczy zakresu lub nowej funkcjonalności
 - **docs/ROADMAP.md** → gdy sesja dotyczy planowania lub kolejności prac
@@ -542,7 +546,7 @@ Na początku sesji AI czyta selektywnie — na podstawie tematu, nie wszystko na
 - **docs/TESTING.md** → gdy sesja dotyczy testowania lub dodawania nowego krytycznego flow
 
 W toku sesji: nie czytaj ponownie pliku który nie zmienił się — reguła 9.
-Na początku sesji: CLAUDE.md, docs/TASKS.md i docs/AI_TEMPLATE_NOTES.md zawsze, reszta na podstawie tematu.
+Na początku sesji: CLAUDE.md, docs/TASKS.md, lista otwartych issues i docs/AI_TEMPLATE_NOTES.md zawsze, reszta na podstawie tematu.
 
 Przy wątpliwościach podczas implementacji: jeśli AI natrafi na pytanie o scope lub architekturę — zatrzymuje się i sygnalizuje, nie jedzie dalej z założeniem.
 
@@ -804,7 +808,7 @@ Twarde zasady:
 - przed merge/PR: AI zawsze wykonuje check regresji dla obszaru zmiany (minimum: testy automatyczne modułu + smoke manualny krytycznego flow)
 - po domknięciu modułu AI **zawsze** proponuje message commita
 - po domknięciu modułu AI **zawsze** proponuje aktualizację dokumentacji:
-  - `docs/TASKS.md`
+  - issue zadania (odhaczone kroki, `Closes #N` w PR) i wpis w logu sesji `docs/TASKS.md`
   - `docs/ROADMAP.md`
   - `docs/adr/*` (jeśli decyzja ma charakter architektoniczny)
   - inne artefakty jeśli zmiana ich dotyczy (`CONVENTIONS`, `TESTING`, `SETUP`, `README`)
@@ -950,7 +954,7 @@ nie „przy okazji”, nie dopiero gdy user poprosi.
 - telefon i ciemny motyw (jeśli projekt go ma) zawsze; przy okienkach i długich formularzach także
   **niski ekran (~640 px)** — typowa wysokość profilu nie pokaże okna uciętego u góry i u dołu
 - w raporcie AI rozdziela: **co wprowadziła ta zmiana** (naprawia od razu) i **co było wcześniej**
-  (mówi wprost, nie naprawia po cichu, dług trafia do `docs/TASKS.md`)
+  (mówi wprost, nie naprawia po cichu, dług trafia do issue)
 - usterkę widoczną na zrzucie usera, której audyt nie złapał, AI zgłasza jako **lukę silnika** (nowy
   detektor ze stroną-atrapą w samoteście), zamiast poprzestać na poprawce w projekcie
 
@@ -989,7 +993,8 @@ się ramki. Każda z tych usterek była do złapania jednym przebiegiem przed od
 - docs/CONVENTIONS.md – konwencje kodu (naming, wzorce, error handling)
 - docs/UI_GUIDELINES.md – standardy UI (komponenty, layout, formularze, stany)
 - docs/ROADMAP.md – kolejność prac
-- docs/TASKS.md – bieżące zadania
+- GitHub Issues – otwarta praca (zadanie = issue z krokami `- [ ]`)
+- docs/TASKS.md – log sesji (w projekcie bez GitHuba także lista zadań)
 - docs/SETUP.md – instrukcja środowiska deweloperskiego (wymagania, instalacja, komendy)
 - docs/TESTING.md – checklisty testów manualnych dla krytycznych flow
 - docs/DELIVERY_CHECKLIST.md – standard domknięcia kroku (testy auto/manualne, regresja, docs, commit)
@@ -1016,7 +1021,7 @@ AI:
 2. ADR-001
 3. docs/ROADMAP.md
 4. kolejne ADR
-5. docs/TASKS.md
+5. issues bieżącej fazy + docs/TASKS.md (log sesji)
 6. docs/CONVENTIONS.md – przed pierwszym commitem z kodem
 7. docs/SETUP.md
 8. README.md
@@ -1030,7 +1035,8 @@ Po zmianie AI sprawdza i aktualizuje jeśli potrzeba:
 - docs/PROJECT_SCOPE.md – gdy zmienia się zakres lub persony
 - docs/ROADMAP.md – gdy zmienia się kolejność lub zakres faz
 - docs/adr/ – gdy pojawia się nowa decyzja architektoniczna lub istniejąca wymaga korekty
-- docs/TASKS.md – oznacza ukończone zadania; dodaje nowe gdy wychodzą w sesji
+- issues – odhacza ukończone kroki; zakłada nowe gdy praca wychodzi w sesji
+- docs/TASKS.md – dopisuje wpis w logu sesji
 - CLAUDE.md – gdy wychodzi nowa preferencja usera lub feedback (reguła 13)
 - docs/CONVENTIONS.md – gdy powstaje nowa konwencja kodu
 - docs/UI_GUIDELINES.md – gdy zmienia się wzorzec UI, pojawia się nowy komponent lub stan
@@ -1075,7 +1081,7 @@ Gdy w sesji pojawia się pytanie "dlaczego X działa tak" i odpowiedź nie jest 
 ### Kiedy NIE pisać ADR
 
 - konwencje kodu → docs/CONVENTIONS.md
-- małe decyzje implementacyjne → komentarz w kodzie lub docs/TASKS.md
+- małe decyzje implementacyjne → komentarz w kodzie lub wpis w logu sesji (docs/TASKS.md)
 - rzeczy które można zmienić bez migracji danych lub przepisywania modułu
 
 ### Struktura ADR
@@ -1185,7 +1191,7 @@ Projekt jest gotowy do implementacji gdy:
 - docs/PROJECT_SCOPE.md istnieje i jest zaakceptowany
 - ADR-001 istnieje
 - docs/ROADMAP.md wskazuje aktualną fazę
-- docs/TASKS.md zawiera zadania bieżącej fazy
+- zadania bieżącej fazy istnieją jako issues (w projekcie bez GitHuba: w docs/TASKS.md)
 
 ---
 

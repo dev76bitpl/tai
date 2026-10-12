@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """docs/TASKS.md must be in staged (CLAUDE.md rule 4).
 
+The file is the session log: every commit carries an entry saying what happened
+and why. Open work lives in issues (or in this file when the project has no
+GitHub remote, ADR-004) — the guard does not look at that, only at the log.
+
 Stage: commit-msg (so [skip-docs] body flag works).
 
 Bypass:
@@ -24,7 +28,8 @@ def main(argv: list[str]) -> None:
         block(
             "❌ [BLOCK] docs/TASKS.md is not in staged files.\n"
             "\n"
-            "   CLAUDE.md rule 4: update the task list before committing.\n"
+            "   CLAUDE.md rule 4: add a session log entry (what happened and why)\n"
+            "   before committing. Open work goes to an issue, not to this file.\n"
             "\n"
             "   Bypass (audit trail):  add [skip-docs] to commit body\n"
             "   Bypass (no audit):     SKIP=guard-tasks-staged git commit ..."
