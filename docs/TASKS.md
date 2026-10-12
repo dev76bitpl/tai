@@ -151,6 +151,34 @@ Historia (zrobione przed przejściem):
 
 ## Stan sesji
 
+- 2026-10-12: **Każdy strażnik ma test, który uruchamia go naprawdę (#139).** Po ludzku: reguła
+  „żaden strażnik bez testu” była dotąd spełniona dla 4 z 16; teraz dla wszystkich 17 (4 hooki,
+  12 strażników commita, sprawdzenie języka PR), a nowy strażnik bez testu wywala pakiet, więc
+  pokrycie nie cofnie się po cichu. Testy uruchamiają strażnika jako osobny proces w tymczasowym
+  repozytorium i sprawdzają dokładny kod wyjścia; próba „strażnik zawsze przepuszcza” wywala plik
+  testów każdego z 17.
+  Technicznie: testy strażników commita przeniesione z `tests/` do `scripts/dev-guards/tests/`
+  (decyzja #162), `test_resolve_template_path.py` do `.claude/hooks/tests/`; wspólne narzędzia
+  `harness.py` / `hook_harness.py` (kopiują strażników do tymczasowego repo, bo ci czytają
+  `config.json` względem własnego pliku; czyszczą zmienne `GIT_*`, bo pakiet sam biega z hooka
+  pre-commit). Nowe pliki: `test_guard_{adr,commit_lang,lint,tests,tests_with_src,testing_md,typecheck,user_tested}.py`,
+  `test_check_pr_language.py`, `test_guard_ai_template.py`, `test_guard_testing_checklist.py`,
+  `test_every_guard_has_tests.py`, `test_every_hook_has_tests.py`. `guard_template_sync` i
+  `guard_release_tag` miały testy tylko na atrapach — sprawdzenie pokrycia to wyłapało, dostały
+  testy całej drogi (fałszywe `gh` na `PATH`).
+  Dziury znalezione i naprawione przy okazji (małe, zgodą właściciela): (1) `read_commit_msg()`
+  zwracał `""`, gdy nie dostał albo nie odczytał pliku wiadomości — `guard_user_tested`
+  i `guard_commit_lang` wtedy przepuszczały; teraz blokada; (2) `get_staged_files()` zwracał `[]`,
+  gdy `git` zawiódł — teraz blokada; (3) `get_current_branch()` (i odpowiednik w hooku
+  `guard-testing-checklist`) używał `git rev-parse --abbrev-ref HEAD`, które pada na gałęzi bez
+  commitów, a pusty wynik znaczył „pomiń” — pierwszy commit na `feat/*` / `fix/*` w nowym repo
+  omijał `[user-tested]` i checklistę; teraz `git branch --show-current`; (4) hook
+  `guard-testing-checklist` szukał `[skip-test-check]` tylko w poleceniu, nie w pliku `-F`;
+  (5) `check_pr_language.py` przechodził przy pustym `PR_TITLE` (workflow nic nie przekazał).
+  Znane, nieruszone: `guard_tests_with_src` rozpoznaje testy tylko po `.test.` / `.spec.` /
+  `__tests__` i tylko kod w `src/` (projekt w Pythonie z `tests/test_x.py` dostaje fałszywą blokadę,
+  kod poza `src/` nie jest sprawdzany) → #165; `guard_template_sync` (commit) czyta ścieżkę szablonu
+  tylko z `config.json`, bez warstw z hooka → #166. Pakiet: 497 testów, ok. 25 s (było 310, ok. 8 s).
 - 2026-10-12: **Hooki blokują, gdy nie odczytają własnego wejścia; strażnik rozjazdu z szablonem
   przestał się wywalać (#137, #140).** Po ludzku: cztery strażniki działające przed poleceniem
   powłoki przepuszczały wszystko, gdy dostały coś, czego nie umiały odczytać — a strażnik, który

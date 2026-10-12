@@ -21,7 +21,7 @@ referenced in an English sentence (e.g. the "Zapisz zmiany" button).
 Bypass: put `[skip-lang]` anywhere in the PR body (rare; e.g. a body that must
 quote long non-English copy outside code/quote spans).
 
-Exit: 0 if English (or bypassed/empty), 1 if Polish detected.
+Exit: 0 if English (or bypassed), 1 if Polish detected or the title did not arrive.
 """
 import os
 import re
@@ -51,6 +51,15 @@ def strip_code(text: str) -> str:
 def main() -> int:
     title = os.environ.get("PR_TITLE", "")
     body = os.environ.get("PR_BODY", "")
+
+    # A pull request always has a title. An empty one means the workflow did not pass it,
+    # and "nothing to check" must not look like "checked, all English".
+    if not title.strip():
+        print(
+            "[BLOCK] PR_TITLE is empty - the PR title did not reach this check, so nothing was checked.\n"
+            "   Pass PR_TITLE and PR_BODY from the pull_request event in the workflow."
+        )
+        return 1
 
     if "[skip-lang]" in body:
         print("[skip-lang] present in PR body - language check bypassed.")

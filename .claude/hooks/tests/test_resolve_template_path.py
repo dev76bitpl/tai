@@ -13,8 +13,7 @@ from pathlib import Path
 
 import pytest
 
-ROOT = Path(__file__).resolve().parent.parent
-STACK = ROOT / ".claude" / "hooks" / "stack.py"
+STACK = Path(__file__).resolve().parents[1] / "stack.py"
 
 
 def _load_at(project_root: Path):

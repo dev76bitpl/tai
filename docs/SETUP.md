@@ -174,6 +174,26 @@ pre-commit run --all-files
 
 ---
 
+### Testy strażników
+
+Każdy strażnik ma test, który uruchamia go jako osobny proces i sprawdza kod wyjścia. Testy
+leżą obok strażników, więc jadą z nimi do projektu:
+
+- `.claude/hooks/tests/` — hooki Claude Code (blokada = kod `2`)
+- `scripts/dev-guards/tests/` — strażnicy commita i sprawdzenie języka PR (blokada = kod `1`)
+
+```bash
+python3 -m pytest -q        # z katalogu głównego; katalogi wymienia pytest.ini
+```
+
+Wymaga `pytest` (`pip install pytest`; na Ubuntu 24.04+ `sudo apt install python3-pytest`).
+Nowy strażnik bez pliku testów wywala `test_every_guard_has_tests.py` /
+`test_every_hook_has_tests.py` — pokrycie nie może się cofnąć po cichu. Wzór testu:
+`scripts/dev-guards/tests/harness.py` i `.claude/hooks/tests/hook_harness.py` (tymczasowe
+repozytorium, kopia strażników, `run_guard` / `run_hook`).
+
+---
+
 ## Krok 8 – Claude Code hooks (per-maszyna)
 
 **Krok 8a — interpreter Python:**

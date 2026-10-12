@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from stack import chdir_to_project_root, get_staged_files, is_foreign_repo, is_git_commit_command, read_command
+from stack import chdir_to_project_root, get_commit_message, get_staged_files, is_foreign_repo, is_git_commit_command, read_command
 
 TRIGGER_BRANCHES = re.compile(r"^(feat|fix)/")
 TESTING_FILE = "docs/TESTING.md"
@@ -22,7 +22,9 @@ BASE_BRANCHES = ("main", "master", "develop")
 
 
 def current_branch() -> str:
-    r = subprocess.run(["git", "rev-parse", "--abbrev-ref", "HEAD"], capture_output=True, text=True)
+    # --show-current also answers on a branch with no commits yet, where rev-parse HEAD fails
+    # (and a failure here would read as "not a feat/fix branch" = pass).
+    r = subprocess.run(["git", "branch", "--show-current"], capture_output=True, text=True)
     return r.stdout.strip() if r.returncode == 0 else ""
 
 
@@ -56,7 +58,8 @@ def main():
     if is_foreign_repo(command):
         sys.exit(0)
 
-    if "[skip-test-check]" in command:
+    # Bypass flag may live inline (command) OR inside a -F <file> message.
+    if "[skip-test-check]" in command + "\n" + (get_commit_message(command) or ""):
         sys.exit(0)
 
     branch = current_branch()
