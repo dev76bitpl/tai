@@ -122,6 +122,14 @@ Po każdym poleceniu `echo $?` pokazuje kod wyjścia (blokuje wyłącznie kod **
       → nic nie wypisuje, kod `0`
 - [ ] `python3 -m pytest -q` z katalogu głównego → wszystkie testy zielone, w tym te z `.claude/hooks/tests/`
 
+### Scenariusz 11d — strażnik commita blokuje, gdy nie może sprawdzić
+
+- [ ] `python3 scripts/dev-guards/guard_user_tested.py; echo $?` (bez pliku wiadomości) →
+      `❌ [BLOCK] guard_user_tested: no commit message file given, so the commit was NOT checked.` i kod `1`
+- [ ] `PR_TITLE= PR_BODY= python3 scripts/dev-guards/check_pr_language.py; echo $?` → `[BLOCK] PR_TITLE is empty` i kod `1`
+- [ ] `PR_TITLE="fix: keep the filter" PR_BODY= python3 scripts/dev-guards/check_pr_language.py; echo $?` → `OK: ...` i kod `0`
+- [ ] Zwykły commit w tym repo przechodzi jak dotąd (strażnicy dostają plik wiadomości od pre-commit)
+
 ### Scenariusz 11c — `guard-template-sync` blokuje rozjazd z szablonem zamiast się wywalać
 
 Wymaga projektu postawionego z szablonu, z lokalnym klonem szablonu (`ai_template_path` albo klon obok).

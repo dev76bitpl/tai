@@ -20,7 +20,7 @@ python3 scripts/update-skills.py --apply
 claude   # napisz: scope
 ```
 
-`--init` usuwa pliki template-only (`tests/`, `README.md` → scaffold, sam siebie) i konfiguruje Claude Code hooks. Skille zostają gotowe do pracy.
+`--init` usuwa pliki template-only (`tests/`, `README.md` → scaffold, sam siebie) i konfiguruje Claude Code hooks. Skille zostają gotowe do pracy. Testy strażników zostają — mieszkają obok nich (`.claude/hooks/tests/`, `scripts/dev-guards/tests/`), a `tests/` to testy narzędzi samego szablonu.
 
 ---
 

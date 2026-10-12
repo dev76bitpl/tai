@@ -11,8 +11,7 @@ from pathlib import Path
 
 import pytest
 
-ROOT = Path(__file__).resolve().parent.parent
-GUARD = ROOT / "scripts" / "dev-guards" / "guard_tasks_staged.py"
+GUARD = Path(__file__).resolve().parents[1] / "guard_tasks_staged.py"
 
 
 @pytest.fixture

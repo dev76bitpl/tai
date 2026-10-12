@@ -3,16 +3,19 @@
 Zasada A: every guard proves (1) it blocks what it must, (2) it passes the rest.
 """
 import importlib.util
+import sys
 from pathlib import Path
 from unittest import mock
 
 import pytest
 
-ROOT = Path(__file__).resolve().parent.parent
-GUARD = ROOT / "scripts" / "dev-guards" / "guard_template_sync.py"
+GUARD = Path(__file__).resolve().parents[1] / "guard_template_sync.py"
 
 
 def _load():
+    # .claude/hooks/stack.py is a different module with the same name; drop a cached one
+    # so the guard imports the stack.py that sits next to it, whatever the test order.
+    sys.modules.pop("stack", None)
     spec = importlib.util.spec_from_file_location("guard_template_sync", GUARD)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
@@ -112,3 +115,65 @@ class TestMain:
         clone = _template_clone(tmp_path)
         with pytest.raises(SystemExit):
             self._run(config={"ai_template_path": str(clone)}, touched=False)
+
+
+# ── end to end: the guard as a separate process, exit code checked ───────────
+# Everything above mocks the inputs and only asserts "SystemExit was raised". These run the
+# real script in a real repository and assert the exit code pre-commit acts on.
+
+from harness import BLOCKED, commit, git, make_repo, run_guard, stage, write_config  # noqa: E402
+
+
+@pytest.fixture
+def clone(tmp_path):
+    """A local template clone: its own repository with a committed CLAUDE.md."""
+    root = make_repo(tmp_path / "template")
+    stage(root, "CLAUDE.md", "# template rules\n")
+    commit(root)
+    return root
+
+
+class TestEndToEnd:
+    GUARD = "guard_template_sync"
+
+    def test_should_block_when_claude_md_is_staged_and_no_clone_is_configured(self, repo):
+        stage(repo, "CLAUDE.md")
+        result = run_guard(self.GUARD, repo)
+        assert result.returncode == BLOCKED
+        assert "[BLOCK] CLAUDE.md staged — confirm where this change belongs" in result.stderr
+
+    def test_should_block_when_template_clone_has_no_matching_change(self, repo, clone):
+        write_config(repo, {"ai_template_path": str(clone)})
+        stage(repo, "CLAUDE.md")
+        result = run_guard(self.GUARD, repo)
+        assert result.returncode == BLOCKED
+        assert "the template's CLAUDE.md has no matching changes" in result.stderr
+        assert str(clone / "CLAUDE.md") in result.stderr
+
+    def test_should_pass_when_template_clone_was_changed_too(self, repo, clone):
+        write_config(repo, {"ai_template_path": str(clone)})
+        (clone / "CLAUDE.md").write_text("# template rules\n\n## New rule\n", encoding="utf-8")
+        stage(repo, "CLAUDE.md")
+        result = run_guard(self.GUARD, repo)
+        assert result.returncode == 0, result.stderr
+
+    def test_should_pass_when_skip_sync_flag_is_in_message(self, repo):
+        stage(repo, "CLAUDE.md")
+        assert run_guard(self.GUARD, repo, "docs: project rule\n\n[skip-sync] project only\n").returncode == 0
+
+    def test_should_pass_when_claude_md_is_not_staged(self, repo):
+        stage(repo, "docs/SETUP.md")
+        result = run_guard(self.GUARD, repo)
+        assert result.returncode == 0, result.stderr
+        assert result.stderr == ""
+
+    def test_should_pass_in_the_template_repository_itself(self, repo):
+        write_config(repo, {"is_template": True})
+        stage(repo, "CLAUDE.md")
+        assert run_guard(self.GUARD, repo).returncode == 0
+
+    def test_should_block_when_commit_message_file_is_missing(self, repo):
+        stage(repo, "docs/SETUP.md")
+        result = run_guard(self.GUARD, repo, message=None)
+        assert result.returncode == BLOCKED
+        assert "guard_template_sync: no commit message file given" in result.stderr

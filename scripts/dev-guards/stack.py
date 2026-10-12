@@ -163,6 +163,25 @@ def run_cmd(cmd: list[str], cwd: Path | None = None) -> tuple[int, str]:
     return result.returncode, output
 
 
+def block(msg: str) -> None:
+    print(msg, file=sys.stderr)
+    sys.exit(1)
+
+
+def _guard_name() -> str:
+    return Path(sys.argv[0]).stem if sys.argv and sys.argv[0] else "guard"
+
+
+def _cannot_check(what: str, detail: str = "") -> None:
+    """A guard that cannot read what it is supposed to check blocks instead of passing:
+    "nothing found" and "could not look" must not end with the same exit code."""
+    block(
+        f"❌ [BLOCK] {_guard_name()}: {what}, so the commit was NOT checked.\n"
+        + (f"   {detail}\n" if detail else "")
+        + "   A guard that cannot check blocks instead of passing silently."
+    )
+
+
 def get_staged_files() -> list[str]:
     """Files currently staged for commit (relative to repo root)."""
     result = subprocess.run(
@@ -170,31 +189,39 @@ def get_staged_files() -> list[str]:
         capture_output=True,
         text=True,
     )
-    return result.stdout.splitlines() if result.returncode == 0 else []
+    if result.returncode != 0:
+        _cannot_check("cannot list staged files (git diff --cached failed)", result.stderr.strip()[-300:])
+    return result.stdout.splitlines()
 
 
 def get_current_branch() -> str:
+    """Current branch name; "" on a detached HEAD (rebase, cherry-pick).
+
+    `git branch --show-current` also answers on a branch with no commits yet, where
+    `git rev-parse --abbrev-ref HEAD` fails — a failure the callers read as "detached, skip"."""
     result = subprocess.run(
-        ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+        ["git", "branch", "--show-current"],
         capture_output=True,
         text=True,
     )
-    return result.stdout.strip() if result.returncode == 0 else ""
+    if result.returncode != 0:
+        _cannot_check("cannot read the current branch (git branch --show-current failed)", result.stderr.strip()[-300:])
+    return result.stdout.strip()
 
 
 def read_commit_msg(argv: list[str]) -> str:
-    """commit-msg stage: pre-commit passes commit-msg file path as argv[1]."""
+    """commit-msg stage: pre-commit passes commit-msg file path as argv[1].
+
+    Blocks when the message cannot be read. Returning "" there meant "no bypass flag and
+    nothing to check": guards that return early on an empty message passed silently."""
     if len(argv) < 2:
-        return ""
-    msg_path = Path(argv[1])
-    if not msg_path.is_file():
-        return ""
+        _cannot_check(
+            "no commit message file given",
+            "This guard runs at the commit-msg stage; pre-commit passes the file path as its argument.",
+        )
     try:
-        return msg_path.read_text(encoding="utf-8")
-    except Exception:
-        return ""
-
-
-def block(msg: str) -> None:
-    print(msg, file=sys.stderr)
-    sys.exit(1)
+        # errors="replace": a message saved in another encoding still shows its ASCII flags.
+        return Path(argv[1]).read_text(encoding="utf-8", errors="replace")
+    except OSError as e:
+        _cannot_check(f"cannot read the commit message file {argv[1]}", str(e))
+    return ""

@@ -2,7 +2,7 @@
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts" / "dev-guards"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from pii import account_ok, mask, pesel_ok, scan_line  # noqa: E402
 
 
@@ -60,7 +60,7 @@ import subprocess  # noqa: E402
 
 import pytest  # noqa: E402
 
-GUARD = Path(__file__).resolve().parents[1] / "scripts" / "dev-guards" / "guard_pii.py"
+GUARD = Path(__file__).resolve().parents[1] / "guard_pii.py"
 FAKE_PESEL = "44051401359"  # pii-ok
 
 
