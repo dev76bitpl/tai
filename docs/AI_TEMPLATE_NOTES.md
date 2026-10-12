@@ -53,7 +53,7 @@ Każdy nowy projekt dokłada tu swoje obserwacje. Sekcje domenowe nie trafiają 
 
 Trzy warstwy skanowania w CI, każda łapie inną klasę problemu:
 
-- **Sekrety** (np. gitleaks) — zwykle już pokryte: hook pre-commit odpalany server-side w jobie `guards` skanuje całe drzewo. Nie duplikuj osobnym jobem.
+- **Sekrety** (np. gitleaks) — osobny **krok** w `guards.yml`, który skanuje całe drzewo (`detect --no-git`), nie osobny job. **Pułapka:** sam hook pre-commit odpalony w CI przez `pre-commit run --all-files` niczego nie skanuje — patrzy wyłącznie na pliki dodane do indeksu (`protect --staged`), a checkout w CI ma indeks pusty, więc świeci na zielono bez względu na zawartość repo. Dlatego hook jest w CI na liście `SKIP`, a wersja obrazu w kroku musi być równa `rev` hooka w `.pre-commit-config.yaml` (pilnuje tego test). Źródło skanu zostaje względne (`-w /repo` + `--source=.`), inaczej wpisy `.gitleaksignore` przestają pasować.
 - **SAST — własny kod** (np. semgrep z regułami pod stack) — szuka wzorców podatności w kodzie który sam piszesz (injection, XSS, brak walidacji). **Blokujący**: findings w twoim kodzie zawsze da się naprawić, więc czerwony build jest akcjonowalny. False-positive wyciszaj inline z komentarzem i uzasadnieniem (audit trail, jak bypass guarda) — nie luzuj całej reguły.
 - **CVE zależności** (np. skaner lockfile'a przeciwko bazie znanych dziur) — sprawdza cudze biblioteki które shippujesz. **Raportujący na start** (`continue-on-error`): CVE w niezałatywalnej transitive zależności nie może blokować każdego merge'a. Gdy poznasz realny stosunek sygnał/szum — możesz zacisnąć do blokującego.
 

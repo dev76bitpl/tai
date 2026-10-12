@@ -57,7 +57,7 @@ jobs:
       - name: Install pre-commit
         run: pip install pre-commit
 
-      # File-level hooks (whitespace, secrets, etc.) across whole tree.
+      # File-level hooks (whitespace, file hygiene, etc.) across whole tree.
       - name: Run pre-commit hooks on all files
         run: pre-commit run --all-files --show-diff-on-failure
         env:
@@ -65,7 +65,19 @@ jobs:
           # with the full toolchain.
           # Skip no-commit-to-branch — CI isn't creating commits; the hook is for
           # blocking local commits only.
-          SKIP: guard-lint,guard-tests,no-commit-to-branch
+          # Skip gitleaks — the hook scans STAGED files only and a CI checkout has
+          # an empty index, so it would pass on any tree. The next step scans instead.
+          SKIP: guard-lint,guard-tests,no-commit-to-branch,gitleaks
+
+      # Secrets across the whole checked-out tree. Keep the image tag equal to the
+      # gitleaks `rev` in .pre-commit-config.yaml (a test enforces it). The source
+      # stays relative (`-w /repo` + `--source=.`): with an absolute source the
+      # fingerprints carry the absolute path and .gitleaksignore entries stop matching.
+      - name: Scan working tree for secrets (gitleaks)
+        run: >-
+          docker run --rm -v "$GITHUB_WORKSPACE:/repo:ro" -w /repo
+          zricethezav/gitleaks:v8.21.2
+          detect --no-git --source=. --redact --verbose
 
       # Commit-msg hooks against each commit in the PR. Only format + language
       # enforcement here — guards that need staging context (tasks-staged,
