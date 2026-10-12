@@ -55,3 +55,27 @@ def test_should_prefer_config_over_autodetected_stack(repo):
     result = run_guard(GUARD, repo, message=None)
     assert result.returncode == BLOCKED
     assert "[BLOCK] Lint failed" in result.stderr
+
+
+# ── config.local.json (per machine) overrides config.json ────────────────────
+
+def test_should_use_lint_command_from_local_config_when_it_overrides_shared(repo):
+    (repo / "pass.py").write_text("print('shared')\n", encoding="utf-8")
+    (repo / "fail.py").write_text("import sys\nprint('from local')\nsys.exit(1)\n", encoding="utf-8")
+    write_config(repo, {"lint": "python3 pass.py"})
+    write_config(repo, {"lint": "python3 fail.py"}, name="config.local.json")
+    result = run_guard(GUARD, repo, message=None)
+    assert result.returncode == BLOCKED
+    assert "from local" in result.stderr
+
+
+def test_should_use_lint_command_when_set_only_in_local_config(repo):
+    (repo / "fail.py").write_text("import sys\nsys.exit(1)\n", encoding="utf-8")
+    write_config(repo, {"lint": "python3 fail.py"}, name="config.local.json")
+    assert run_guard(GUARD, repo, message=None).returncode == BLOCKED
+
+
+def test_should_keep_shared_lint_command_when_local_config_is_unreadable(repo):
+    _lint_script(repo, "lint.py", "import sys\nsys.exit(1)\n")
+    (repo / ".claude" / "hooks" / "config.local.json").write_text("{ not json", encoding="utf-8")
+    assert run_guard(GUARD, repo, message=None).returncode == BLOCKED

@@ -10,7 +10,7 @@ Reports prerequisites:
   - .pre-commit-config.yaml present and parseable
   - pytest available (optional — runs the guard tests)
   - Claude Code hooks wired in .claude/settings.local.json (per machine)
-  - ai_template_path configured in .claude/hooks/config.json (optional)
+  - AI template source: $AI_TEMPLATE_PATH, config.local.json or config.json (optional)
   - Docker running (optional but recommended)
 
 Exit code 0 if all REQUIRED checks pass (optional checks may be ✗ without
@@ -279,31 +279,57 @@ def check_claude_hooks() -> bool:
     return healthy
 
 
+def _load_hook_config() -> tuple[dict, str]:
+    """config.json overlaid with config.local.json (per machine) — as the guards read it.
+
+    Returns the merged config and the name of the file that supplied ai_template_path.
+    """
+    merged: dict = {}
+    source = ""
+    for name in ("config.json", "config.local.json"):
+        path = REPO_ROOT / ".claude" / "hooks" / name
+        if not path.is_file():
+            continue
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            warn(f".claude/hooks/{name} present but unparseable — ignored by the guards")
+            continue
+        if isinstance(data, dict):
+            merged.update(data)
+            if "ai_template_path" in data:
+                source = name
+    return merged, source
+
+
 def check_claude_template_path() -> None:
-    config = REPO_ROOT / ".claude" / "hooks" / "config.json"
-    if not config.is_file():
+    """Where the template comes from: $AI_TEMPLATE_PATH > config.local.json > config.json."""
+    config, source = _load_hook_config()
+    if config.get("is_template") is True:
+        ok("This repo is the AI template — nothing to sync from")
+        return
+
+    template = os.environ.get("AI_TEMPLATE_PATH", "").strip()
+    if template:
+        source = "$AI_TEMPLATE_PATH"
+    else:
+        template = str(config.get("ai_template_path", "") or "").strip()
+    if not template:
         warn(
-            ".claude/hooks/config.json not configured (optional)",
-            "Copy from config.json.example and set ai_template_path — see docs/SETUP.md.",
+            "ai_template_path not set (optional)",
+            "Set $AI_TEMPLATE_PATH or put it in .claude/hooks/config.local.json — see docs/SETUP.md step 8b.",
         )
         return
-    try:
-        data = json.loads(config.read_text(encoding="utf-8"))
-    except json.JSONDecodeError:
-        warn("config.json present but unparseable")
+    if "://" in template or template.startswith("git@"):
+        ok(f"AI template repo: {template}  (remote, from {source})")
         return
-    template = data.get("ai_template_path")
-    if not template:
-        warn("ai_template_path not set in .claude/hooks/config.json (optional)")
-        return
-    path = Path(template)
-    if not path.is_dir():
+    if not Path(template).expanduser().is_dir():
         warn(
-            f"ai_template_path doesn't exist: {template}",
+            f"ai_template_path doesn't exist: {template}  (from {source})",
             "AI template sync guard will skip silently.",
         )
         return
-    ok(f"AI template repo: {template}")
+    ok(f"AI template repo: {template}  (from {source})")
 
 
 def check_docker() -> None:

@@ -176,6 +176,15 @@ do repo. Resolver dokłada warstwy i autodetekcję po markerze.
 - [ ] Katalog obok bez `is_template: true` (zwykły projekt z template'a) → **nie** jest brany za template
 - [ ] Projekt, który sam jest template'm (`is_template: true`) → nie wskazuje sam na siebie
 
+### Scenariusz 13a — config.local.json widzą też strażnicy commita i doctor
+
+W projekcie postawionym z szablonu (w samym szablonie doctor pokazuje tylko „This repo is the AI template”):
+
+- [ ] W `.claude/hooks/config.local.json` wpisz `{"lint": "false"}`, zrób commit → `Stack-aware lint` blokuje (komenda z pliku lokalnego wygrała); usuń wpis → commit przechodzi
+- [ ] W `.claude/hooks/config.local.json` wpisz `ai_template_path` na istniejący katalog, `npm run doctor` → `AI template repo: <ścieżka>  (from config.local.json)`
+- [ ] `AI_TEMPLATE_PATH=<inny katalog> npm run doctor` → ta ścieżka i `(from $AI_TEMPLATE_PATH)`
+- [ ] Bez pliku lokalnego i zmiennej, z adresem URL w `config.json` → `(remote, from config.json)`, bez ostrzeżenia
+
 ### Scenariusz 14 — config.local.json nie trafia do repo
 
 - [ ] Utwórz `.claude/hooks/config.local.json`, `git status` → plik nie pojawia się jako untracked

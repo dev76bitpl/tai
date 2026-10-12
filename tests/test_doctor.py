@@ -134,6 +134,85 @@ def test_should_warn_with_repair_commands_when_pytest_is_missing(doctor, monkeyp
     assert "sudo apt install python3-pytest" in out
 
 
+# ── check_claude_template_path ───────────────────────────────────────────────
+
+def _write_hook_config(root: Path, name: str, data) -> None:
+    text = data if isinstance(data, str) else json.dumps(data)
+    (root / ".claude" / "hooks" / name).write_text(text, encoding="utf-8")
+
+
+@pytest.fixture()
+def no_template_env(monkeypatch):
+    monkeypatch.delenv("AI_TEMPLATE_PATH", raising=False)
+
+
+def test_should_use_local_path_when_set_only_in_config_local(doctor, tmp_path, capsys, no_template_env):
+    clone = tmp_path / "template-clone"
+    clone.mkdir()
+    _write_hook_config(tmp_path, "config.json", {"lint": "x"})
+    _write_hook_config(tmp_path, "config.local.json", {"ai_template_path": str(clone)})
+    doctor.check_claude_template_path()
+    out = capsys.readouterr().out
+    assert "✓" in out and str(clone) in out and "from config.local.json" in out
+
+
+def test_should_prefer_local_path_when_both_files_set_it(doctor, tmp_path, capsys, no_template_env):
+    clone = tmp_path / "template-clone"
+    clone.mkdir()
+    _write_hook_config(tmp_path, "config.json", {"ai_template_path": str(tmp_path / "missing")})
+    _write_hook_config(tmp_path, "config.local.json", {"ai_template_path": str(clone)})
+    doctor.check_claude_template_path()
+    out = capsys.readouterr().out
+    assert "✓" in out and "from config.local.json" in out and "⚠" not in out
+
+
+def test_should_prefer_env_variable_over_both_files(doctor, tmp_path, capsys, monkeypatch):
+    clone = tmp_path / "env-clone"
+    clone.mkdir()
+    _write_hook_config(tmp_path, "config.local.json", {"ai_template_path": str(tmp_path / "missing")})
+    monkeypatch.setenv("AI_TEMPLATE_PATH", str(clone))
+    doctor.check_claude_template_path()
+    out = capsys.readouterr().out
+    assert "✓" in out and str(clone) in out and "from $AI_TEMPLATE_PATH" in out
+
+
+def test_should_accept_remote_url_as_template_source(doctor, tmp_path, capsys, no_template_env):
+    _write_hook_config(tmp_path, "config.json", {"ai_template_path": "https://example.com/template.git"})
+    doctor.check_claude_template_path()
+    out = capsys.readouterr().out
+    assert "✓" in out and "remote, from config.json" in out
+
+
+def test_should_warn_when_configured_path_does_not_exist(doctor, tmp_path, capsys, no_template_env):
+    _write_hook_config(tmp_path, "config.json", {"ai_template_path": str(tmp_path / "missing")})
+    doctor.check_claude_template_path()
+    out = capsys.readouterr().out
+    assert "⚠" in out and "doesn't exist" in out and "from config.json" in out
+
+
+def test_should_warn_when_no_source_is_set(doctor, tmp_path, capsys, no_template_env):
+    _write_hook_config(tmp_path, "config.json", {"lint": "x"})
+    doctor.check_claude_template_path()
+    out = capsys.readouterr().out
+    assert "⚠" in out and "ai_template_path not set" in out and "config.local.json" in out
+
+
+def test_should_say_repo_is_template_when_marked(doctor, tmp_path, capsys, no_template_env):
+    _write_hook_config(tmp_path, "config.json", {"is_template": True})
+    doctor.check_claude_template_path()
+    out = capsys.readouterr().out
+    assert "✓" in out and "is the AI template" in out and "⚠" not in out
+
+
+def test_should_ignore_unparseable_local_file_and_say_so(doctor, tmp_path, capsys, no_template_env):
+    _write_hook_config(tmp_path, "config.json", {"ai_template_path": "https://example.com/template.git"})
+    _write_hook_config(tmp_path, "config.local.json", "{ not json")
+    doctor.check_claude_template_path()
+    out = capsys.readouterr().out
+    assert "config.local.json present but unparseable" in out
+    assert "remote, from config.json" in out
+
+
 # ── main: exit code ──────────────────────────────────────────────────────────
 
 REQUIRED_ELSEWHERE = ["check_python", "check_node", "check_pre_commit", "check_hooks_installed", "check_config_yaml"]

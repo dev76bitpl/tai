@@ -26,6 +26,7 @@ sys.stderr.reconfigure(encoding="utf-8")
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 CONFIG_PATH = REPO_ROOT / ".claude" / "hooks" / "config.json"
+LOCAL_CONFIG_PATH = CONFIG_PATH.with_name("config.local.json")
 
 STACKS: dict[str, dict] = {
     "node": {
@@ -97,12 +98,22 @@ def get_project_root() -> Path:
 
 
 def load_config() -> dict:
-    if CONFIG_PATH.is_file():
+    """config.json + config.local.json (per machine, gitignored) — local overrides.
+
+    Same layering as load_config() in .claude/hooks/stack.py, so a value set in
+    config.local.json means the same thing to both guard layers.
+    """
+    config: dict = {}
+    for path in (CONFIG_PATH, LOCAL_CONFIG_PATH):
+        if not path.is_file():
+            continue
         try:
-            return json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
+            data = json.loads(path.read_text(encoding="utf-8"))
         except Exception:
-            return {}
-    return {}
+            continue
+        if isinstance(data, dict):
+            config.update(data)
+    return config
 
 
 def detect_stack() -> str:
