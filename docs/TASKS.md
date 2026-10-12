@@ -1,7 +1,7 @@
 # Tasks
 
-Ten plik jest logiem wykonanych prac i backlogiem usprawnień.
-Checklisty implementacyjne per faza znajdują się wyłącznie w [docs/ROADMAP.md](ROADMAP.md).
+Ten plik jest **logiem sesji**: co się wydarzyło i dlaczego. Otwarta praca szablonu żyje
+w GitHub Issues (`gh issue list`), nie tutaj. Fazy definiuje [docs/ROADMAP.md](ROADMAP.md).
 
 ---
 
@@ -102,115 +102,26 @@ Checklisty implementacyjne per faza znajdują się wyłącznie w [docs/ROADMAP.m
 
 ---
 
-## Backlog
+## Backlog — przeniesiony do issues (2026-10-12)
 
-- [ ] **Lekki tor dla zmian trywialnych — wpiąć w `CLAUDE.md`** (uzgodnione, nie zakodowane)
+> Po ludzku: lista rzeczy do zrobienia nie jest już prowadzona w tym pliku. Każde zadanie ma
+> swoje issue, a tu zostaje tylko ślad, dokąd trafiło.
 
-  > Po ludzku: trywialna decyzja (np. „board: tak/nie") nie może kosztować godziny i 4 PR-ów.
-  > Właściciel ustawia kierunek i klika merge; AI robi resztę.
+- martwy `script_integrity` w `skills-manifest.json` → #154
+- `new-project.py --init`: dokumenty-szkielety wyglądają jak gotowa instrukcja → #155
+- jeden punkt wejścia: dołączenie do projektu i aktualizacja z szablonu → #156
+- narzędzia szablonu do prowadzenia zadań w issues (ADR-004) → #157; reguły w `CLAUDE.md` → #131
+- `NameError` w `.claude/hooks/guard-template-sync.py` → #140
 
-  Ustalenia (dziś tylko w pamięci maszynowej — warstwa ulotna, reguła 13 → do repo):
-  (1) **test trywialności** — odwracalne tanio + decyzja w jednym zdaniu + dotyka docs/configu nie
-  runtime + zero ryzyka dla usera; choć jedno „nie" → pełny tor; (2) lekki tor **pomija** ADR,
-  duplikat w wielu miejscach, branch/PR per drobiazg, hard-stop 16b — **zostaje** commit + uczciwy
-  message; (3) **jedno źródło prawdy na poziom** (projekt vs template), w obrębie poziomu fakt ma
-  jeden dom, reszta linkuje; (4) **batch** — jeden PR per repo, nie N osobnych; (5) **decyzja „A"**:
-  AI robi branch→PR→sprzątanie autonomicznie, właściciel klika **merge raz na batch** (commit
-  prosto na main = odrzucone); (6) pełny tor zostaje dla realnego kodu produktu.
-  Wpięcie wytnie wyjątki w regułach 3/16b + „AI nie dodaje flag bypass sam" → **sam nie jest
-  trywialne, idzie pełnym torem z testami guardów**. Osobna krótka sesja systemowa.
+Zamknięte bez issue jako nieaktualne:
 
-- [ ] **Martwy `script_integrity` w `skills-manifest.json`** — hash `update-skills.py`
-      nie zgadza się z plikiem (skrypt zmieniony w PR #57, hash nie). Zero referencji
-      w hookach/pre-commit → nic go nie egzekwuje. Albo zaktualizować hash przy każdej
-      zmianie skryptu (dodać guard), albo usunąć pole jako mylące.
-- [ ] **GitHub: uprawnienie Actions do tworzenia PR-ów** — projekty z template'u
+- `session-context.py` podpowiadał URL jako `ai_template_path` — podpowiedź mówi już o lokalnej
+  ścieżce
+- uprawnienie Actions do tworzenia PR-ów — opisane w `docs/SETUP.md` (ustawienia repozytorium)
+- lekki tor dla zmian trywialnych — zastąpiony regułą 1a w `CLAUDE.md` (AI pyta przed każdym
+  ruchem), decyzja właściciela 2026-10-12
 
-  > Po ludzku: w nowym projekcie release-please nie wystawia release'u (czyli wersja nie
-  > powstaje) dopóki nie włączysz jednego ustawienia na GitHubie — pada po cichu w CI.
-
-  Projekty bootstrapowane z template'u mają domyślnie wyłączone „Allow GitHub Actions to
-  create and approve pull requests" (`default_workflow_permissions: read`,
-  `can_approve_pull_request_reviews: false`). release-please pada przy każdym merge do main:
-  `GitHub Actions is not permitted to create or approve pull requests` — aż ktoś ręcznie
-  włączy. Fix (per repo):
-  `gh api -X PUT repos/<owner>/<repo>/actions/permissions/workflow -f default_workflow_permissions=write -F can_approve_pull_request_reviews=true`
-  Do zrobienia: dopisać do `docs/SETUP.md` (sekcja GitHub settings / „Done when") albo
-  zautomatyzować w `new-project.py` post-init. Wykryte w projekcie pochodnym (release-please
-  padał od #2).
-- [ ] **Onboarding + update z tai — jeden punkt wejścia** — dziura wykryta przy migracji
-      projektu pochodnego
-
-  > Po ludzku: dev który dostaje gotowy projekt (albo wraca do niego po czasie) nie wie,
-  > co odpalić, żeby guardy i hooki działały — info jest porozrzucane. A devu, który chce
-  > wciągnąć najnowsze poprawki ze wzorca, nikt nie mówi jak — robi to na piechotę.
-
-  Trzy persony, dziś obsłużone nierówno:
-  - **Nowy projekt z tai** — pokryte: README „Nowy projekt — 3 kroki" (`new-project.py --init`
-    + `update-skills.py --apply` + `scope`). OK, bez zmian.
-  - **Dołączenie do istniejącego projektu** — info istnieje (`docs/SETUP.md` Krok 7 pre-commit,
-    Krok 8 Claude hooks; `doctor.py` mówi „skopiuj z config.json.example"), ale **rozsypane**,
-    brak jednego punktu wejścia. Do zrobienia: README scaffold projektu kieruje wprost do
-    `python3 scripts/doctor.py` jako pierwszego kroku po klonie; doctor robi audyt i wypisuje
-    czego brakuje (config.json, pre-commit install, hooki). Rozważ czy doctor ma `--fix`.
-  - **Update istniejącego projektu z tai** — **brak mechanizmu**. `update-skills.py --sync`
-    pokrywa tylko skille; guardy (`scripts/dev-guards/*.py`, `.claude/hooks/*.py`) aktualizuje
-    się ręcznie — dokładnie to, co KROK 3 robi gołymi rękami. Do zrobienia: udokumentowany
-    flow „pull z tai" albo skrypt `update-from-template.py` (kopiuje kanoniczne guardy/hooki
-    z `ai_template_path`, raportuje diff). To nietrywialne → **zasługuje na ADR-003**.
-
-- [ ] **Bug: NameError w `.claude/hooks/guard-template-sync.py` (linia ~171)** — w ścieżce
-      raportu desyncu jest `f"...({template_path})..."`, ale zmienna nazywa się `template_root`
-      → `NameError`. Hook wywala się wyjątkiem (exit 1), a exit 1 **nie blokuje** → guard
-      fail-open dokładnie w sytuacji, którą ma łapać (lokalny klon ustawiony + wykryty desync
-      *.md/guardów). Aktywuje się gdy `ai_template_path` wskazuje realny klon. Fix: `template_path`
-      → `template_root`. Wchodzi z testem dowodzącym (Zasada A): desync + valid clone → blok.
-
-- [ ] **Niespójność: `session-context.py` podpowiada URL jako `ai_template_path`** — linia ~361
-      sugeruje `"ai_template_path": "git@github.com:dev76bitpl/tai.git"`, ale wg ADR-002 URL jest
-      martwy (guard wymaga lokalnego katalogu, URL → tryb potwierdzenia). `config.json.example`
-      mówi poprawnie (lokalna ścieżka). Ujednolicić podpowiedź session-context do lokalnej ścieżki.
-
-- [ ] **Migracja śledzenia zadań na GitHub Issues/Projects** — wg **ADR-004** (accepted, wykonanie odłożone)
-
-  > Po ludzku: backlog w pliku markdown przestaje się skalować przy ~30 zadaniach — nieczytelny
-  > dla właściciela, nie trzyma stanu (ręczne wykreślanie „zrobione"), brak jednej kolejności →
-  > AI dryfuje w rekomendacjach co sesja. Przenosimy taski tam, gdzie i tak żyją PR-y i kod.
-
-  Wg **ADR-004**: Issues = dane (priorytet/klasa jako etykiety, dwuwarstwowy opis przez Issue
-  Template); Project = widok (kolumny statusu + jedna kolumna „Up next"); auto-zamykanie przez
-  `Closes #N`; roadmapa → milestones; markdown zostaje fallbackiem dla projektów spoza GitHub.
-  Do zrobienia: `.github/ISSUE_TEMPLATE/task.yml`, dokument konfiguracji Projects, tryb wyboru
-  markdown/Issues w `new-project.py` (wykrycie remote GitHub), usunięcie/przepięcie guardów
-  `TASKS.md`, skrypt migracji przez `gh issue create`. Każdy guard z testem (Zasada A).
-  **Timing: granica bezpieczna dla projektu (po fazie/MVP), nie w środku krytycznej pracy.**
-
-  **Metoda TAIGA** (**T**asks **A**s **I**ssues, **G**ates, **A**utomation) — rozszerzenia
-  z researchu metodyk (CCPM / GitHub Spec Kit): epic + sub-issues dla funkcjonalności
-  wielozadaniowych, mini-spec w body issue dla większych tasków, board Projects wyłącznie na
-  wbudowanych automatach (zero ręcznych pól), komentarze issue jako audit trail, uporządkowana
-  kolumna „Up next". Lekcja z pilota: do listy „Do zrobienia" dochodzi scaffold sekcji SETUP
-  „praca z zadaniami przez gh" — kokpit (`gh issue list --milestone/--label`,
-  `gh issue status/view --comments`), standup przez API milestones (postęp + due date jednym
-  `gh api --jq`), skoki `--web`, board z CLI (scope `project`); wzór do uogólnienia z projektu
-  pilotażowego (placeholdery zamiast repo/nazw milestones).
-
-  > Pilot wykonania na konkretnym projekcie + kryterium oceny → prywatny backlog maintainera
-  > (`docs/MAINTAINER_BACKLOG.local.md`), poza commitowanym logiem template'u (reguła 13a).
-
-- [ ] **`new-project.py --init` oznacza scaffoldy jako "stan przed implementacją"**
-
-  > Po ludzku: świeży projekt z template'u dostaje SETUP.md, który wygląda jak gotowa
-  > instrukcja (`npm run db:migrate`, `localhost:3000`, "Logowanie działa"), choć żadna
-  > z tych komend jeszcze nie istnieje. Czytelnik nie odróżnia szkieletu od faktu —
-  > dokument kłamie od inicjalizacji do końca fundamentu, chyba że ktoś to zauważy.
-
-  Wykryte w pilocie (2026-06-13): właściciel trafił na `db:migrate` w SETUP.md projektu,
-  w którym `package.json` ma tylko `doctor` i `prepare`. Do zrobienia: `--init` dodaje
-  automatyczną banderolę na górze scaffoldowanych docs (co działa po init: repo settings,
-  clone, guard system, hooki; co jest szkieletem do wypełnienia; TODO usunięcia przy
-  zamknięciu fundamentu) — albo scaffold przepisany na jawne placeholdery `<uzupełnij>`.
-  Wzór banderoli: docs/SETUP.md w projekcie pilotażowym.
+Historia (zrobione przed przejściem):
 
 - [x] **Config canonicalizacja `ai_template_path`** — ✅ KROK 2 zrobiony (ADR-002);
       pozostaje KROK 3: migracja projektu pochodnego (osobna sesja projektowa, Zasada B →
@@ -238,29 +149,14 @@ Checklisty implementacyjne per faza znajdują się wyłącznie w [docs/ROADMAP.m
 
 ---
 
-## Następna sesja (SYSTEM — zacznij tu)
-
-To jest sesja systemu (tai), nie projektu.
-
-Domknięte (2026-06-04): durable lessons (wnioski → `AI_TEMPLATE_NOTES`, zasady A/B →
-`CLAUDE.md` 13a), hardening hooków 1–3 (fail-closed guard, utf-8), push+merge
-`fix/template-hardening` (PR #57), skille copywriting/cro (PR #59).
-
-**Zadanie do zrobienia — Config canonicalizacja `ai_template_path` (+ADR):** to jedyny
-otwarty kawałek hardeningu (items 4–6) i wymaga własnej sesji z ADR. Szczegóły w backlogu
-niżej. Obejmuje: jeden kanoniczny plik configu (`guard_template_sync` czyta inny niż
-`doctor.py`/`new-project.py` → guard sync martwy w nowych projektach), URL-aware
-`ai_template_path` (konsumenci wymagają lokalnej ścieżki), oraz błąd A w `--init`
-(`create_config_json(root, root)` zapisuje remote projektu jako template path). Każdy
-guard, który tu powstanie/zmieni się, wchodzi z testem (Zasada A).
-
-**Zasady pracy:** commit przez `-m`/heredoc, nigdy `-F` do omijania guardów;
-dry-run guardów tą samą treścią co commit; nie mieszaj sesji system/projekt.
-
----
-
 ## Stan sesji
 
+- 2026-10-12: **Otwarta praca przeniesiona do issues (#158).** Po ludzku: lista zadań szablonu jest
+  teraz w jednym miejscu, na GitHubie, a ten plik jest tylko dziennikiem. Z 8 otwartych pozycji
+  backlogu 4 dostały issues (#154–#157), 1 była już w #140, 3 zamknięte jako nieaktualne (lista
+  w sekcji „Backlog” wyżej). Usunięta sekcja „Następna sesja” — opisywała zadanie zrobione
+  w czerwcu (ADR-002). W `docs/ROADMAP.md` nic do przeniesienia: oba checkboxy to pola szkieletu.
+  Przy okazji, na polecenie właściciela, 13 otwartych issues przetłumaczonych na polski.
 - 2026-10-12: **CI rozdzielone na strażników i ciężkie sprawdzenia (#148, gałąź
   `ci/148-docs-only-split`).** Po ludzku: w nowym projekcie poprawka samej dokumentacji nie odpala już
   testów, builda i skanu kodu — idą tylko lekkie strażniki. Zamyka wpis z backlogu „PR czysto
