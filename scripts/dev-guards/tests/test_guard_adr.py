@@ -66,3 +66,13 @@ def test_should_block_when_staged_files_cannot_be_listed(repo, tmp_path):
     result = run_guard(GUARD, repo, cwd=outside)
     assert result.returncode == BLOCKED
     assert "cannot list staged files" in result.stderr
+
+
+def test_should_block_on_pattern_added_in_local_config(repo):
+    # config.local.json (per machine) is layered over config.json, as in the Claude Code hooks
+    write_config(repo, {"lint": "true"})
+    write_config(repo, {"adr_patterns": [["billing/", "billing rules change"]]}, name="config.local.json")
+    stage(repo, "billing/invoice.py")
+    result = run_guard(GUARD, repo)
+    assert result.returncode == BLOCKED
+    assert "billing rules change" in result.stderr

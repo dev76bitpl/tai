@@ -226,13 +226,34 @@ repozytorium, więc warstwa commita może być cała zielona, gdy żaden hook Cl
 | `⚠ Guard hooks present ... but not wired: <nazwy>` | strażnik `guard-*.py` jest w `.claude/hooks/`, ale nie ma go w pliku (np. doszedł z szablonu później) — dopisz wpis z `settings.local.json.example` | ostrzeżenie |
 | `✓ Claude Code hooks wired (N guard hook(s))` | wszystkie strażniki z repo są podpięte | — |
 
-**Krok 8b — ścieżka do AI template repo:**
+**Krok 8b — konfiguracja strażników (dwa pliki):**
+
+| Plik | Dla kogo | W repozytorium? | Co w nim trzymać |
+|---|---|---|---|
+| `.claude/hooks/config.json` | cały zespół | **tak, commitowany** | ustawienia projektu: komendy `lint` / `test`, `adr_patterns`, `dev_user_ports`, `repos` |
+| `.claude/hooks/config.local.json` | jedna maszyna | nie (`.gitignore`) | to, co różni się między maszynami — przede wszystkim lokalna ścieżka klona szablonu |
 
 ```bash
-cp .claude/hooks/config.json.example .claude/hooks/config.json
+cp .claude/hooks/config.json.example .claude/hooks/config.json   # dostosuj do projektu i zacommituj
 ```
 
-Ustaw `ai_template_path` na lokalną ścieżkę klonu AI template repo. Plik jest w `.gitignore` — każda maszyna ma swoją wersję.
+`config.local.json` nakłada się na `config.json` — wartość z pliku lokalnego wygrywa. Czytają go
+tak samo **obie warstwy strażników** (hooki Claude Code i strażnicy commita) oraz `npm run doctor`.
+
+**Ścieżki ze swojego komputera nie wpisuj do `config.json`** — ten plik trafia do commita. Lokalny
+klon szablonu wskaż jednym z dwóch sposobów (kolejność: pierwszy znaleziony wygrywa):
+
+1. `export AI_TEMPLATE_PATH=/sciezka/do/klona` w `~/.bashrc` — jeden wpis obsługuje wszystkie projekty
+2. `{"ai_template_path": "/sciezka/do/klona"}` w `.claude/hooks/config.local.json`
+3. `ai_template_path` w `config.json` — tylko adres wspólny dla wszystkich (publiczny URL szablonu)
+
+Bez żadnego z nich działa autodetekcja klona obok projektu, a potem publiczny URL. `npm run doctor`
+pokazuje w sekcji „Optional integrations”, skąd wziął ścieżkę (`from $AI_TEMPLATE_PATH` /
+`from config.local.json` / `from config.json`).
+
+Pułapka: `config.local.json` potrafi też nadpisać komendę `lint` albo `test` — wtedy strażnik
+commita na tej jednej maszynie sprawdza co innego niż u reszty zespołu i w repozytorium tego nie
+widać. Trzymaj tam ścieżki i porty, nie komendy sprawdzające.
 
 **Krok 8c — klucz API Anthropic (per-projekt, opcjonalnie):**
 

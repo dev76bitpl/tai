@@ -50,8 +50,9 @@ def make_repo(root: Path, branch: str = "main", config: dict | None = None) -> P
     return root
 
 
-def write_config(repo: Path, config: dict) -> None:
-    path = repo / ".claude" / "hooks" / "config.json"
+def write_config(repo: Path, config: dict, name: str = "config.json") -> None:
+    """name="config.local.json" writes the per-machine file that overrides config.json."""
+    path = repo / ".claude" / "hooks" / name
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(config), encoding="utf-8")
 

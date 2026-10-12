@@ -151,6 +151,27 @@ Historia (zrobione przed przejściem):
 
 ## Stan sesji
 
+- 2026-10-13: **Plik ustawień per maszyna działa dla obu warstw strażników (#152), a instrukcja
+  przestała kazać commitować ścieżkę z własnego komputera (#153).** Po ludzku: strażnicy mają
+  plik wspólny (`config.json`, w repo) i plik jednej maszyny (`config.local.json`, poza repo),
+  który ma nadpisywać wspólny. Respektowały go tylko hooki Claude Code; strażnicy commita
+  i `npm run doctor` po cichu go pomijali. Teraz wszyscy czytają tak samo. Instrukcja instalacji
+  twierdziła do tego, że wspólny plik jest poza Gitem, i kazała wpisać do niego lokalną ścieżkę —
+  trafiłaby do commita.
+  Decyzja właściciela: wspólne zachowanie zamiast zapisu „plik lokalny tylko dla hooków”. Znany
+  koszt: plikiem lokalnym da się na jednej maszynie podmienić komendę `lint` / `test` i w repo
+  tego nie widać (to samo robi dziś `--no-verify`); SETUP mówi, żeby trzymać tam ścieżki i porty.
+  Technicznie: `scripts/dev-guards/stack.py` `load_config()` nakłada `config.local.json` na
+  `config.json` (to samo co `.claude/hooks/stack.py`; nieczytelny plik lokalny jest pomijany).
+  `scripts/doctor.py` `check_claude_template_path()`: kolejność `$AI_TEMPLATE_PATH` >
+  `config.local.json` > `config.json`, w komunikacie źródło (`from ...`); adres zdalny (domyślny
+  w `config.json.example`) nie jest już zgłaszany jako nieistniejąca ścieżka; przy `is_template`
+  komunikat „This repo is the AI template”. Testy: `test_guard_lint.py` (+3), `test_guard_adr.py`
+  (+1) — strażnik jako osobny proces, trzy czerwone na starym loaderze; `tests/test_doctor.py` (+8).
+  `docs/SETUP.md` krok 8b przepisany (tabela dwóch plików), komentarze w `config.json.example`.
+  Wyszło przy okazji: `guard-ai-template` blokuje commity w samym szablonie, bo nie czyta
+  `is_template` (#170) — commity tej nocy szły z `[no-template]` za zgodą właściciela.
+
 - 2026-10-13: **`npm run doctor` widzi, czy hooki Claude Code są podpięte, i czy jest `pytest` (#150, #162).**
   Po ludzku: raport środowiska świecił cały na zielono, choć hooki zatrzymujące polecenia AI mogły
   w ogóle nie działać na danej maszynie — sprawdzał tylko warstwę commita. Teraz ma osobną sekcję

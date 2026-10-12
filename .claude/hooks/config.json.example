@@ -1,5 +1,6 @@
 {
-  "_comment": "Skopiuj do config.json i dostosuj do projektu. Pola są opcjonalne — bez nich działa autodetekcja stacku.",
+  "_comment": "Skopiuj do config.json i dostosuj do projektu. Pola są opcjonalne — bez nich działa autodetekcja stacku. config.json jest wspólny i COMMITOWANY.",
+  "_local_comment": "config.local.json (obok, gitignored) nadpisuje dowolne pole z tego pliku na jednej maszynie. Czytają go obie warstwy strażników (hooki Claude Code i strażnicy commita) oraz npm run doctor. Trzymaj w nim ścieżki i porty z własnej maszyny, nie komendy lint/test.",
 
   "_stacks_autodected": ["node (package.json)", "php (composer.json)", "python (requirements.txt / pyproject.toml)", "ruby (Gemfile)", "go (go.mod)"],
 
