@@ -88,6 +88,12 @@ Checklisty testów manualnych dla krytycznych flow.
 - [ ] Push branchu, otwórz PR → GitHub Actions job `guards` runs → wszystkie hooki zielone
 - [ ] Branch protection rule na `main` wymaga `guards` zielony przed merge
 
+### Scenariusz 10a — skan sekretów w CI obejmuje całe repo
+
+- [ ] Otwórz PR → w zadaniu `Checks` jest krok `Scan working tree for secrets (gitleaks)` i jest zielony
+- [ ] Na gałęzi próbnej dodaj plik z fałszywym kluczem (jak w scenariuszu 7), wypchnij z `--no-verify` → krok czerwony, w logu nazwa pliku i reguły, wartość zamaskowana; gałąź próbną usuń
+- [ ] Lokalnie: `python3 -m pytest -q tests/test_ci_secret_scan.py` → 5 zielonych (wersja obrazu = `rev` hooka `gitleaks`)
+
 ### Scenariusz 11 — release-please creates Release PR
 
 - [ ] Po merge feat/fix commitów do main, workflow `Release Please` runs

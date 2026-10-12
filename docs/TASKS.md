@@ -151,6 +151,23 @@ Historia (zrobione przed przejściem):
 
 ## Stan sesji
 
+- 2026-10-12: **Skan sekretów w CI naprawdę skanuje (#136).** Po ludzku: krok w CI, który miał
+  łapać klucze i hasła wrzucone do repo, świecił na zielono bez względu na zawartość — patrzył
+  tylko na pliki przygotowane do commita, a w CI takich nie ma. Lokalnie przy commicie działał.
+  Teraz CI skanuje całe repo osobnym krokiem i czerwieni się na znalezisku; lukę dziedziczył
+  każdy projekt startujący z szablonu.
+  Technicznie: hook `gitleaks` to `gitleaks protect --staged`, a `pre-commit run --all-files`
+  w checkoucie CI ma pusty indeks. W `.github/workflows/guards.yml` hook trafił do `SKIP`,
+  a za nim doszedł krok `Scan working tree for secrets (gitleaks)`: obraz
+  `zricethezav/gitleaks:v8.21.2`, `detect --no-git --source=. --redact --verbose`, repo
+  montowane tylko do odczytu. Wersja obrazu = `rev` hooka w `.pre-commit-config.yaml`; źródło
+  względne (`-w /repo` + `--source=.`), bo przy bezwzględnym wpis w `.gitleaksignore` przestaje
+  pasować. Pilnuje tego `tests/test_ci_secret_scan.py` (5 testów, 4 czerwone na starym
+  workflow). Poprawione też: komentarz w `.github/workflows/ci.yml` i punkt „Sekrety” w
+  `docs/AI_TEMPLATE_NOTES.md` (oba twierdziły, że hook skanuje całe drzewo). Sprawdzone lokalnie:
+  drzewo szablonu 0 znalezisk, katalog próbny z fałszywym kluczem AWS → kod wyjścia 1.
+  Zgłoszenie podawało `ci.yml` — po podziale CI (#148) krok mieszka w `guards.yml`.
+
 - 2026-10-12: **Każdy strażnik ma test, który uruchamia go naprawdę (#139).** Po ludzku: reguła
   „żaden strażnik bez testu” była dotąd spełniona dla 4 z 16; teraz dla wszystkich 17 (4 hooki,
   12 strażników commita, sprawdzenie języka PR), a nowy strażnik bez testu wywala pakiet, więc

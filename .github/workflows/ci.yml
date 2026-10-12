@@ -87,7 +87,8 @@ jobs:
   # toolchain the `checks` job in guards.yml needs. Suppress a confirmed false
   # positive inline with a reason comment (audit trail, like a guard bypass) —
   # never loosen the rule.
-  # Secret scanning is NOT here: gitleaks already covers it in guards.yml.
+  # Secret scanning is NOT here: guards.yml scans the whole tree in a dedicated
+  # gitleaks step (the pre-commit hook alone sees staged files only, so not in CI).
   #
   # sast:
   #   name: SAST
