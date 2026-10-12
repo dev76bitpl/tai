@@ -151,6 +151,27 @@ Historia (zrobione przed przejściem):
 
 ## Stan sesji
 
+- 2026-10-13: **`npm run doctor` widzi, czy hooki Claude Code są podpięte, i czy jest `pytest` (#150, #162).**
+  Po ludzku: raport środowiska świecił cały na zielono, choć hooki zatrzymujące polecenia AI mogły
+  w ogóle nie działać na danej maszynie — sprawdzał tylko warstwę commita. Teraz ma osobną sekcję
+  „Claude Code hooks”: brak pliku ustawień to ostrzeżenie, niepodmieniony znacznik `INTERPRETER`
+  albo zepsuty plik to błąd (każdy hook wywala się przy starcie), strażnik obecny w repo, a
+  niepodpięty — ostrzeżenie z nazwą. Do tego ostrzeżenie o braku `pytest` z poleceniem naprawczym.
+  Progi wybrał właściciel: błąd w doctorze znaczy „środowisko niezdatne”, a brak pliku u kogoś,
+  kto nie używa Claude Code, tym nie jest.
+  Technicznie: `scripts/doctor.py` — `check_claude_hooks()` (czyta `.claude/settings.local.json`,
+  zbiera wszystkie pola `command` z sekcji `hooks`, znacznik szuka tylko w poleceniach, nie
+  w `_readme`; strażnik liczy się jako podpięty także wtedy, gdy uruchamia go wspólny
+  `.claude/settings.json`; porównanie z `.claude/hooks/guard-*.py`) i `check_pytest()`
+  (`sys.executable -m pytest --version`; wariant dla Ubuntu 24.04+ / PEP 668 w podpowiedzi).
+  Testy: `tests/test_doctor.py` (13), w `tests/test_new_project.py` dwa testy pilnujące decyzji
+  z #162 — `--init` usuwa `tests/`, a `.claude/hooks/tests/`, `scripts/dev-guards/tests/`
+  i `pytest.ini` zostają. `docs/SETUP.md`: tabela komunikatów w kroku 8a i akapit o projekcie
+  o innym stosie (przy commicie test własnego strażnika nie rusza sam, pilnuje go krok
+  `Run tests` w `guards.yml`; sprawdzone, że `pytest` pomija nieistniejący katalog z `testpaths`).
+  Wyszło przy okazji: w samym repo szablonu na maszynie właściciela pliku ustawień nie było —
+  doctor pokazał to pierwszym przebiegiem.
+
 - 2026-10-12: **Skan sekretów w CI naprawdę skanuje (#136).** Po ludzku: krok w CI, który miał
   łapać klucze i hasła wrzucone do repo, świecił na zielono bez względu na zawartość — patrzył
   tylko na pliki przygotowane do commita, a w CI takich nie ma. Lokalnie przy commicie działał.

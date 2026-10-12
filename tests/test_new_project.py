@@ -172,6 +172,31 @@ class TestInitInPlace:
         assert not (fake_root / "tests").exists()
         assert (fake_root / "README.md").read_text(encoding="utf-8") == README_SCAFFOLD
 
+    def test_should_keep_guard_tests_when_removing_template_tests(self, tmp_path):
+        # A new project must be able to satisfy "no guard without a test" out of the box:
+        # guard tests live next to the guards and travel with them, only tests/ (tests of the
+        # template's own tooling) goes away.
+        fake_root = self._setup(tmp_path)
+        hook_tests = fake_root / ".claude" / "hooks" / "tests"
+        commit_tests = fake_root / "scripts" / "dev-guards" / "tests"
+        for directory in (hook_tests, commit_tests):
+            directory.mkdir(parents=True)
+            (directory / "test_guard_example.py").write_text("# guard test")
+        (fake_root / "pytest.ini").write_text("[pytest]\n")
+        with mock.patch.object(mod, "create_config_json"):
+            with mock.patch.object(mod, "create_settings_local"):
+                mod.init_in_place(fake_root, dry_run=False, do_git=False)
+        assert not (fake_root / "tests").exists()
+        assert (hook_tests / "test_guard_example.py").exists()
+        assert (commit_tests / "test_guard_example.py").exists()
+        assert (fake_root / "pytest.ini").exists()
+
+    def test_should_not_list_guard_test_dirs_as_template_meta(self):
+        removed = [Path(name) for name in TEMPLATE_META]
+        for kept in (".claude/hooks/tests", "scripts/dev-guards/tests", "pytest.ini"):
+            kept_path = Path(kept)
+            assert not any(kept_path == r or r in kept_path.parents for r in removed), kept
+
     def test_writes_readme_scaffold(self, tmp_path):
         fake_root = self._setup(tmp_path)
         with mock.patch.object(mod, "create_config_json"):
