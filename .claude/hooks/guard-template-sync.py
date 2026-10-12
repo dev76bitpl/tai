@@ -21,22 +21,13 @@ is_template: true → to repo JEST template'm, sync pomijany.
 Trigger: staged pliki zawierają *.md lub scripts/dev-guards/*.py.
 Bypass: [skip-sync] w wiadomości commita.
 """
-import json
 import re
 import subprocess
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from stack import chdir_to_project_root, get_commit_message, get_staged_files, is_foreign_repo, is_git_commit_command, load_config, resolve_template_path
-
-
-def get_command() -> str:
-    try:
-        data = json.load(sys.stdin)
-        return data.get("tool_input", {}).get("command", "")
-    except Exception:
-        return ""
+from stack import chdir_to_project_root, get_commit_message, get_staged_files, is_foreign_repo, is_git_commit_command, load_config, read_command, resolve_template_path
 
 
 def get_section_headers(text: str) -> set[str]:
@@ -75,7 +66,7 @@ def _ack_message() -> str:
 
 
 def main():
-    command = get_command()
+    command = read_command("guard-template-sync")
     chdir_to_project_root(command)
 
     if not is_git_commit_command(command):
@@ -171,7 +162,7 @@ def main():
         msg = "❌ [BLOCK] Desync z AI template repo:\n\n"
         msg += "\n".join(issues)
         msg += "\n\n  Opcje:"
-        msg += f"\n  1. Universal? → zsynchronizuj zmiany do template ({template_path}), commit z [template-done]"
+        msg += f"\n  1. Universal? → zsynchronizuj zmiany do template ({template_root}), commit z [template-done]"
         msg += "\n  2. Project-specific / świadome odejście? → bypass [skip-sync] w commicie (z notą w body — co i dlaczego)"
         print(msg, file=sys.stderr)
         sys.exit(2)

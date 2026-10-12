@@ -104,6 +104,34 @@ Checklisty testów manualnych dla krytycznych flow.
 - [ ] Plik z polskimi znakami albo spacją w nazwie → nadal blokuje
 - [ ] Nazwisko wpisane do `~/.config/76bit/pii-names.txt` i użyte w pliku → blokuje; bez listy — nie
 
+### Scenariusz 11b — hook blokuje, gdy nie odczyta własnego wejścia
+
+Dotyczy czterech hooków blokujących: `guard-process-kill`, `guard-template-sync`, `guard-ai-template`,
+`guard-testing-checklist`. Polecenia niczego nie ubijają ani nie commitują — hook dostaje tylko tekst.
+Po każdym poleceniu `echo $?` pokazuje kod wyjścia (blokuje wyłącznie kod **2**).
+
+- [ ] `echo 'not json' | python3 .claude/hooks/guard-process-kill.py; echo $?` → komunikat
+      `❌ [BLOCK] guard-process-kill: cannot read its own input (input is not valid JSON)` i kod `2`
+- [ ] To samo dla pozostałych trzech hooków → ten sam komunikat z nazwą hooka i kod `2`
+- [ ] `printf '' | python3 .claude/hooks/guard-process-kill.py; echo $?` (puste wejście) → blokada, kod `2`
+- [ ] `echo '{"tool_name":"Edit","tool_input":{"file_path":"x"}}' | python3 .claude/hooks/guard-process-kill.py; echo $?`
+      → nic nie wypisuje, kod `0` (inne narzędzie niż powłoka — cisza jest poprawnym wynikiem)
+- [ ] `echo '{"tool_input":{"command":"killall node"}}' | python3 .claude/hooks/guard-process-kill.py; echo $?`
+      → blokada `kill by process NAME or PATTERN`, kod `2` (wejście bez `tool_name` też jest czytane)
+- [ ] `echo '{"tool_input":{"command":"kill 12345"}}' | python3 .claude/hooks/guard-process-kill.py; echo $?`
+      → nic nie wypisuje, kod `0`
+- [ ] `python3 -m pytest -q` z katalogu głównego → wszystkie testy zielone, w tym te z `.claude/hooks/tests/`
+
+### Scenariusz 11c — `guard-template-sync` blokuje rozjazd z szablonem zamiast się wywalać
+
+Wymaga projektu postawionego z szablonu, z lokalnym klonem szablonu (`ai_template_path` albo klon obok).
+
+- [ ] W projekcie dopisz do dowolnego `*.md` istniejącego też w szablonie nagłówek `## Tylko tutaj`, `git add` tego pliku
+- [ ] `echo '{"tool_input":{"command":"git commit -m \"docs: x\""}}' | python3 .claude/hooks/guard-template-sync.py; echo $?`
+      → `❌ [BLOCK] Desync z AI template repo` z nazwą pliku, nagłówkiem i ścieżką klona szablonu; kod `2`, bez `Traceback`
+- [ ] To samo z `[skip-sync]` w wiadomości → nic nie wypisuje, kod `0`
+- [ ] Cofnij zmianę (`git restore --staged <plik>` i usuń nagłówek)
+
 ---
 
 ## Rozstrzyganie ścieżki do template (`resolve_template_source`)

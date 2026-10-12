@@ -10,8 +10,7 @@ from pathlib import Path
 
 import pytest
 
-ROOT = Path(__file__).resolve().parent.parent
-HOOK = ROOT / ".claude" / "hooks" / "guard-process-kill.py"
+HOOK = Path(__file__).resolve().parents[1] / "guard-process-kill.py"
 
 
 def _load():
@@ -92,3 +91,66 @@ def test_should_ignore_data_and_unrelated_commands(guard, cmd):
 def test_self_test_cases_all_pass(guard):
     for cmd, should_block in guard.SELF_TEST:
         assert (guard.verdict(cmd, guard.DEFAULT_USER_PORTS) is not None) == should_block, cmd
+
+
+# ── end to end: the hook as a separate process, exit code checked ────────────
+# Everything above calls verdict() directly, so it cannot see the two things Claude Code
+# actually depends on: how the hook reads its payload from stdin and which exit code it ends
+# with. Only exit code 2 blocks a tool call — 1 is a non-blocking error. These tests run the
+# real script and assert the exact code; change sys.exit(2) in main() to 1 and they fail
+# while every verdict() test stays green.
+
+import json  # noqa: E402
+import subprocess  # noqa: E402
+
+
+def run_hook(command: str, tool_name: str | None = "Bash") -> subprocess.CompletedProcess:
+    data = {"tool_input": {"command": command}}
+    if tool_name is not None:
+        data["tool_name"] = tool_name
+    return subprocess.run(
+        [sys.executable, str(HOOK)],
+        input=json.dumps(data, ensure_ascii=False).encode("utf-8"),
+        capture_output=True,
+    )
+
+
+@pytest.mark.parametrize("cmd", [
+    "killall node",
+    'pkill -f "next dev"',
+    "ps aux | grep next | awk '{print $2}' | xargs kill",
+    'echo "zażółć gęślą jaźń" && killall node',
+])
+def test_should_exit_2_and_explain_when_kill_is_blocked(cmd):
+    result = run_hook(cmd)
+    assert result.returncode == 2
+    assert "[BLOCK] guard-process-kill" in result.stderr.decode("utf-8")
+
+
+@pytest.mark.parametrize("cmd", [
+    "kill 12345",
+    "kill $(cat /tmp/x/dev-ai.pid)",
+    "npm run dev:ai",
+    'git commit -m "docs: forbid pkill -f and taskkill /IM"',
+    'echo "zażółć gęślą jaźń"',
+])
+def test_should_exit_0_silently_when_command_is_allowed(cmd):
+    result = run_hook(cmd)
+    assert result.returncode == 0
+    assert result.stderr == b""
+
+
+def test_should_block_and_allow_the_same_way_without_tool_name():
+    # The payload shape used when feeding the hook by hand.
+    assert run_hook("killall node", tool_name=None).returncode == 2
+    assert run_hook("kill 12345", tool_name=None).returncode == 0
+
+
+def test_should_block_under_powershell_tool_name():
+    assert run_hook("Stop-Process -Name node -Force", tool_name="PowerShell").returncode == 2
+
+
+def test_should_exit_2_when_input_is_not_json():
+    result = subprocess.run([sys.executable, str(HOOK)], input=b"not json", capture_output=True)
+    assert result.returncode == 2
+    assert "cannot read its own input" in result.stderr.decode("utf-8")

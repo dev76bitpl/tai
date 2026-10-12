@@ -151,6 +151,29 @@ Historia (zrobione przed przejściem):
 
 ## Stan sesji
 
+- 2026-10-12: **Hooki blokują, gdy nie odczytają własnego wejścia; strażnik rozjazdu z szablonem
+  przestał się wywalać (#137, #140).** Po ludzku: cztery strażniki działające przed poleceniem
+  powłoki przepuszczały wszystko, gdy dostały coś, czego nie umiały odczytać — a strażnik, który
+  przepuszcza, wygląda tak samo jak ten, który nic nie znalazł. Teraz w takiej sytuacji blokują
+  i mówią, że nie sprawdziły. Strażnik rozjazdu z szablonem wywalał się dokładnie wtedy, gdy rozjazd
+  znalazł, więc commit przechodził; teraz blokuje.
+  Technicznie: `.claude/hooks/stack.py` — `parse_hook_input()` (trzy wyniki: polecenie / inne
+  narzędzie niż `Bash`/`PowerShell` / nieczytelne) i `read_command()` (kod 2 z komunikatem przy
+  nieczytelnym, kod 0 dla innego narzędzia); stdin czytany jako bajty UTF-8. Cztery kopie
+  `get_command()` (`except Exception: return ""`) usunięte z `guard-process-kill`,
+  `guard-template-sync`, `guard-ai-template`, `guard-testing-checklist`. Puste wejście = nieczytelne
+  (decyzja właściciela; hook PreToolUse zawsze dostaje dane). Wejście bez `tool_name`, ale
+  z poleceniem, jest czytane — tak hook karmi się ręcznie. #140: `guard-template-sync.py`,
+  komunikat blokady używał niezdefiniowanego `template_path` (`NameError`, kod 1 = brak blokady).
+  Testy: `.claude/hooks/tests/test_hook_input.py` (granica wejścia, każdy z czterech hooków jako
+  osobny proces), `test_guard_process_kill.py` (+ testy całej drogi), `test_guard_template_sync_hook.py`
+  (+ gałąź „klon istnieje” na tymczasowym projekcie). Próba psucia: zamiana kodu blokady 2→1 i 2→0
+  wywala testy całej drogi, a testy samego `verdict()` zostają zielone.
+  Poza głównym tematem, decyzją właściciela (#162): testy strażników mieszkają obok strażników,
+  żeby jechały z nimi do nowego projektu — `.claude/hooks/tests/` (dwa pliki przeniesione z `tests/`),
+  `pytest.ini` z `testpaths`, bo pytest pomija katalogi z kropką. Testy strażników commita
+  przeniesie #139. `suggest-pr` i `session-context` mają ten sam `except`, ale niczego nie blokują —
+  nieruszone.
 - 2026-10-12: **Reguły szablonu mówią to samo co praktyka: praca w issues, plik jako log (#131).**
   Po ludzku: nowy projekt z szablonu nie startuje już ze sprzecznością „zasady każą prowadzić
   zadania w pliku, a pracujemy w issues”. `CLAUDE.md`: nowy akapit „Gdzie żyje otwarta praca”
