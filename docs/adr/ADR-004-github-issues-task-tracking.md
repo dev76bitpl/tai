@@ -3,6 +3,30 @@
 **Status:** accepted (wykonanie odłożone — patrz „Konsekwencje / Timing")
 **Data:** 2026-06-11
 
+## Korekta 2026-10-12 — plik zadań zostaje jako log sesji (zmienia §5)
+
+§5 zakładał, że `docs/TASKS.md` skurczy się do jednozdaniowego wskaźnika albo zniknie,
+a guard pilnujący jego obecności w commicie zostanie usunięty lub przepięty. Praktyka
+po przejściu na issues pokazała co innego: plik przestał być listą zadań, ale jako
+**log sesji** (co się wydarzyło i dlaczego, co było celem, a co dygresją) niesie treść,
+której issue nie niesie — issue mówi, co jest do zrobienia, log mówi, jak do tego doszło.
+
+**Zmiana:**
+
+- `docs/TASKS.md` **zostaje** jako log sesji; otwartych checkboxów w nim nie prowadzimy
+- guard `guard-tasks-staged` **zostaje** i pilnuje wpisu w logu przy każdym commicie
+  (`scripts/dev-guards/guard_tasks_staged.py`, test `tests/test_guard_tasks_staged.py`);
+  aktualizację stanu zadania nadal załatwia `Closes #N`
+- `docs/ROADMAP.md` definiuje fazy i nie trzyma stanu (bez zmian wobec §4)
+
+Powód odrzucenia „cienkiego wskaźnika”: dwa źródła prawdy groziły rozjazdem tylko wtedy,
+gdy plik i issues opisywały **tę samą** rzecz. Log i lista zadań opisują różne rzeczy,
+więc rozjazd nie powstaje, a usunięcie logu zabrałoby kontekst decyzji kolejnej sesji.
+
+§6 (markdown jako lista zadań w projekcie bez GitHuba) stoi bez zmian.
+
+---
+
 ## Korekta 2026-06-14 — wynik pilotażu: board zdegradowany do opcjonalnego
 
 Pierwszy pilotaż wykonania tej decyzji w realnym projekcie (model 1 właściciel + AI)

@@ -151,6 +151,18 @@ Historia (zrobione przed przejściem):
 
 ## Stan sesji
 
+- 2026-10-12: **Reguły szablonu mówią to samo co praktyka: praca w issues, plik jako log (#131).**
+  Po ludzku: nowy projekt z szablonu nie startuje już ze sprzecznością „zasady każą prowadzić
+  zadania w pliku, a pracujemy w issues”. `CLAUDE.md`: nowy akapit „Gdzie żyje otwarta praca”
+  w regule 4 i 12 poprawionych odesłań (reguły 4, 10, 16a, 19a, lista artefaktów, kolejność
+  tworzenia, „Aktualizacja”, „Kiedy NIE pisać ADR”, „Start projektu”); dwie warstwy opisu dotyczą
+  treści issue. Projekt bez GitHuba zostaje przy pliku jako liście zadań (ADR-004 §6).
+  `scripts/dev-guards/guard_tasks_staged.py`: komunikat mówi o wpisie w logu sesji, nie o liście
+  zadań; dopisany test `tests/test_guard_tasks_staged.py` (6 przypadków, uruchamia skrypt
+  w prawdziwym repo i sprawdza kod wyjścia; celowo zepsuty strażnik wywala 4 z 6) — to też jedna
+  pozycja z #139. ADR-004: korekta §5 — plik zostaje jako log sesji, strażnik zostaje.
+  Znana słabość strażnika, nieruszona: dopasowuje nazwę pliku jako fragment ścieżki. Poza zakresem:
+  wzmianki o pliku zadań w `README.md`, `docs/SETUP.md`, `scripts/new-project.py` (#157, #124).
 - 2026-10-12: **Issues po polsku — reguła 2 w `CLAUDE.md` (#131, pierwszy krok).** Po ludzku: zadania
   i sprawy do decyzji czyta właściciel, więc mają być w języku, w którym rozmawiamy; dotąd reguła
   kazała pisać je po angielsku i przeczyła praktyce. Kod, opisy commitów i PR zostają po angielsku
