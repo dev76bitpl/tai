@@ -162,6 +162,15 @@ pre-commit run --all-files
 - gdy strażnik nie umie odczytać zmian, **blokuje** commit zamiast przepuścić
 - pomija pliki binarne i lockfile; detektor `scripts/dev-guards/pii.py` da się zaimportować osobno
   (np. do cyklicznego skanu całego repo)
+- nazwy rodzajów zwracane przez detektor (`PESEL`, `bank account`, `phone`, `private e-mail`,
+  `listed name`) są **kontraktem**: skan, który zapisuje je w kluczach własnej listy wyjątków, po
+  zmianie nazwy przestaje rozpoznawać stare klucze. Do 2026-10-12 nazwy były polskie — istniejącą
+  listę przepisz raz, z kopią zapasową:
+  ```bash
+  cp lista-wyjatkow.txt lista-wyjatkow.txt.bak
+  sed -i -e 's/:numer konta:/:bank account:/' -e 's/:telefon:/:phone:/' \
+         -e 's/:e-mail prywatny:/:private e-mail:/' -e 's/:nazwisko z listy:/:listed name:/' lista-wyjatkow.txt
+  ```
 
 ---
 

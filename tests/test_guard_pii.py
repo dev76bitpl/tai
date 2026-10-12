@@ -20,24 +20,24 @@ def test_valid_pesel_found_invalid_ignored():
 def test_bank_account_checksum():
     acc = "61109010140000071219812874"  # pii-ok
     assert account_ok(acc)
-    assert "numer konta" in kinds("konto PL61 1090 1014 0000 0712 1981 2874")  # pii-ok
+    assert "bank account" in kinds("konto PL61 1090 1014 0000 0712 1981 2874")  # pii-ok
     assert kinds("konto 61109010140000071219812875") == []  # pii-ok
 
 
 def test_phone_formats():
-    assert kinds("tel. +48 600 700 800") == ["telefon"]  # pii-ok
-    assert kinds("tel. 600-700-800") == ["telefon"]  # pii-ok
+    assert kinds("tel. +48 600 700 800") == ["phone"]  # pii-ok
+    assert kinds("tel. 600-700-800") == ["phone"]  # pii-ok
     assert kinds("version 1.600.700") == []
 
 
 def test_private_vs_company_email():
-    assert kinds("jan.kowalski@gmail.com") == ["e-mail prywatny"]  # pii-ok
+    assert kinds("jan.kowalski@gmail.com") == ["private e-mail"]  # pii-ok
     assert kinds("biuro@cdue.edu.pl") == []
     assert kinds("user@example.com") == []
 
 
 def test_names_from_list_whole_word():
-    assert kinds("Ania Zielinska zapisana", ["Zielinska"]) == ["nazwisko z listy"]  # pii-ok
+    assert kinds("Ania Zielinska zapisana", ["Zielinska"]) == ["listed name"]  # pii-ok
     assert kinds("ZielinskaService", ["Zielinska"]) == []  # pii-ok
 
 
@@ -88,16 +88,16 @@ def test_should_block_and_mask_when_staged_line_adds_pesel(repo):
     stage(repo, "notes.txt", "first line\nstudent %s\n" % FAKE_PESEL)
     result = run_guard(repo)
     assert result.returncode == 1
-    assert "notes.txt:2" in result.stdout
-    assert "PESEL" in result.stdout
-    assert FAKE_PESEL not in result.stdout
+    assert "notes.txt:2" in result.stderr
+    assert "PESEL" in result.stderr
+    assert FAKE_PESEL not in result.stderr
 
 
 def test_should_pass_when_staged_change_is_clean(repo):
     stage(repo, "notes.txt", "nothing personal here\nversion 1.600.700\n")
     result = run_guard(repo)
     assert result.returncode == 0
-    assert result.stdout == ""
+    assert result.stderr == ""
 
 
 def test_should_pass_when_nothing_is_staged(repo):
@@ -113,21 +113,21 @@ def test_should_block_when_file_name_has_non_ascii_characters(repo):
     stage(repo, "zażółć.txt", "student %s\n" % FAKE_PESEL)
     result = run_guard(repo)
     assert result.returncode == 1
-    assert "zażółć.txt:1" in result.stdout
+    assert "zażółć.txt:1" in result.stderr
 
 
 def test_should_block_when_file_name_has_space(repo):
     stage(repo, "class list.txt", "student %s\n" % FAKE_PESEL)
     result = run_guard(repo)
     assert result.returncode == 1
-    assert "class list.txt:1" in result.stdout
+    assert "class list.txt:1" in result.stderr
 
 
 def test_should_block_when_added_line_looks_like_diff_header(repo):
     stage(repo, "notes.txt", "++ /dev/null\nstudent %s\n" % FAKE_PESEL)
     result = run_guard(repo)
     assert result.returncode == 1
-    assert "notes.txt:2" in result.stdout
+    assert "notes.txt:2" in result.stderr
 
 
 def test_should_skip_lock_files(repo):
@@ -138,4 +138,4 @@ def test_should_skip_lock_files(repo):
 def test_should_block_when_staged_diff_cannot_be_read(tmp_path):
     result = run_guard(tmp_path, GIT_DIR=str(tmp_path / "missing.git"))
     assert result.returncode == 1
-    assert "zablokowany" in result.stdout
+    assert "[BLOCK]" in result.stderr

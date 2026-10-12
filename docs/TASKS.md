@@ -19,6 +19,12 @@ Checklisty implementacyjne per faza znajdują się wyłącznie w [docs/ROADMAP.m
       Projekty dostaną strażnika przy najbliższej synchronizacji z szablonem.
       Obsługa (lista nazwisk, dane testowe, fałszywy alarm): `docs/SETUP.md`, sekcja o `guard-pii`;
       test ręczny: `docs/TESTING.md`, scenariusz 11a.
+- [x] **`guard-pii` po angielsku** (2026-10-12, #145): komunikat blokady i nazwy rodzajów danych
+      (`bank account`, `phone`, `private e-mail`, `listed name`) po angielsku, w stylu pozostałych
+      strażników (`❌ [BLOCK] ...`, na stderr).
+      > Po ludzku: strażnik mówi teraz tym samym językiem co reszta. Uwaga przy wdrożeniu: skan
+      > zapisujący nazwę rodzaju w kluczach listy wyjątków przestaje rozpoznawać stare klucze —
+      > listę trzeba przepisać raz, w tym samym momencie (komenda w `docs/SETUP.md`).
 - [x] CI: pakiet testów repo odpalany na PR (`pytest` jako **krok** w istniejącym jobie
       `checks`, nie osobny job — job jest rozliczany w górę do pełnej minuty, a ten już
       instaluje Pythona, więc krok nie dokłada ani jednej naliczonej minuty). Wcześniej

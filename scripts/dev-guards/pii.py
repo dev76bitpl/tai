@@ -17,6 +17,10 @@ list such values in ~/.config/76bit/pii-public.txt (one per line, digits or e-ma
 
 A line containing the marker `pii-ok` is skipped (documented fake data, fixtures).
 Found values are always reported masked, never in full.
+
+The kind labels returned by scan_line ("PESEL", "bank account", "phone", "private e-mail",
+"listed name") are a contract: callers may store them (e.g. in allowlist keys), so renaming
+one requires rewriting such stored keys in the same step.
 """
 import os
 import re
@@ -96,17 +100,17 @@ def scan_line(line: str, names=()):
             found.append(("PESEL", mask(m.group(1))))
     for m in ACCOUNT_RE.finditer(line):
         if account_ok(m.group(1)):
-            found.append(("numer konta", mask(m.group(1))))
+            found.append(("bank account", mask(m.group(1))))
     for m in PHONE_RE.finditer(line):
         digits = re.sub(r"\D", "", m.group(0))[-9:]
         if len(set(digits[3:])) == 1 or digits in PUBLIC:
             continue  # 600 000 000 style placeholders, company numbers
-        found.append(("telefon", mask(m.group(0))))
+        found.append(("phone", mask(m.group(0))))
     for m in EMAIL_RE.finditer(line):
         if m.group(1).lower() in PUBLIC_MAIL and m.group(0).lower() not in PUBLIC:
-            found.append(("e-mail prywatny", mask(m.group(0))))
+            found.append(("private e-mail", mask(m.group(0))))
     low = line.lower()
     for n in names:
         if re.search(r"(?<!\w)" + re.escape(n.lower()) + r"(?!\w)", low):
-            found.append(("nazwisko z listy", mask(n)))
+            found.append(("listed name", mask(n)))
     return found

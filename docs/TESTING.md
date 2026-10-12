@@ -97,8 +97,8 @@ Checklisty testów manualnych dla krytycznych flow.
 ### Scenariusz 11a — personal data blocked (`guard-pii`)
 
 - [ ] Plik z linią `uczen 44051401359` (przykładowy PESEL z poprawną sumą kontrolną), stage, <!-- pii-ok -->
-      `python3 scripts/dev-guards/guard_pii.py` → blokada z nazwą pliku, numerem linii i wartością
-      zamaskowaną (`44*******59`); pełny numer nie pojawia się w komunikacie <!-- pii-ok -->
+      `python3 scripts/dev-guards/guard_pii.py` → blokada `❌ [BLOCK] Personal data in staged changes`
+      z nazwą pliku, numerem linii, rodzajem `PESEL` i wartością zamaskowaną (`44*******59`); pełny numer nie pojawia się w komunikacie <!-- pii-ok -->
 - [ ] Usuń plik ze staged → to samo polecenie nie wypisuje nic (cisza = poprawny wynik)
 - [ ] Ta sama linia z dopiskiem `pii-ok` → przechodzi
 - [ ] Plik z polskimi znakami albo spacją w nazwie → nadal blokuje

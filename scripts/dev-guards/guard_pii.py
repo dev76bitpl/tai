@@ -17,6 +17,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from pii import load_names, scan_line
+from stack import block
 
 SKIP_SUFFIXES = (".lock", ".png", ".jpg", ".jpeg", ".gif", ".webp", ".pdf", ".ico", ".woff", ".woff2")
 SKIP_NAMES = ("package-lock.json", "pnpm-lock.yaml", "yarn.lock", "poetry.lock", "uv.lock")
@@ -31,19 +32,20 @@ def header_path(raw: str) -> str:
     return path[2:] if path.startswith("b/") else path
 
 
-def main() -> int:
+def main() -> None:
     try:
         proc = subprocess.run(
             ["git", "-c", "core.quotePath=false", "diff", "--cached", "--unified=0", "--no-color",
              "--diff-filter=AM"],
             capture_output=True, text=True, encoding="utf-8", errors="replace")
     except OSError as exc:
-        print("guard-pii: nie mozna uruchomic git (%s) - commit zablokowany." % exc)
-        return 1
+        block("❌ [BLOCK] guard-pii cannot run git (%s), so the staged changes were not checked." % exc)
     if proc.returncode != 0:
-        print("guard-pii: nie mozna odczytac zmian do commita - commit zablokowany.")
-        print(proc.stderr.strip())
-        return 1
+        block(
+            "❌ [BLOCK] guard-pii cannot read the staged changes, so they were not checked.\n"
+            "\n"
+            "   " + proc.stderr.strip()
+        )
     names = load_names()
     hits, path, lineno, in_hunk = [], "?", 0, False
     for raw in proc.stdout.splitlines():
@@ -67,15 +69,20 @@ def main() -> int:
         if path.endswith(SKIP_SUFFIXES) or Path(path).name in SKIP_NAMES:
             continue
         for kind, masked in scan_line(raw[1:], names):
-            hits.append("  %s:%d  %s  %s" % (path, lineno, kind, masked))
+            hits.append("   %s:%d  %s  %s" % (path, lineno, kind, masked))
     if not hits:
-        return 0
-    print("guard-pii: dane osobowe w zmianach do commita (wartosci zamaskowane):")
-    print("\n".join(hits))
-    print("Usun je z pliku. Dane testowe oznacz `pii-ok` w tej linii.")
-    print("Falszywy alarm, ktory sprawdziles: SKIP=guard-pii git commit ...")
-    return 1
+        return
+    block(
+        "❌ [BLOCK] Personal data in staged changes (values masked):\n"
+        "\n"
+        + "\n".join(hits) + "\n"
+        "\n"
+        "   Remove it from the file.\n"
+        "\n"
+        "   Documented fake data:    put `pii-ok` on the same line\n"
+        "   Checked false positive:  SKIP=guard-pii git commit ..."
+    )
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()
