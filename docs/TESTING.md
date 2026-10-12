@@ -94,6 +94,16 @@ Checklisty testów manualnych dla krytycznych flow.
 - [ ] Auto-utworzony Release PR z `CHANGELOG.md` + version bump
 - [ ] Merge Release PR → tag + GitHub Release
 
+### Scenariusz 11a — personal data blocked (`guard-pii`)
+
+- [ ] Plik z linią `uczen 44051401359` (przykładowy PESEL z poprawną sumą kontrolną), stage, <!-- pii-ok -->
+      `python3 scripts/dev-guards/guard_pii.py` → blokada z nazwą pliku, numerem linii i wartością
+      zamaskowaną (`44*******59`); pełny numer nie pojawia się w komunikacie <!-- pii-ok -->
+- [ ] Usuń plik ze staged → to samo polecenie nie wypisuje nic (cisza = poprawny wynik)
+- [ ] Ta sama linia z dopiskiem `pii-ok` → przechodzi
+- [ ] Plik z polskimi znakami albo spacją w nazwie → nadal blokuje
+- [ ] Nazwisko wpisane do `~/.config/76bit/pii-names.txt` i użyte w pliku → blokuje; bez listy — nie
+
 ---
 
 ## Rozstrzyganie ścieżki do template (`resolve_template_source`)

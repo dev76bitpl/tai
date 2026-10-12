@@ -105,6 +105,12 @@ repos:
         language: system
         stages: [commit-msg]
 
+      - id: guard-pii
+        name: "[CLAUDE.md] no personal data in commits (PESEL, account, phone, private e-mail, local name list)"
+        entry: python3 scripts/dev-guards/guard_pii.py
+        language: system
+        pass_filenames: false
+
       - id: guard-commit-lang
         name: "[CLAUDE.md 2] commit message subject must be in English"
         entry: python3 scripts/dev-guards/guard_commit_lang.py

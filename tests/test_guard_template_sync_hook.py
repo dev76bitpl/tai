@@ -37,6 +37,9 @@ def _no_machine_template_path(monkeypatch):
     # $AI_TEMPLATE_PATH wins over every config file (stack.resolve_template_source), so a machine
     # that sets it made the "no clone" cases find one and fail. Each test states its own setup.
     monkeypatch.delenv("AI_TEMPLATE_PATH", raising=False)
+    # Autodetection scans sibling directories of the repo, so a neighbouring project marked as a
+    # template had the same effect. Patched in the stack module this hook actually imported.
+    monkeypatch.setitem(h.resolve_template_path.__globals__, "_autodetect_template_root", lambda: None)
 
 
 # ── _local_template_root ──────────────────────────────────────────────────────
