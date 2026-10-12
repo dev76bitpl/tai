@@ -7,6 +7,16 @@ Checklisty implementacyjne per faza znajdują się wyłącznie w [docs/ROADMAP.m
 
 ## Aktualny fokus
 
+- [x] **Strażnik danych osobowych `guard-pii`** (2026-10-02, na prośbę właściciela):
+      blokuje commit, który dodaje PESEL (z sumą kontrolną), numer konta (mod 97), telefon,
+      prywatny e-mail (gmail, wp, onet…) albo nazwisko z lokalnej listy
+      `~/.config/76bit/pii-names.txt` (lista nigdy nie trafia do repo). Wartości w komunikacie
+      zamaskowane. Dane testowe: `pii-ok` w linii. Powód: dane prawdziwej osoby mogą trafić do
+      repozytorium niezauważone, a z historii Gita nie da się ich już wygodnie usunąć.
+      Gdy strażnik nie umie odczytać zmian, blokuje commit (nie przepuszcza po cichu); pliki
+      z polskimi znakami lub spacją w nazwie są skanowane jak każde inne. Detektor
+      `scripts/dev-guards/pii.py` da się zaimportować osobno, np. do cyklicznego skanu repo.
+      Projekty dostaną strażnika przy najbliższej synchronizacji z szablonem.
 - [x] CI: pakiet testów repo odpalany na PR (`pytest` jako **krok** w istniejącym jobie
       `checks`, nie osobny job — job jest rozliczany w górę do pełnej minuty, a ten już
       instaluje Pythona, więc krok nie dokłada ani jednej naliczonej minuty). Wcześniej
