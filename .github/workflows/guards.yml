@@ -1,0 +1,105 @@
+name: Guards
+
+# EVERY pull request, NO path filter — on purpose. A docs-only PR still has to be
+# checked for commit format and language, file hygiene and secrets, so this
+# workflow must never get `paths` / `paths-ignore`. The heavy, project-specific
+# checks live in ci.yml, which does skip docs-only PRs.
+#
+# PULL REQUESTS ONLY — deliberately no `push: [main]` trigger.
+# Re-running the identical commit after merge repeats a result the PR already
+# produced; measured on a real project it was HALF the Actions bill. Accepted
+# risk: if `main` moves between a green PR and its merge, a semantic conflict
+# lands unchecked — small for one maintainer, grows with parallel PRs.
+# Rationale: docs/AI_TEMPLATE_NOTES.md → "CI — wydajność pipeline'u".
+on:
+  pull_request:
+    branches: [main]
+
+# Cancel superseded runs on the same branch/PR — rapid pushes during iteration
+# no longer spawn parallel duplicate runs, which conserves Actions minutes.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Guards, plus anything that finishes in seconds.
+  #
+  # Actions bills each JOB rounded UP to a full minute, so a check doing 8 s of
+  # work costs the same minute as a build. Fold every sub-minute check in HERE as
+  # a step — this job is nowhere near the critical path, so it costs no waiting.
+  # That, plus the pull_request-only trigger above, is the free half of the bill.
+  #
+  # Collapsing the parallel legs of ci.yml into this job saves more, but it DOES cost
+  # wall-clock (sum instead of slowest leg, first failure stops the rest). That is
+  # a trade to price out per project, not a default — see
+  # docs/AI_TEMPLATE_NOTES.md → "CI — wydajność pipeline'u".
+  checks:
+    name: Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # gitlint needs full history to inspect PR commits
+
+      # ── Guards: server-side mirror of .pre-commit-config.yaml, un-bypassable ──
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Cache pre-commit envs
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: Install pre-commit
+        run: pip install pre-commit
+
+      # File-level hooks (whitespace, secrets, etc.) across whole tree.
+      - name: Run pre-commit hooks on all files
+        run: pre-commit run --all-files --show-diff-on-failure
+        env:
+          # Skip stack-aware lint/tests here — the native steps below run them
+          # with the full toolchain.
+          # Skip no-commit-to-branch — CI isn't creating commits; the hook is for
+          # blocking local commits only.
+          SKIP: guard-lint,guard-tests,no-commit-to-branch
+
+      # Commit-msg hooks against each commit in the PR. Only format + language
+      # enforcement here — guards that need staging context (tasks-staged,
+      # tests-with-src, adr, user-tested) were enforced locally at commit time
+      # and cannot be replayed in CI without re-staging historical state.
+      - name: Lint commit messages
+        run: |
+          git config user.name "ci-bot"
+          git config user.email "ci@example.com"
+          git fetch origin ${{ github.base_ref }}
+          for sha in $(git rev-list origin/${{ github.base_ref }}..HEAD); do
+            git log -1 --format=%B "$sha" > /tmp/commit-msg
+            pre-commit run gitlint --hook-stage commit-msg --commit-msg-filename /tmp/commit-msg || exit 1
+            pre-commit run guard-commit-lang --hook-stage commit-msg --commit-msg-filename /tmp/commit-msg || exit 1
+          done
+
+      # Repo's own test suite. A STEP here, not a job of its own: Actions bills every
+      # job rounded UP to a full minute, so a 1-second suite in its own job costs the
+      # same minute as a build (docs/AI_TEMPLATE_NOTES.md → "CI — wydajność pipeline'u").
+      # This job already sets up Python, so the step adds no billed minute at all.
+      # guard-tests stays in SKIP above — it would run this same command through stack
+      # autodetection, which picks node here because of package.json.
+      - name: Run tests
+        run: |
+          pip install pytest
+          python3 -m pytest -q
+
+      # Dependency CVE scan — third-party holes in what you ship. Belongs HERE as a
+      # step, not in a job of its own: it finishes in seconds, and a job would bill
+      # a full minute for them. REPORT-ONLY (`continue-on-error: true`) — an
+      # unpatchable transitive CVE must not wedge every merge. Trap + exit-code
+      # handling: docs/AI_TEMPLATE_NOTES.md → "CI — skanery bezpieczeństwa".
+      # - name: Dependency CVE scan
+      #   continue-on-error: true
+      #   run: |
+      #     <scanner> <args> || code=$?
+      #     if [ "${code:-0}" -gt 1 ]; then exit "${code}"; fi; exit 0

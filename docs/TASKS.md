@@ -104,25 +104,6 @@ Checklisty implementacyjne per faza znajdują się wyłącznie w [docs/ROADMAP.m
 
 ## Backlog
 
-- [ ] **PR czysto dokumentacyjny nie powinien palić pełnego CI** (do przemyślenia, nie zdecydowane)
-
-  > Po ludzku: zmiana dwóch akapitów w dokumentacji odpala dziś build, testy, typecheck i skan
-  > bezpieczeństwa — czyli pełny rachunek za tekst, w którym nie ma czego zbudować. Przy jednej
-  > puli minut na wszystkie repo to realny koszt, nie teoria.
-
-  Kierunek: ograniczyć ciężkie joby do zmian dotykających kodu (`paths` / `paths-ignore`), zostawiając
-  lekkie sprawdzenia bez zmian. **Dwa zastrzeżenia, bez których to szkodzi:**
-  (1) `paths-ignore` na checku **wymaganym** przez branch protection blokuje PR **na zawsze** —
-  GitHub raportuje „expected", status nigdy nie przychodzi, merge stoi; bezpieczny wariant to job
-  zwracający sukces dla ścieżek dokumentacyjnych, nie wycięcie workflow;
-  (2) **nie pomijamy wszystkiego** — walidacja tytułu i opisu PR ma działać zawsze, bo sprawdza
-  tekst PR-a, a przy zmianie dokumentacyjnej jest najbardziej potrzebna.
-
-  Do przemyślenia zanim to powstanie: co dokładnie liczy się jako „tylko dokumentacja" (czy
-  `.github/**` i pliki konfiguracyjne też, skoro potrafią zepsuć build); jak to się zachowa w repo
-  z wieloma pakietami; czy wpływa na wersjonowanie release'ów. Weryfikacja wymaga odpalenia CI —
-  czyli tego zasobu, którego oszczędzanie jest celem; robić, gdy budżet minut na to pozwala.
-
 - [ ] **Lekki tor dla zmian trywialnych — wpiąć w `CLAUDE.md`** (uzgodnione, nie zakodowane)
 
   > Po ludzku: trywialna decyzja (np. „board: tak/nie") nie może kosztować godziny i 4 PR-ów.
@@ -280,6 +261,17 @@ dry-run guardów tą samą treścią co commit; nie mieszaj sesji system/projekt
 
 ## Stan sesji
 
+- 2026-10-12: **CI rozdzielone na strażników i ciężkie sprawdzenia (#148, gałąź
+  `ci/148-docs-only-split`).** Po ludzku: w nowym projekcie poprawka samej dokumentacji nie odpala już
+  testów, builda i skanu kodu — idą tylko lekkie strażniki. Zamyka wpis z backlogu „PR czysto
+  dokumentacyjny nie powinien palić pełnego CI”. `guards.yml`: całe dotychczasowe zadanie `checks`
+  przeniesione 1:1 (pre-commit, opisy commitów, testy szablonu), każdy PR, bez filtra. `ci.yml`: sam
+  wzór (matryca stosu, build, SAST) z `paths-ignore` na `docs/**` i `**/*.md` oraz zaślepką
+  `if: false`, bo plik bez joba jest nieważny. Świadomie inaczej niż podział 1:1 znany z projektów:
+  testy szablonu trwają 2 s, osobny job kosztowałby drugą naliczoną minutę na każdym PR z kodem,
+  a `.claude/**` nie może być pomijane, bo testy czytają stamtąd hooki. Brak wymaganych checków na
+  `main`, więc pominięty workflow nie blokuje merge'a. Do potwierdzenia na pierwszym PR: zaślepka
+  nie startuje runnera; na pierwszym PR dokumentacyjnym: idą tylko `Guards` i `PR language`.
 - 2026-09-28: **`update-skills.py` bez `--apply` przestał zapisywać manifest.** Po ludzku: sprawdzenie
   „tylko pokaż, co jest do aktualizacji" zostawiało zmieniony `skills-manifest.json`, który w projekcie
   potrafił wjechać do zupełnie innego commita. Przyczyna: `check_skill()` stempluje `checked`
