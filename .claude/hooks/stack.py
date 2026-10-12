@@ -84,6 +84,61 @@ BASE_ADR_PATTERNS: list[tuple[str, str]] = [
 ]
 
 
+SHELL_TOOLS = ("Bash", "PowerShell")
+
+
+def parse_hook_input(raw: bytes) -> tuple[str | None, str | None]:
+    """PreToolUse payload -> (command, error). Exactly three outcomes:
+
+    (command, None)  the shell command to check (may be an empty string)
+    (None, None)     a readable payload for a tool that is not a shell — not this hook's business
+    (None, error)    the payload cannot be read — the caller must BLOCK, not pass
+
+    A guard that treats unreadable input as "no command" passes everything and looks exactly
+    like a guard that found nothing wrong. Bytes are decoded as UTF-8 regardless of the console
+    encoding, so a non-ASCII command is not mistaken for garbage (or silently mangled).
+    A payload without tool_name is still read when it carries a command: that is how a guard
+    gets fed by hand (echo '{"tool_input":{"command":"..."}}' | guard.py).
+    """
+    try:
+        data = json.loads(raw.decode("utf-8"))
+    except UnicodeDecodeError:
+        return None, "input is not valid UTF-8"
+    except ValueError:
+        return None, "input is empty" if not raw.strip() else "input is not valid JSON"
+    if not isinstance(data, dict):
+        return None, "input is not a JSON object"
+    tool_name = data.get("tool_name")
+    if tool_name is not None and tool_name not in SHELL_TOOLS:
+        return None, None
+    tool_input = data.get("tool_input")
+    if not isinstance(tool_input, dict):
+        return None, "input has no tool_input object"
+    command = tool_input.get("command")
+    if not isinstance(command, str):
+        return None, "tool_input.command is missing or not a string"
+    return command, None
+
+
+def read_command(guard: str) -> str:
+    """The shell command from stdin. Exits 0 when the call is not a shell command and
+    exits 2 (block) with a message when the input cannot be read."""
+    command, error = parse_hook_input(sys.stdin.buffer.read())
+    if error is not None:
+        print(
+            f"❌ [BLOCK] {guard}: cannot read its own input ({error}), so the command was NOT checked.\n"
+            "  A guard that cannot check blocks instead of passing silently.\n"
+            "  Expected on stdin: JSON with tool_input.command (Claude Code PreToolUse payload).\n"
+            "  If every shell command is blocked with this message, the payload format changed —\n"
+            "  fix parse_hook_input() in .claude/hooks/stack.py; do not unhook the guard.",
+            file=sys.stderr,
+        )
+        sys.exit(2)
+    if command is None:
+        sys.exit(0)
+    return command
+
+
 def _normalize_git_path(path: str) -> str:
     """Convert /c/foo/bar style paths (Git for Windows) to C:/foo/bar."""
     if platform.system() == "Windows":

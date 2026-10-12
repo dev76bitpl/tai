@@ -12,13 +12,12 @@ parsowany tylko z -m, więc -F dawał exit 0 = cichy bypass).
 Bypass: [no-template] lub [template-done] w wiadomości commita
 (wykrywane w -m, heredoc oraz w pliku -F).
 """
-import json
 import re
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from stack import chdir_to_project_root, get_commit_message, get_staged_files, is_foreign_repo, is_git_commit_command, load_config
+from stack import chdir_to_project_root, get_commit_message, get_staged_files, is_foreign_repo, is_git_commit_command, load_config, read_command
 
 TEMPLATE_PATTERNS: list[str] = [
     r"^\.claude/",
@@ -33,14 +32,6 @@ TRIGGER_TYPES = ("feat", "fix", "docs", "refactor")
 CONVENTIONAL = r"^(feat|fix|docs|refactor|test|chore|style|perf|ci|build)"
 
 
-def get_command() -> str:
-    try:
-        data = json.load(sys.stdin)
-        return data.get("tool_input", {}).get("command", "")
-    except Exception:
-        return ""
-
-
 def commit_type_of(message: str) -> str:
     """Conventional-commit type from message first line, or '' if none."""
     m = re.match(CONVENTIONAL, message.strip())
@@ -53,7 +44,7 @@ def _block(msg: str) -> None:
 
 
 def main():
-    command = get_command()
+    command = read_command("guard-ai-template")
     chdir_to_project_root(command)
 
     if not is_git_commit_command(command):

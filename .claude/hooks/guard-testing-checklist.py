@@ -8,26 +8,17 @@ anywhere in the current branch (staged now OR committed earlier on this branch).
 Bypass: [skip-test-check] in commit message — only for doc-only / chore changes
 that have no UI or runtime impact. Requires a justification note in commit body.
 """
-import json
 import re
 import subprocess
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from stack import chdir_to_project_root, get_staged_files, is_foreign_repo, is_git_commit_command
+from stack import chdir_to_project_root, get_staged_files, is_foreign_repo, is_git_commit_command, read_command
 
 TRIGGER_BRANCHES = re.compile(r"^(feat|fix)/")
 TESTING_FILE = "docs/TESTING.md"
 BASE_BRANCHES = ("main", "master", "develop")
-
-
-def get_command() -> str:
-    try:
-        data = json.load(sys.stdin)
-        return data.get("tool_input", {}).get("command", "")
-    except Exception:
-        return ""
 
 
 def current_branch() -> str:
@@ -56,7 +47,7 @@ def testing_md_touched_in_branch() -> bool:
 
 
 def main():
-    command = get_command()
+    command = read_command("guard-testing-checklist")
     chdir_to_project_root(command)
 
     if not is_git_commit_command(command):

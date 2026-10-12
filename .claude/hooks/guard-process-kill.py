@@ -18,17 +18,20 @@ Allowed:
   - port-based kills on any port that is NOT a user port (i.e. the AI's own port)
   - docker kill/stop (containers, not dev processes)
 
+Unreadable input (not JSON, no tool_input.command) blocks too: a guard that cannot check
+does not pass. A payload for a tool other than Bash/PowerShell is not this guard's business.
+
 No bypass flag on purpose: if the user's server really must go down, the user runs the command
 (CLAUDE.md 3d — ask, wait for consent, restore afterwards).
 
 Self-test: python3 guard-process-kill.py --self-test
 """
-import json
 import re
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from stack import load_config, read_command
 
 DEFAULT_USER_PORTS = [3000]
 
@@ -56,7 +59,6 @@ NUMERIC_KILL = re.compile(r"(?<![\w-])kill\s+(?:-\w+\s+|--\s+)*-?\d+(\s+-?\d+)*\
 
 def user_ports() -> list[int]:
     try:
-        from stack import load_config  # type: ignore
         ports = load_config().get("dev_user_ports")
         if isinstance(ports, list) and ports:
             return [int(p) for p in ports]
@@ -96,16 +98,8 @@ def verdict(command: str, ports: list[int] | None = None) -> str | None:
     return None
 
 
-def get_command() -> str:
-    try:
-        data = json.load(sys.stdin)
-        return data.get("tool_input", {}).get("command", "")
-    except Exception:
-        return ""
-
-
 def main() -> None:
-    command = get_command()
+    command = read_command("guard-process-kill")
     reason = verdict(command, user_ports())
     if reason is None:
         sys.exit(0)
