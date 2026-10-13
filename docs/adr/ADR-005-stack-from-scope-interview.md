@@ -83,6 +83,16 @@ istniał zawsze, jako szkielet).
     Odrzucone: ustawiać oba zawsze (uprawnienia bez potrzeby); lista do wyboru (decyzja właściciela:
     jedno pytanie tak/nie).
 
+11. **Strażnicy lintu i testów biorą polecenie z plików projektu, a brak narzędzia nie jest cichy**
+    (uzupełnienie z 2026-10-13, #185). Wzorzec konfiguracji nie niesie już żadnych poleceń — każdy
+    projekt dziedziczył `composer lint` / `composer test`, strażnik bez `composer` ostrzegał
+    niewidocznie i przepuszczał. Reguła: polecenie wpisane przez projekt w `config.json`, którego
+    nie da się uruchomić, **blokuje** commit; polecenie wykryte automatycznie, a jeszcze
+    nieustawione, przepuszcza z ostrzeżeniem widocznym przy każdym commicie (`verbose: true`
+    w `.pre-commit-config.yaml`), a `npm run doctor` pokazuje, co strażnik faktycznie robi.
+    Dlaczego nie blokada zawsze: świeży projekt nie ma jeszcze lintu ani testów i nie zrobiłby
+    pierwszego commita. Dlaczego nie `set-stack.py`: polecenia są sprawą projektu, nie stosu.
+
 ## Odrzucone alternatywy
 
 | Opcja | Dlaczego odrzucona |

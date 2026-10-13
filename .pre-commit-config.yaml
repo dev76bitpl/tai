@@ -60,21 +60,25 @@ repos:
   # ── Stack-aware lint & tests (pre-commit stage — fail fast) ──────────────
   - repo: local
     hooks:
+      # verbose: the guard's own lines are shown also when it passes — otherwise its warning
+      # "checks NOTHING" (no lint set up yet) would be hidden behind a green "Passed".
       - id: guard-lint
-        name: "Stack-aware lint (auto-detected)"
+        name: "Stack-aware lint (config.json or autodetected)"
         entry: python3 scripts/dev-guards/guard_lint.py
         language: system
         stages: [pre-commit]
         always_run: true
         pass_filenames: false
+        verbose: true
 
       - id: guard-tests
-        name: "Stack-aware tests (auto-detected, skipped for docs-only)"
+        name: "Stack-aware tests (config.json or autodetected, skipped for docs-only)"
         entry: python3 scripts/dev-guards/guard_tests.py
         language: system
         stages: [pre-commit]
         always_run: true
         pass_filenames: false
+        verbose: true
 
       - id: guard-typecheck
         name: "TypeScript type check (tsc --noEmit)"

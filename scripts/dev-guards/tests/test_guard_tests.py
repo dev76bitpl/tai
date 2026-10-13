@@ -46,19 +46,47 @@ def test_should_run_tests_when_docs_and_source_are_staged_together(repo):
     assert run_guard(GUARD, repo, message=None).returncode == BLOCKED
 
 
-def test_should_warn_and_pass_when_stack_is_unknown(repo):
+def test_should_pass_but_say_it_checks_nothing_when_stack_is_unknown(repo):
     stage(repo, "src/price.py")
     result = run_guard(GUARD, repo, message=None)
     assert result.returncode == 0
-    assert "[WARN] Unknown stack" in result.stdout
+    assert "[WARN] Test guard checks NOTHING: unknown stack" in result.stdout
 
 
-def test_should_warn_and_pass_when_test_command_is_not_installed(repo):
+def test_should_block_when_the_project_own_test_command_cannot_run(repo):
+    # a command the project itself wrote into config.json is a promise; one that cannot run
+    # used to print a warning nobody saw and let every commit through
     write_config(repo, {"test": "no-such-runner-xyz"})
     stage(repo, "src/price.py")
     result = run_guard(GUARD, repo, message=None)
-    assert result.returncode == 0
-    assert "[WARN] Test command unavailable: no-such-runner-xyz" in result.stdout
+    assert result.returncode == BLOCKED
+    assert "[BLOCK] Test command from .claude/hooks/config.json cannot run: no-such-runner-xyz" in result.stderr
+    assert "`no-such-runner-xyz` is not installed" in result.stderr
+
+
+def test_should_not_block_docs_only_commit_even_when_test_command_cannot_run(repo):
+    write_config(repo, {"test": "no-such-runner-xyz"})
+    stage(repo, "docs/NOTES.md")
+    assert run_guard(GUARD, repo, message=None).returncode == 0
+
+
+def test_should_pass_with_a_warning_when_autodetected_stack_has_no_test_script_yet(repo):
+    # a fresh node project: package.json is there, tests are not set up — the first commits
+    # must go through, but not silently
+    stage(repo, "package.json", '{"scripts": {"doctor": "node x.mjs"}}\n')
+    stage(repo, "src/price.js")
+    result = run_guard(GUARD, repo, message=None)
+    assert result.returncode == 0, result.stderr
+    assert "[WARN] Test guard checks NOTHING" in result.stdout
+    assert 'package.json has no "test" script' in result.stdout
+
+
+def test_should_run_autodetected_test_script_when_the_project_has_one(repo):
+    stage(repo, "package.json", '{"scripts": {"test": "node -e \\"process.exit(1)\\""}}\n')
+    stage(repo, "src/price.js")
+    result = run_guard(GUARD, repo, message=None)
+    assert result.returncode == BLOCKED
+    assert "[BLOCK] Tests failed" in result.stderr
 
 
 def test_should_block_when_staged_files_cannot_be_listed(repo, tmp_path):

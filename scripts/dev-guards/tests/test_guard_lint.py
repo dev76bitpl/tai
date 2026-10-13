@@ -34,19 +34,44 @@ def test_should_run_lint_from_the_project_root(repo):
     assert run_guard(GUARD, repo, message=None, cwd=repo / "sub").returncode == 0
 
 
-def test_should_warn_and_pass_when_stack_is_unknown(repo):
-    # no config, no marker file: nothing to run. Documented behaviour — warn, do not block.
+def test_should_pass_but_say_it_checks_nothing_when_stack_is_unknown(repo):
+    # no config, no marker file: nothing to run. The commit goes through — but the guard says so.
     result = run_guard(GUARD, repo, message=None)
     assert result.returncode == 0
-    assert "[WARN] Unknown stack" in result.stdout
+    assert "[WARN] Lint guard checks NOTHING: unknown stack" in result.stdout
 
 
-def test_should_warn_and_pass_when_lint_command_is_not_installed(repo):
-    # an external tool that is not there is "could not check for reasons outside the repo"
+def test_should_block_when_the_project_own_lint_command_cannot_run(repo):
+    # found in a fresh project: config.json carried "composer lint" copied from the example,
+    # composer was not there, the guard warned (invisibly) and passed on every commit
     write_config(repo, {"lint": "no-such-linter-xyz --check"})
     result = run_guard(GUARD, repo, message=None)
-    assert result.returncode == 0
-    assert "[WARN] Lint command unavailable: no-such-linter-xyz --check" in result.stdout
+    assert result.returncode == BLOCKED
+    assert "[BLOCK] Lint command from .claude/hooks/config.json cannot run: no-such-linter-xyz --check" in result.stderr
+    assert "SKIP=guard-lint" in result.stderr
+
+
+def test_should_pass_with_a_warning_when_autodetected_stack_has_no_lint_script_yet(repo):
+    stage(repo, "package.json", '{"scripts": {"doctor": "node x.mjs"}}\n')
+    result = run_guard(GUARD, repo, message=None)
+    assert result.returncode == 0, result.stderr
+    assert "[WARN] Lint guard checks NOTHING: npm run lint --silent" in result.stdout
+    assert 'package.json has no "lint" script' in result.stdout
+
+
+def test_should_block_when_explicit_npm_script_is_missing_from_package_json(repo):
+    stage(repo, "package.json", '{"scripts": {}}\n')
+    write_config(repo, {"lint": "npm run lint"})
+    result = run_guard(GUARD, repo, message=None)
+    assert result.returncode == BLOCKED
+    assert 'package.json has no "lint" script' in result.stderr
+
+
+def test_should_run_autodetected_lint_script_when_the_project_has_one(repo):
+    stage(repo, "package.json", '{"scripts": {"lint": "node -e \\"process.exit(2)\\""}}\n')
+    result = run_guard(GUARD, repo, message=None)
+    assert result.returncode == BLOCKED
+    assert "[BLOCK] Lint failed" in result.stderr
 
 
 def test_should_prefer_config_over_autodetected_stack(repo):

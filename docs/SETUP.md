@@ -349,6 +349,23 @@ grupa dodana z powrotem wraca przy najbliższej synchronizacji
 - Ustawienia repo z kroku 1 tej instrukcji (usuwanie gałęzi po merge'u, uprawnienia Actions) nadal
   ustawiasz ręcznie — skrypt ich nie zmienia.
 
+**Polecenia lintu i testów — skąd strażnicy je biorą.** Nowy projekt nie dostaje żadnych poleceń
+„na zapas” (wzorzec konfiguracji kiedyś niósł `composer lint` / `composer test` i każdy projekt
+je dziedziczył). Strażnik dobiera polecenie tak:
+
+| Sytuacja | Polecenie | Gdy nie da się go uruchomić |
+|---|---|---|
+| `lint` / `test` wpisane w `config.json` | dokładnie to, co wpisane | **blokada commita** — projekt coś obiecał i tego nie ma |
+| brak wpisu | wykryte po plikach projektu: `package.json` → `npm run lint` / `npm test`, `composer.json` → `composer lint` / `composer test`, `pyproject.toml` / `requirements.txt` → `ruff` / `pytest`, `Gemfile` → `rubocop` / `rspec`, `go.mod` → `golangci-lint` / `go test` | commit przechodzi z ostrzeżeniem „checks NOTHING” widocznym przy **każdym** commicie |
+| brak wpisu i nieznany stos | — | jak wyżej: ostrzeżenie |
+
+„Nie da się uruchomić” to nie tylko brak narzędzia: `npm run lint` bez skryptu `lint`
+w `package.json` też się liczy. Stan w dowolnej chwili pokazuje `npm run doctor`, sekcja
+„Guard system”: `✓ Lint guard runs: …`, `⚠ Lint guard checks nothing: …` albo
+`⚠ Lint guard BLOCKS every commit: …`. Świeży projekt po kreatorze zobaczy ostrzeżenie — to
+poprawny stan do chwili ustawienia lintu i testów, nie awaria. Projekt postawiony wcześniej ma
+w swoim `config.json` odziedziczone `composer lint` / `composer test`: usuń je albo zastąp własnymi.
+
 Pułapka: `config.local.json` potrafi też nadpisać komendę `lint` albo `test` — wtedy strażnik
 commita na tej jednej maszynie sprawdza co innego niż u reszty zespołu i w repozytorium tego nie
 widać. Trzymaj tam ścieżki i porty, nie komendy sprawdzające.

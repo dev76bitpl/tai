@@ -151,6 +151,30 @@ Historia (zrobione przed przejściem):
 
 ## Stan sesji
 
+- 2026-10-13: **Strażnicy lintu i testów w nowym projekcie przestali udawać, że coś sprawdzają (#185).**
+  Po ludzku: świeży projekt dziedziczył z przykładu polecenia dla PHP. Bez `composer` strażnik
+  wypisywał ostrzeżenie, którego nikt nie widział, i przepuszczał każdy commit — raport środowiska
+  był zielony, a lint i testy nie chodziły nigdy. Teraz polecenie wynika z tego, co naprawdę jest
+  w projekcie, a strażnik, który nie ma czym sprawdzić, mówi to przy każdym commicie i w doctorze.
+  Decyzje właściciela: polecenia z wykrywania po plikach projektu (nie z wyboru stosu, bo są sprawą
+  projektu); polecenie wpisane przez projekt i niedostępne = blokada, wykryte automatycznie
+  i jeszcze nieustawione = głośne ostrzeżenie (blokada zawsze zatrzymałaby pierwszy commit świeżego
+  projektu).
+  Technicznie: `scripts/dev-guards/stack.py` — `get_cmd(kind)` zwraca też, czy polecenie jest
+  jawne; `why_unavailable()` liczy jako niedostępne także brak skryptu w `package.json` /
+  `composer.json` (wcześniej `npm run lint` bez skryptu kończyło się błędem npm = blokadą);
+  `guard_command()` wspólne dla `guard_lint.py` i `guard_tests.py`; `doctor_lines()` dla doctora.
+  `.pre-commit-config.yaml`: `verbose: true` na obu strażnikach (bez tego ostrzeżenie chowa się za
+  „Passed”) i nazwy bez „auto-detected”. `.claude/hooks/config.json.example`: bez `lint` / `test`.
+  `scripts/doctor.py`: linie „Lint/Test guard runs / checks nothing / BLOCKS every commit”;
+  sprawdzenia warstwy Claude Code przeniesione do `scripts/doctor_checks.py` (limit długości pliku).
+  Testy: `test_guard_lint.py`, `test_guard_tests.py`, nowy `test_stack_commands.py`,
+  `tests/test_new_project.py`; scenariusz 10h; ADR-005 decyzja 11.
+  Sprawdzone: 780 testów; scenariusz ze zgłoszenia odtworzony na świeżym projekcie poza repo.
+  Skutek dla projektów już postawionych: mają w `config.json` odziedziczone `composer lint` /
+  `composer test` — po przejęciu nowych strażników dostaną blokadę, dopóki ich nie usuną albo nie
+  zastąpią własnymi.
+
 - 2026-10-13: **Kreator startu ustawia w repo na GitHubie to, co instrukcja nazywa blokującym (#186).**
   Po ludzku: start projektu zakładał repo i na tym kończył. Dwa ustawienia z kroku 1 instrukcji
   (kasowanie gałęzi po scaleniu, uprawnienia automatów GitHuba) zostawały w stanie domyślnym, bo

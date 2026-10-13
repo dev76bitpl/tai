@@ -4,8 +4,7 @@
 
   "_stacks_autodected": ["node (package.json)", "php (composer.json)", "python (requirements.txt / pyproject.toml)", "ruby (Gemfile)", "go (go.mod)"],
 
-  "lint": "composer lint",
-  "test": "composer test",
+  "_lint_test_comment": "Polecenia lintu i testów dla strażników commita. NIE wpisuj ich na zapas: bez tych pól strażnik sam dobiera polecenie po plikach projektu (lista wyżej). Własne polecenie wpisz dopiero, gdy projekt je ma — np. \"lint\": \"npm run lint\", \"test\": \"composer test\". Polecenie wpisane tutaj, którego nie da się uruchomić, BLOKUJE commit; wykryte automatycznie, a jeszcze nieustawione — przepuszcza z ostrzeżeniem. Stan pokazuje npm run doctor.",
 
   "_dev_user_ports_comment": "Porty serwera dev usera — guard-process-kill.py blokuje kill wymierzony w te porty (CLAUDE.md 3d). Domyślnie [3000].",
   "dev_user_ports": [3000],
