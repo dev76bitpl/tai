@@ -151,6 +151,56 @@ Historia (zrobione przed przejściem):
 
 ## Stan sesji
 
+- 2026-10-13: **Testy uruchamiane przy commicie nie sięgają już do prawdziwego repozytorium (#181).**
+  Po ludzku: pierwszy commit z osobnego katalogu roboczego (worktree) uszkodził repo — główny katalog
+  przestał działać z Gitem, a w indeksie pojawiły się pliki, których nikt nie dodawał. Nic nie zginęło,
+  naprawa zajęła dwa polecenia, ale szablon sam każe pracować w worktree, więc trzymanie się reguły
+  psuło repo. Teraz pakiet testów jest od tego odcięty.
+  Technicznie: `guard-tests` uruchamia pakiet z hooka, a Git przekazuje hookom `GIT_INDEX_FILE` i —
+  w worktree — `GIT_DIR` prawdziwego repo. Testy wołające `git init` / `git add` w katalogach
+  tymczasowych działały przez to na prawdziwym repozytorium (`core.bare = true`, pliki testowe
+  w indeksie). Czyszczenie było punktowe (`harness.clean_env`); `test_guard_pii.py`
+  i `test_guard_tasks_staged.py` wołały Gita bez niego. Poprawka: `conftest.py` w `tests/`,
+  `.claude/hooks/tests/` i `scripts/dev-guards/tests/` z ustawieniem `autouse`, które przed każdym
+  testem usuwa wszystkie zmienne `GIT_*`; w każdym katalogu test izolacji. Dowód na repozytorium-atrapie
+  z worktree (hook `pre-commit` uruchamiający pakiet): przed 12 czerwonych i uszkodzona atrapa, po 661
+  zielonych i atrapa nietknięta. Pułapka opisana w `docs/AI_TEMPLATE_NOTES.md`.
+
+- 2026-10-13: **Start projektu prowadzi przez kroki, a strażnicy dopasowują się do stosu (#134, #165, #178, #171, #172).**
+  Po ludzku: (1) projekt bez sklepu przestał dostawać blokadę „nowy moduł PrestaShop” — wzorce platform są
+  w konfiguracji nieaktywne, dopóki projekt nie jest na tej platformie; (2) strażnik „kod wymaga testów”
+  rozpoznaje testy Pythona, PHP, Ruby i Go, a nie tylko JavaScript, i sprawdza katalogi kodu właściwe dla
+  stosu; (3) nikt nie ustawia tego ręcznie — stos pada w wywiadzie o zakresie i z niego wynika reszta;
+  (4) start projektu to kroki z pytaniami i wynikiem, a przy błędzie propozycja pomocy AI; (5) projekt
+  zawsze startuje na gałęzi `main`, a README nie każe już kasować świeżo zainstalowanych strażników.
+  Decyzje właściciela (w tej kolejności, każda zmieniała poprzednią wersję): wzorce platform wyłączone do
+  włączenia; wbudowana lista wzorców testów; katalogi kodu ustawiane przy starcie, nie ręcznie; pytanie
+  o stos, nie o katalogi; pytanie o stos w wywiadzie scope, nie w `--init`; start i wywiad powiązane
+  pytaniem „ustalamy brief?”; lista kroków jako prowadzone kroki z pomocą AI; do kroków dołożone
+  założenie repo na GitHubie i etykiety `owner` / `idea`; wywiad interaktywny, sześć tematów domyślnych
+  plus dopytanie.
+  Technicznie: `.claude/hooks/config.json.example` — `adr_patterns` tylko ogólne, grupy platform
+  w `_adr_patterns_optional`, nowy klucz `src_dirs`. `scripts/dev-guards/guard_tests_with_src.py` —
+  `is_test_file()` z listą konwencji wszystkich stosów, katalogi z `src_dirs` (domyślnie `src`), dopasowanie
+  po segmencie ścieżki. Nowy `scripts/set-stack.py` — tabela `STACK_PRESETS` (10 stosów), `apply_stack()`
+  ustawia `src_dirs` i kopiuje grupę platformy do `adr_patterns`; ponowne uruchomienie z innym stosem
+  wyłącza poprzednią grupę. Nowy `scripts/project-setup.py` — kroki: repozytorium Git, repo na GitHubie
+  (`git remote add` albo `gh repo create`, bez `push`), etykiety, skille, doctor, brief; krok zrobiony jest
+  pomijany, `StepFailed` → propozycja uruchomienia Claude Code z poleceniem i błędem; bez terminala tylko
+  lista. `scripts/new-project.py` — `git init -b main`, opcjonalne `--stack`, po sprzątaniu `os.execv` do
+  `project-setup.py`. Skill `new-project-scope` — trzy stany `docs/PROJECT_SCOPE.md` (brak / szkielet
+  z szablonu / własna treść; wcześniej instrukcja zabraniała wywiadu, gdy plik istnieje, a po `--init`
+  istnieje zawsze), wywiad po jednym pytaniu z dopytaniem, „Artifact 3” uruchamia `set-stack.py`.
+  Testy: `tests/test_set_stack.py`, `tests/test_project_setup.py`, rozszerzone `test_new_project.py`,
+  `test_guard_adr.py`, `test_guard_tests_with_src.py`; próba `--init` na kopii poza repo (gałąź `main`
+  przy pustej konfiguracji Gita, strażnicy zainstalowani, przekazanie do kroków).
+  Znane ograniczenia: po wyjściu z Claude Code nie ma powrotu do kroków (`os.execvp`) → #180; projekty
+  już postawione mają stare wzorce platform we własnym `config.json`; synchronizacja z szablonu nie
+  przenosi `scripts/`, więc starszy projekt nie dostanie `set-stack.py` (skill to przewiduje);
+  `scripts/new-project.py` ma 548 linii (limit 400).
+  Poza tematem, wyszło w trakcie: synchronizacja skilli w projektach czyta katalog roboczy klona szablonu,
+  także z gałęzi w toku → #179; od tej chwili praca nad szablonem idzie w osobnym worktree.
+
 - 2026-10-13: **Plik ustawień per maszyna działa dla obu warstw strażników (#152), a instrukcja
   przestała kazać commitować ścieżkę z własnego komputera (#153).** Po ludzku: strażnicy mają
   plik wspólny (`config.json`, w repo) i plik jednej maszyny (`config.local.json`, poza repo),
