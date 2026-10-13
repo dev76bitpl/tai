@@ -256,7 +256,8 @@ Nikt nie jest pytany o katalogi i nikt nie edytuje pliku ręcznie: stos ustala *
 (hasło `scope` w Claude Code, pytanie „Stack i środowisko?”), a po nim Claude uruchamia
 `python3 scripts/set-stack.py <stos>`, który wpisuje wynik do `config.json`. Kto zna stos od razu,
 może podać go przy starcie (`new-project.py --init --stack <stos>`) albo uruchomić skrypt sam;
-ponowne uruchomienie z innym stosem jest bezpieczne. Tabelę drukuje `python3 scripts/set-stack.py --list`:
+ponowne uruchomienie z innym stosem jest bezpieczne. Tabelę drukuje `python3 scripts/set-stack.py --list`
+(skąd te decyzje: [ADR-005](adr/ADR-005-stack-from-scope-interview.md)):
 
 | Stos | Katalogi kodu (`src_dirs`) | Włączona grupa wzorców ADR |
 |---|---|---|

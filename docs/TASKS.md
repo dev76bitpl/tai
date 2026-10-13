@@ -151,6 +151,19 @@ Historia (zrobione przed przejściem):
 
 ## Stan sesji
 
+- 2026-10-13: **`new-project.py` podzielony, decyzje paczki zapisane w ADR-005.** Po ludzku: skrypt startu
+  projektu urósł do 548 linii przy limicie 400 dla plików logiki — właściciel uznał to za błąd do
+  naprawy od razu. Teraz ma 371. Decyzje z całej paczki (stos z wywiadu ustawia strażników, wzorce
+  platform do włączenia, prowadzony start) dostały ADR, żeby za pół roku nie trzeba było ich odtwarzać.
+  Technicznie: dane (`COPY_*`, `SCAFFOLD_DOCS`, `README_SCAFFOLD`, `TEMPLATE_META`) →
+  `scripts/new_project_data.py`; kroki Gita (`fresh_git_history`, `install_guards`,
+  `_resolve_pre_commit`) i pomocnicze `log` / `warn` → `scripts/new_project_git.py`. Oba pliki są
+  tylko-szablonowe jak sam skrypt: lista `TEMPLATE_ONLY_SCRIPTS` steruje usuwaniem przy `--init`
+  i pomijaniem w trybie kopiowania. Testy: lista zgodna z dyskiem, `--init` usuwa całą trójkę
+  i zostawia `set-stack.py` / `project-setup.py`, limit 400 linii dla plików logiki. Próba `--init`
+  na kopii poza repo: gałąź `main`, strażnicy, w `scripts/` brak plików startowych.
+  `docs/adr/ADR-005-stack-from-scope-interview.md`, odesłanie w `docs/SETUP.md` krok 8b.
+
 - 2026-10-13: **Testy uruchamiane przy commicie nie sięgają już do prawdziwego repozytorium (#181).**
   Po ludzku: pierwszy commit z osobnego katalogu roboczego (worktree) uszkodził repo — główny katalog
   przestał działać z Gitem, a w indeksie pojawiły się pliki, których nikt nie dodawał. Nic nie zginęło,

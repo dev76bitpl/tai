@@ -25,8 +25,6 @@ import argparse
 import json
 import os
 import shutil
-import stat
-import subprocess
 import sys
 from pathlib import Path
 
@@ -34,102 +32,14 @@ sys.stdout.reconfigure(encoding="utf-8")
 
 ROOT = Path(__file__).resolve().parent.parent
 
-# ── What to copy (copy-to-dir mode) ─────────────────────────────────────────
-
-COPY_DIRS = [".claude"]
-
-COPY_FILES = ["CLAUDE.md", "skills-manifest.json"]
-
-COPY_DOCS = [
-    "AI_TEMPLATE_NOTES.md",
-    "CONVENTIONS.md",
-    "DELIVERY_CHECKLIST.md",
-    "SETUP.md",
-    "SKILLS.md",
-    "TESTING.md",
-    "UI_GUIDELINES.md",
-    "USER_PROFILE.example",
-]
-
-SCAFFOLD_DOCS: dict[str, str] = {
-    "TASKS.md": """\
-# Tasks
-
-> Stan sesji: projekt zainicjalizowany — scope do zdefiniowania.
-
----
-
-## Backlog
-
-- [ ] Zdefiniuj scope projektu — napisz Claude'owi: `scope`
-
-## In Progress
-
-## Done
-""",
-    "ROADMAP.md": """\
-# Roadmap
-
-<!-- Wygeneruj za pomocą `scope` lub wypełnij ręcznie -->
-
-## Faza 1 — [Nazwa]
-
-**Cel:**
-
-**Zakres:**
-
-**Done when:**
-
-**Zależności:** brak
-""",
-}
-
-# ── What to remove + replace in --init mode ──────────────────────────────────
-
-README_SCAFFOLD = """\
-# [Nazwa projektu]
-
-> Krótki opis — co to jest i dla kogo.
-
----
-
-## Uruchomienie
-
-```bash
-# TODO: uzupełnij
-```
-
-## Stack
-
-<!-- TODO: opisz stack -->
-
-## Dokumentacja
-
-- [Scope projektu](docs/PROJECT_SCOPE.md)
-- [Konwencje](docs/CONVENTIONS.md)
-- [Zadania](docs/TASKS.md)
-- [Roadmapa](docs/ROADMAP.md)
-"""
-
-# Paths relative to ROOT that are template-only and removed during --init.
-# The script itself is removed last (it's added in init_in_place after this list).
-TEMPLATE_META: list[str] = [
-    "tests",
-    "README.md",
-    "docs/SETUP.example.md",
-    "docs/TASKS.example.md",
-    "docs/ROADMAP.example.md",
-]
-# docs/adr/ is reset wholesale by reset_adr_dir (not listed here) — the template's
-# own ADRs (ADR-002+) plus the example must all go, leaving a clean docs/adr/.
-
+# Sibling modules (data and git steps) — importable also when this file is loaded by path.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from new_project_data import (  # noqa: E402
+    COPY_DIRS, COPY_DOCS, COPY_FILES, README_SCAFFOLD, SCAFFOLD_DOCS, TEMPLATE_META, TEMPLATE_ONLY_SCRIPTS,
+)
+from new_project_git import fresh_git_history, install_guards, log, warn  # noqa: E402,F401
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
-
-def log(label: str, path: str, dry_run: bool) -> None:
-    prefix = "  [dry]" if dry_run else "  ✓"
-    print(f"{prefix} {label:<12} {path}")
-
 
 def remove(path: Path, root: Path, dry_run: bool) -> None:
     label = "rmdir" if path.is_dir() else "rm"
@@ -276,94 +186,6 @@ def reset_adr_dir(root: Path, dry_run: bool) -> None:
     (adr_dir / ".gitkeep").touch()
 
 
-def _on_rm_error(func, path, _exc_info) -> None:
-    """rmtree onerror handler: clear read-only bit (Windows .git pack files) and retry."""
-    os.chmod(path, stat.S_IWRITE)
-    func(path)
-
-
-def fresh_git_history(root: Path, dry_run: bool) -> None:
-    """Replace the template's git history with a single init commit for the project.
-
-    The new repo has no remote and no installed hooks yet, so the init commit is
-    unguarded by design — guards apply once the user wires up origin and installs
-    pre-commit (see next steps).
-    """
-    git_dir = root / ".git"
-    log("rmdir", ".git  (template history)", dry_run)
-    log("git", "init -b main", dry_run)
-    log("git", 'commit -m "chore: initialize project from AI template"', dry_run)
-    if dry_run:
-        return
-    if git_dir.exists():
-        shutil.rmtree(git_dir, onerror=_on_rm_error)
-    try:
-        # -b main: the guards and the whole described workflow assume main, while a bare
-        # `git init` follows the machine's init.defaultBranch and may start on master
-        subprocess.run(["git", "init", "-q", "-b", "main"], cwd=str(root), check=True)
-        subprocess.run(["git", "add", "-A"], cwd=str(root), check=True)
-        subprocess.run(
-            ["git", "commit", "-q", "-m", "chore: initialize project from AI template"],
-            cwd=str(root), check=True,
-        )
-    except subprocess.CalledProcessError as exc:
-        warn(
-            f"git init/commit failed (exit {exc.returncode}). "
-            "Cleaning is done; finish git manually:\n"
-            "    git init -b main && git add -A && "
-            'git commit -m "chore: initialize project from AI template"'
-        )
-
-
-def warn(msg: str) -> None:
-    print(f"⚠️  {msg}", file=sys.stderr)
-
-
-def _resolve_pre_commit() -> list[str] | None:
-    """argv prefix to invoke pre-commit — standalone binary or `python -m pre_commit`.
-
-    Falls back to the module form because on Windows `pip install --user` often
-    leaves the binary off PATH while `python -m pre_commit` still works.
-    """
-    if shutil.which("pre-commit"):
-        return ["pre-commit"]
-    for py in ("python", "python3", "py"):
-        if not shutil.which(py):
-            continue
-        probe = subprocess.run(
-            [py, "-m", "pre_commit", "--version"], capture_output=True
-        )
-        if probe.returncode == 0:
-            return [py, "-m", "pre_commit"]
-    return None
-
-
-def install_guards(root: Path, dry_run: bool) -> None:
-    """Install pre-commit + commit-msg git hooks so the project is guarded from commit #1.
-
-    Runs after the init commit (the fresh repo defaults to branch main, where
-    no-commit-to-branch would otherwise block a guarded init commit). Soft-fails:
-    a missing pre-commit warns with the manual command instead of aborting init.
-    """
-    log("git-hooks", "pre-commit install (pre-commit + commit-msg)", dry_run)
-    if dry_run:
-        return
-    invocation = _resolve_pre_commit()
-    if invocation is None:
-        warn(
-            "pre-commit not found — guards not installed. Install later with:\n"
-            "    npm install   (or: pre-commit install "
-            "--hook-type pre-commit --hook-type commit-msg)"
-        )
-        return
-    result = subprocess.run(
-        [*invocation, "install", "--hook-type", "pre-commit", "--hook-type", "commit-msg"],
-        cwd=str(root), capture_output=True, text=True,
-    )
-    if result.returncode != 0:
-        warn(f"pre-commit install failed: {result.stderr.strip()[:300]}")
-
-
 # ── Init in-place ─────────────────────────────────────────────────────────────
 
 def hand_over_to_setup(root: Path) -> None:
@@ -409,7 +231,8 @@ def init_in_place(root: Path, dry_run: bool, do_git: bool = True,
 
     # Remove this script before any git commit — it's template-only.
     print("\n── Usuwam template-only skrypt ──────────────────────────")
-    remove(root / "scripts" / "new-project.py", root, dry_run)
+    for name in TEMPLATE_ONLY_SCRIPTS:
+        remove(root / "scripts" / name, root, dry_run)
 
     if do_git:
         print("\n── Świeża historia git + init commit ────────────────────")
@@ -512,7 +335,7 @@ def main() -> None:
             continue
         if "__pycache__" in item.parts or item.suffix == ".pyc":
             continue
-        if item.name == "new-project.py":
+        if item.name in TEMPLATE_ONLY_SCRIPTS:
             continue  # template-only, not needed in new projects
         rel = item.relative_to(scripts_src)
         copy_file(item, scripts_dst / rel, dry_run)

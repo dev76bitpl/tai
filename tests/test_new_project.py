@@ -19,6 +19,7 @@ def _load():
 
 
 mod = _load()
+git_mod = sys.modules["new_project_git"]  # git steps live in their own module
 create_config_json = mod.create_config_json
 create_settings_local = mod.create_settings_local
 README_SCAFFOLD = mod.README_SCAFFOLD
@@ -208,6 +209,28 @@ class TestHandOver:
         # installed guards and the init commit
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         assert "rm -rf .git" not in readme
+
+
+class TestTemplateOnlyScripts:
+    def test_should_remove_every_template_only_script_during_init(self, tmp_path):
+        (tmp_path / ".claude" / "hooks").mkdir(parents=True)
+        (tmp_path / "scripts").mkdir()
+        for name in [*mod.TEMPLATE_ONLY_SCRIPTS, "set-stack.py", "project-setup.py"]:
+            (tmp_path / "scripts" / name).write_text("# x")
+        with mock.patch.object(mod, "create_config_json"), mock.patch.object(mod, "create_settings_local"), \
+             mock.patch.object(mod, "hand_over_to_setup"):
+            mod.init_in_place(tmp_path, dry_run=False, do_git=False)
+        left = sorted(p.name for p in (tmp_path / "scripts").iterdir())
+        assert left == ["project-setup.py", "set-stack.py"]
+
+    def test_should_list_every_new_project_file_as_template_only(self):
+        on_disk = {p.name for p in (ROOT / "scripts").glob("new[-_]project*.py")}
+        assert on_disk == set(mod.TEMPLATE_ONLY_SCRIPTS)
+
+    @pytest.mark.parametrize("name", ["new-project.py", "new_project_git.py"])
+    def test_should_keep_logic_files_under_the_size_limit(self, name):
+        # CLAUDE.md rule 20: logic files max 400 lines; data files (new_project_data.py) are exempt
+        assert len((ROOT / "scripts" / name).read_text(encoding="utf-8").splitlines()) <= 400
 
 
 class TestMainBranch:
@@ -452,9 +475,9 @@ class TestFreshGitHistory:
     def test_removes_git_dir_and_makes_init_commit(self, tmp_path):
         (tmp_path / ".git").mkdir()
         calls = []
-        with mock.patch.object(mod.subprocess, "run",
+        with mock.patch.object(git_mod.subprocess, "run",
                                side_effect=lambda *a, **k: calls.append(a[0])) as _run:
-            with mock.patch.object(mod.shutil, "rmtree") as rmtree:
+            with mock.patch.object(git_mod.shutil, "rmtree") as rmtree:
                 mod.fresh_git_history(tmp_path, dry_run=False)
         rmtree.assert_called_once()
         # git init, git add -A, git commit ... in order
@@ -464,17 +487,17 @@ class TestFreshGitHistory:
 
     def test_dry_run_runs_no_git(self, tmp_path):
         (tmp_path / ".git").mkdir()
-        with mock.patch.object(mod.subprocess, "run") as run:
-            with mock.patch.object(mod.shutil, "rmtree") as rmtree:
+        with mock.patch.object(git_mod.subprocess, "run") as run:
+            with mock.patch.object(git_mod.shutil, "rmtree") as rmtree:
                 mod.fresh_git_history(tmp_path, dry_run=True)
         run.assert_not_called()
         rmtree.assert_not_called()
 
     def test_git_failure_warns_not_raises(self, tmp_path):
         import subprocess as sp
-        with mock.patch.object(mod.subprocess, "run",
+        with mock.patch.object(git_mod.subprocess, "run",
                                side_effect=sp.CalledProcessError(1, "git")):
-            with mock.patch.object(mod.shutil, "rmtree"):
+            with mock.patch.object(git_mod.shutil, "rmtree"):
                 # Must not raise — cleaning already happened.
                 mod.fresh_git_history(tmp_path, dry_run=False)
 
@@ -523,13 +546,13 @@ class TestInitInPlaceVersioning:
 
 class TestInstallGuards:
     def test_dry_run_runs_nothing(self, tmp_path):
-        with mock.patch.object(mod.subprocess, "run") as run:
+        with mock.patch.object(git_mod.subprocess, "run") as run:
             mod.install_guards(tmp_path, dry_run=True)
         run.assert_not_called()
 
     def test_installs_when_pre_commit_available(self, tmp_path):
-        with mock.patch.object(mod, "_resolve_pre_commit", return_value=["pre-commit"]):
-            with mock.patch.object(mod.subprocess, "run",
+        with mock.patch.object(git_mod, "_resolve_pre_commit", return_value=["pre-commit"]):
+            with mock.patch.object(git_mod.subprocess, "run",
                                    return_value=mock.Mock(returncode=0, stderr="")) as run:
                 mod.install_guards(tmp_path, dry_run=False)
         args = run.call_args[0][0]
@@ -537,9 +560,9 @@ class TestInstallGuards:
         assert "--hook-type" in args and "commit-msg" in args
 
     def test_warns_when_pre_commit_missing(self, tmp_path):
-        with mock.patch.object(mod, "_resolve_pre_commit", return_value=None):
-            with mock.patch.object(mod.subprocess, "run") as run:
-                with mock.patch.object(mod, "warn") as warn:
+        with mock.patch.object(git_mod, "_resolve_pre_commit", return_value=None):
+            with mock.patch.object(git_mod.subprocess, "run") as run:
+                with mock.patch.object(git_mod, "warn") as warn:
                     mod.install_guards(tmp_path, dry_run=False)
         run.assert_not_called()
         warn.assert_called_once()
