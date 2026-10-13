@@ -44,6 +44,9 @@ def fresh_git_history(root: Path, dry_run: bool) -> None:
         # -b main: the guards and the whole described workflow assume main, while a bare
         # `git init` follows the machine's init.defaultBranch and may start on master
         subprocess.run(["git", "init", "-q", "-b", "main"], cwd=str(root), check=True)
+        # same setting scripts/setup-hooks.mjs makes on `npm install` — the guided start does not
+        # run npm, so without this a Windows clone would start with core.autocrlf=true
+        subprocess.run(["git", "config", "--local", "core.autocrlf", "input"], cwd=str(root), check=True)
         subprocess.run(["git", "add", "-A"], cwd=str(root), check=True)
         subprocess.run(
             ["git", "commit", "-q", "-m", "chore: initialize project from AI template"],

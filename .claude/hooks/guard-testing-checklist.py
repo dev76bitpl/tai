@@ -2,8 +2,10 @@
 """
 Guard: Testing checklist in docs/TESTING.md.
 
-Blocks feat/* and fix/* commits when docs/TESTING.md has not been touched
+Blocks feat/* and fix/* commits when no manual-test checklist has been touched
 anywhere in the current branch (staged now OR committed earlier on this branch).
+A checklist is docs/TESTING.md (flows of the project) or any other docs/*TESTING*.md
+(e.g. docs/GUARDS_TESTING.md for the guard system) — the scenario goes where it belongs.
 
 Bypass: [skip-test-check] in commit message — only for doc-only / chore changes
 that have no UI or runtime impact. Requires a justification note in commit body.
@@ -18,6 +20,7 @@ from stack import chdir_to_project_root, get_commit_message, get_staged_files, i
 
 TRIGGER_BRANCHES = re.compile(r"^(feat|fix)/")
 TESTING_FILE = "docs/TESTING.md"
+TESTING_FILES = re.compile(r"^docs/[^/]*TESTING[^/]*\.md$")
 BASE_BRANCHES = ("main", "master", "develop")
 
 
@@ -41,11 +44,11 @@ def testing_md_touched_in_branch() -> bool:
     if not base:
         return False
     r = subprocess.run(
-        ["git", "diff", "--name-only", base, "HEAD", "--", TESTING_FILE],
+        ["git", "diff", "--name-only", base, "HEAD", "--", "docs/"],
         capture_output=True,
         text=True,
     )
-    return TESTING_FILE in r.stdout.splitlines()
+    return any(TESTING_FILES.match(name) for name in r.stdout.splitlines())
 
 
 def main():
@@ -69,7 +72,7 @@ def main():
     staged = get_staged_files(command)
 
     # Pass if TESTING.md is staged in this commit
-    if TESTING_FILE in staged:
+    if any(TESTING_FILES.match(name) for name in staged):
         sys.exit(0)
 
     # Pass if TESTING.md was touched in any earlier commit on this branch
@@ -81,7 +84,8 @@ def main():
         "  Reguła 16b krok 3: checklist testów manualnych musi trafić do docs/TESTING.md,\n"
         "  nie tylko do czatu.\n\n"
         "  Opcje:\n"
-        f"  1. Dopisz checklist do {TESTING_FILE} i dodaj go do staged.\n"
+        f"  1. Dopisz checklist do {TESTING_FILE} (flow projektu) albo do innego docs/*TESTING*.md\n"
+        "     (np. docs/GUARDS_TESTING.md dla strażników) i dodaj plik do staged.\n"
         "  2. Bypass [skip-test-check] — tylko dla zmian czysto dokumentacyjnych\n"
         "     lub nie dotykających UI/runtime. Dopisz uzasadnienie w body commita.\n"
     )

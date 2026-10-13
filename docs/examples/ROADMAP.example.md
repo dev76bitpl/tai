@@ -1,7 +1,7 @@
 # Roadmap — przykład wypełnienia
 
-> **To jest plik przykładowy** — pokazuje poziom szczegółowości i format ROADMAP.md.
-> Wypełnij `docs/ROADMAP.md` dla swojego projektu i usuń ten plik.
+> **Wzór, nie dokument projektu.** Pokazuje poziom szczegółowości i format `docs/ROADMAP.md`.
+> Zostaje w projekcie na stałe jako odniesienie: pisz w `docs/ROADMAP.md`, tego pliku nie edytuj i nie usuwaj.
 
 ---
 

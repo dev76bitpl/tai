@@ -151,6 +151,49 @@ Historia (zrobione przed przejściem):
 
 ## Stan sesji
 
+- 2026-10-13: **Nowy projekt dostaje wzory i puste szkielety zamiast dokumentów roboczych szablonu (#124, #155).**
+  Po ludzku: start projektu kasował wypełnione przykłady w pierwszej sekundzie, zanim ktokolwiek mógł
+  się na nich wzorować, a zostawiał w projekcie ponad 600 linii logu sesji samego szablonu i ponad
+  200 linii jego scenariuszy testów. Wzór logu sesji uczył do tego prowadzenia backlogu, którego
+  zasady zabraniają od 12.10. Zauważył to właściciel, pytając, po co są pliki przykładowe — obie
+  sesje pracujące nad startem projektu oglądały listę usuwanych plików wielokrotnie i jej nie
+  zakwestionowały.
+  Przyczyna jest jedna: szablon prowadzi własne dokumenty robocze pod nazwami, które nowy projekt
+  ma dostać puste. Teraz pod taką nazwą leży szkielet albo plik podmieniany przy starcie, a zasada
+  jest w `CLAUDE.md` (13a) razem ze sprawdzianem: uruchom start na kopii i przeczytaj, co zostało.
+  Technicznie: przykłady przeniesione do `docs/examples/` (zostają w projekcie; `README.md` z opisem;
+  `TASKS.example.md` przepisany na log sesji), usunięte z `TEMPLATE_META`. `--init` podmienia
+  `docs/TASKS.md` na szkielet z `SCAFFOLD_DOCS` (`INIT_SKELETONS`); szkielet poprawiony także dla
+  trybu kopiowania, który kopiuje też `docs/examples/`, `GUARDS.md`, `GUARDS_TESTING.md`.
+  `docs/TESTING.md` → szkielet; scenariusze strażników w `docs/GUARDS_TESTING.md` (jadą do projektu),
+  scenariusze samego szablonu w `docs/TEMPLATE_TESTING.md` (usuwany przy starcie). `docs/SETUP.md` →
+  szkielet (126 linii zamiast 513); opis strażników i narzędzi AI w nowym `docs/GUARDS.md`, z nazwanymi
+  sekcjami zamiast numerów kroków. Komunikaty skryptów odsyłają do sekcji `docs/GUARDS.md`;
+  `tests/test_line_endings.py` sprawdza, że każda taka sekcja istnieje i że nie wraca odesłanie do
+  numeru kroku. Strażnicy `guard-testing-checklist` i `guard_testing_md` uznają dowolny
+  `docs/*TESTING*.md`. `CLAUDE.md`: reguła czytania wzoru przed pisaniem dokumentu, nowe artefakty.
+  Sprawdzone: 869 testów; prawdziwy start na kopii poza repo i przegląd każdego pliku w `docs/`
+  (w nowym projekcie przechodzi też doctor i 481 testów strażników).
+  Zostaje: `docs/GUARDS.md` opisuje prowadzony start od `new-project.py`, którego w projekcie już
+  nie ma; `docs/SKILLS.md` wymienia wszystkie skille niezależnie od wyboru (#183).
+
+- 2026-10-13: **Końce linii są ustawione w każdym klonie i w każdym nowym projekcie (#187, #173, #174).**
+  Po ludzku: szablon nie miał pliku ustalającego końce linii, a jedyną ochronę ustawiał
+  `npm install`, którego prowadzony start nie uruchamia. Na Windows kończy się to setkami
+  „zmienionych” plików bez zmiany treści i strażnikiem odbijającym commity. Teraz reguła jest
+  w repo, start projektu ustawia też ustawienie lokalne, a doctor pokazuje, czy ochrona jest.
+  Technicznie: nowy `.gitattributes` (`* text=auto eol=lf`, CRLF dla `*.bat` / `*.cmd`, typy
+  binarne) — w repo nie było plików CRLF, `git add --renormalize .` niczego nie zmienia.
+  `scripts/new_project_git.py` `fresh_git_history()` i krok „Repozytorium Git”
+  w `scripts/project-setup.py` ustawiają `core.autocrlf=input`. `scripts/doctor.py`
+  `check_line_endings()` w „Repository state”. `scripts/setup-hooks.mjs`: komentarz o
+  `.gitattributes` jest wreszcie prawdziwy. #174: odesłanie „step 12” → krok 7, przy braku Node
+  → tabela wymagań; `tests/test_line_endings.py` sprawdza, że każde odesłanie do kroku
+  `docs/SETUP.md` w komunikatach skryptów wskazuje istniejący krok.
+  Sprawdzone: 805 testów; `--init` na kopii z pustą konfiguracją Gita; próba właściciela.
+  Nie sprawdzone: skutek na Windows (praca w WSL). Tryb kopiowania do nowego katalogu nadal nie
+  przenosi plików kropkowych (#127).
+
 - 2026-10-13: **Strażnicy lintu i testów w nowym projekcie przestali udawać, że coś sprawdzają (#185).**
   Po ludzku: świeży projekt dziedziczył z przykładu polecenia dla PHP. Bez `composer` strażnik
   wypisywał ostrzeżenie, którego nikt nie widział, i przepuszczał każdy commit — raport środowiska

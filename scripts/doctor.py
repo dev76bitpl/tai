@@ -13,7 +13,7 @@ Reports prerequisites:
   - Claude Code hooks wired in .claude/settings.local.json (per machine)
   - AI template source: $AI_TEMPLATE_PATH, config.local.json or config.json (optional)
   - Docker running (optional but recommended)
-  - GitHub repo settings from docs/SETUP.md step 1 (optional — asks gh)
+  - GitHub repo settings from docs/GUARDS.md (optional — asks gh)
 
 Exit code 0 if all REQUIRED checks pass (optional checks may be ✗ without
 failing the overall exit code). Exit code 1 if any required check fails.
@@ -94,7 +94,7 @@ def check_python() -> bool:
 
 def check_node() -> bool:
     if not shutil.which("node"):
-        fail("node not in PATH", "Install Node.js 22+ — see docs/SETUP.md step 1.")
+        fail("node not in PATH", "Install Node.js 22+ — see the requirements table at the top of docs/SETUP.md.")
         return False
     code, out = run(["node", "--version"])
     if code != 0:
@@ -238,6 +238,19 @@ def check_docker() -> None:
     ok("docker daemon running")
 
 
+def check_line_endings() -> None:
+    """A repo-level rule (.gitattributes) protects every clone; a local git setting only this one."""
+    attributes = REPO_ROOT / ".gitattributes"
+    if attributes.is_file() and "eol=lf" in attributes.read_text(encoding="utf-8", errors="ignore"):
+        ok("Line endings: .gitattributes (eol=lf)")
+        return
+    _, value = run(["git", "config", "core.autocrlf"])
+    local = f"core.autocrlf={value.strip() or 'unset'} on this machine"
+    warn(f"No .gitattributes rule for line endings ({local})",
+         "A Windows clone will show files as modified and fight the line-ending guard. "
+         "Add .gitattributes with: * text=auto eol=lf")
+
+
 def check_git_branch() -> None:
     code, out = run(["git", "rev-parse", "--abbrev-ref", "HEAD"])
     if code != 0:
@@ -277,7 +290,8 @@ def main() -> int:
 
     header("Repository state")
     check_git_branch()
-    repo_settings.doctor_check(REPO_ROOT, run, ok, warn)  # docs/SETUP.md step 1
+    check_line_endings()
+    repo_settings.doctor_check(REPO_ROOT, run, ok, warn)
 
     print()
     if all(required):

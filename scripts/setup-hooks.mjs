@@ -45,10 +45,12 @@ if (!existsSync(GIT_DIR)) {
   process.exit(0);
 }
 
-// Align local git config with .gitattributes (eol=lf). On Windows the default
-// core.autocrlf=true would convert LF→CRLF on checkout, fighting the LF-only
-// repo and triggering `mixed-line-ending` on every commit. `input` keeps the
-// working tree as-is but normalizes line endings to LF on commit.
+// Align local git config with .gitattributes (`* text=auto eol=lf` in the repo root).
+// The file is what protects every clone; this local setting is the second layer for a
+// clone made before the file existed. On Windows the default core.autocrlf=true would
+// convert LF→CRLF on checkout, fighting the LF-only repo and triggering
+// `mixed-line-ending` on every commit. `input` keeps the working tree as-is but
+// normalizes line endings to LF on commit. new-project.py --init sets the same value.
 {
   const current = spawnSync("git", ["config", "--local", "core.autocrlf"], {
     encoding: "utf8",
@@ -137,7 +139,7 @@ if (!resolvePreCommitInvocation()) {
   const installed = tryInstallPreCommit();
   if (!installed || !resolvePreCommitInvocation()) {
     warn("Could not auto-install pre-commit.");
-    warn("Install manually (see docs/SETUP.md step 12):");
+    warn('Install manually (see docs/GUARDS.md, section "Strażnicy commita"):');
     warn("    python -m pip install --user pre-commit");
     warn("    python -m pre_commit install --hook-type pre-commit --hook-type commit-msg");
     warn("Skipping hook install — commits will not be guarded locally.");

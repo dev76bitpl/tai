@@ -1,4 +1,4 @@
-"""GitHub repository settings a project from this template needs (docs/SETUP.md, step 1).
+"""GitHub repository settings a project from this template needs (docs/GUARDS.md).
 
 Shared by scripts/project-setup.py (the guided start sets them after asking) and
 scripts/doctor.py (warns when they are still at GitHub's defaults). Both pass their own
@@ -96,7 +96,7 @@ def step(root: Path, run, confirm, has_origin: bool) -> tuple[str, str]:
     When GitHub refuses (organisation limits, no owner rights) the commands are shown for manual
     use and the start goes on — a missing setting must not block the remaining steps.
     """
-    manual = "ustaw ręcznie: docs/SETUP.md, krok 1"
+    manual = "ustaw ręcznie: docs/GUARDS.md, sekcja „Ustawienia repo na GitHubie”"
     if not has_origin:
         return SKIPPED, "pominięte — nie ma podpiętego repo"
     slug, why_not = repo_slug(run)
@@ -132,4 +132,4 @@ def doctor_check(root: Path, run, ok, warn) -> None:
         ok(f"GitHub repo settings in place ({slug})")
         return
     warn("GitHub repo settings missing: " + "; ".join(LABELS[key] for key in todo),
-         "Set them with: python3 scripts/project-setup.py  (or by hand — docs/SETUP.md step 1)")
+         "Set them with: python3 scripts/project-setup.py  (or by hand — docs/GUARDS.md, section \"Ustawienia repo na GitHubie\")")

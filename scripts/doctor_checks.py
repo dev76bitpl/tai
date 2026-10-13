@@ -35,7 +35,7 @@ def claude_hooks(root: Path, ok, fail, warn) -> bool:
         warn(
             ".claude/settings.local.json missing — no Claude Code hook runs on this machine",
             "Run: cp .claude/settings.local.json.example .claude/settings.local.json"
-            "  then replace INTERPRETER (python3 / py) — see docs/SETUP.md step 8a.",
+            "  then replace INTERPRETER (python3 / py) — see docs/GUARDS.md, section \"Interpreter\".",
         )
         return True
 
@@ -54,7 +54,7 @@ def claude_hooks(root: Path, ok, fail, warn) -> bool:
     if any(_INTERPRETER_PLACEHOLDER.search(cmd) for cmd in commands):
         fail(
             ".claude/settings.local.json still contains the INTERPRETER placeholder — every hook fails to start",
-            "Replace INTERPRETER with python3 (Ubuntu/macOS) or py (Windows) — see docs/SETUP.md step 8a.",
+            "Replace INTERPRETER with python3 (Ubuntu/macOS) or py (Windows) — see docs/GUARDS.md, section \"Interpreter\".",
         )
         healthy = False
 
@@ -118,7 +118,7 @@ def claude_template_path(root: Path, ok, warn) -> None:
     if not template:
         warn(
             "ai_template_path not set (optional)",
-            "Set $AI_TEMPLATE_PATH or put it in .claude/hooks/config.local.json — see docs/SETUP.md step 8b.",
+            "Set $AI_TEMPLATE_PATH or put it in .claude/hooks/config.local.json — see docs/GUARDS.md, section \"Konfiguracja strażników\".",
         )
         return
     if "://" in template or template.startswith("git@"):

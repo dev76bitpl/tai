@@ -544,6 +544,8 @@ Na początku sesji AI czyta selektywnie — na podstawie tematu, nie wszystko na
 - **docs/** → sprawdź co istnieje — lista plików rośnie wraz z projektem, nie zakładaj że powyższe to wszystko
 - **docs/SETUP.md** → gdy sesja dotyczy środowiska lub onboardingu
 - **docs/TESTING.md** → gdy sesja dotyczy testowania lub dodawania nowego krytycznego flow
+- **docs/GUARDS.md** → gdy sesja dotyczy strażników, hooków, konfiguracji albo startu projektu
+- **docs/examples/** → przed napisaniem albo rozbudową SETUP, TASKS, ROADMAP lub ADR
 
 W toku sesji: nie czytaj ponownie pliku który nie zmienił się — reguła 9.
 Na początku sesji: CLAUDE.md, docs/TASKS.md, lista otwartych issues i docs/AI_TEMPLATE_NOTES.md zawsze, reszta na podstawie tematu.
@@ -620,6 +622,14 @@ To repo jest **template'm pracy z AI** — zbiorem uniwersalnych wzorców (zasad
 - Generyczne wzorce w `docs/UI_GUIDELINES.md` (stany, przyciski, formularze, błędy)
 - Standard z `docs/DELIVERY_CHECKLIST.md` (kompletny standard domknięcia kroku)
 - Scaffoldy (puste szkielety) dla `docs/SETUP.md`, `docs/TESTING.md`, `docs/ROADMAP.md`, `docs/TASKS.md`, `docs/PROJECT_SCOPE.md`
+- Wypełnione wzory tych dokumentów w `docs/examples/` — zostają w projekcie na stałe
+- Opis strażników i narzędzi AI w `docs/GUARDS.md` oraz ich ręczne scenariusze w `docs/GUARDS_TESTING.md` — takie same w każdym projekcie
+
+**Szkielet to nie dokument roboczy szablonu.** Szablon też jest projektem i prowadzi własny log sesji oraz
+własne scenariusze — ale pod nazwą, którą nowy projekt ma dostać pustą, może leżeć wyłącznie szkielet albo
+plik podmieniany przy starcie projektu. Własne materiały szablonu idą do plików tylko-szablonowych
+(`docs/TEMPLATE_TESTING.md`, `docs/adr/`) albo do `docs/TASKS.md`, który start projektu zeruje. Sprawdzian
+przy każdej zmianie w `docs/`: uruchom start projektu na kopii i przeczytaj, co w niej zostało.
 
 **Czego tu NIE ma**:
 - Nazwy konkretnych produktów, branż, klientów, person, faz biznesowych
@@ -997,6 +1007,9 @@ się ramki. Każda z tych usterek była do złapania jednym przebiegiem przed od
 - docs/TASKS.md – log sesji (w projekcie bez GitHuba także lista zadań)
 - docs/SETUP.md – instrukcja środowiska deweloperskiego (wymagania, instalacja, komendy)
 - docs/TESTING.md – checklisty testów manualnych dla krytycznych flow
+- docs/GUARDS.md – strażnicy i narzędzia AI z szablonu: ustawienia repo, pre-commit, hooki, konfiguracja (nie edytuj per projekt — przychodzi z szablonu)
+- docs/GUARDS_TESTING.md – ręczne scenariusze sprawdzania strażników
+- docs/examples/ – wypełnione wzory SETUP, TASKS, ROADMAP i ADR
 - docs/DELIVERY_CHECKLIST.md – standard domknięcia kroku (testy auto/manualne, regresja, docs, commit)
 - dziennik wdrożeń – zapis wdrożonych zmian dla cyklicznego agenta doradczego (data, czego dotyczy, na czyją rekomendację)
 - README.md – wizytówka projektu (stack, struktura, komendy, linki do docs)
@@ -1012,6 +1025,7 @@ AI:
 - aktualizuje zamiast duplikować
 - wykrywa niespójności między artefaktami i sygnalizuje je wprost
 - gdy w sesji wychodzi preferencja lub feedback — proponuje zapis do CLAUDE.md bez czekania na pytanie
+- **zanim napisze albo rozbuduje SETUP, TASKS, ROADMAP lub ADR — czyta jego wzór w `docs/examples/`** (poziom szczegółowości i format); wzorów nie edytuje i nie usuwa
 
 ---
 

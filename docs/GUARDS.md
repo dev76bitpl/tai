@@ -1,0 +1,433 @@
+# GUARDS — strażnicy i narzędzia AI
+
+Wszystko, co projekt dostaje z szablonu poza samym kodem: ustawienia repo na GitHubie, strażnicy
+commita, hooki Claude Code, ich konfiguracja, stos, wybór skilli i kroki startu. Ten plik jest taki
+sam w każdym projekcie z szablonu. Jak postawić **ten** projekt (baza, zmienne, uruchomienie) —
+[docs/SETUP.md](SETUP.md). Ręczne scenariusze sprawdzania — [docs/GUARDS_TESTING.md](GUARDS_TESTING.md).
+
+Komunikaty skryptów odsyłają tutaj po nazwie sekcji (np. „docs/GUARDS.md, sekcja „Interpreter””),
+nie po numerze — test pilnuje, że każda taka sekcja istnieje.
+
+---
+
+## Ustawienia repo na GitHubie
+
+> ⚠️ Bez tych ustawień release-please nie tworzy tagów ani GitHub Releases automatycznie, a branche trzeba sprzątać ręcznie po każdym merge. Ustaw zaraz po stworzeniu repo — przed pierwszym commitem.
+>
+> **Prowadzony start robi to sam:** krok „Ustawienia repo” w `python3 scripts/project-setup.py` odczytuje stan, mówi, czego brakuje, i po jednym „tak” ustawia to przez `gh`. Poniższe polecenia są dla startu bez kreatora i na wypadek, gdy GitHub odmówi (ograniczenia organizacji). Stan w istniejącym projekcie pokazuje `npm run doctor`, sekcja „Repository state”.
+
+**Settings → General → Pull Requests**:
+- ☑ `Automatically delete head branches` — branche usuwane automatycznie po merge
+
+**Settings → Actions → General → Workflow permissions**:
+- ☑ `Read and write permissions`
+- ☑ `Allow GitHub Actions to create and approve pull requests`
+
+Weryfikacja i ustawienie przez CLI:
+
+```bash
+gh api repos/<owner>/<repo>/actions/permissions/workflow
+# oczekiwane: "default_workflow_permissions": "write", "can_approve_pull_request_reviews": true
+
+# jeśli nie — ustaw:
+gh api -X PUT repos/<owner>/<repo>/actions/permissions/workflow \
+  -F default_workflow_permissions=write \
+  -F can_approve_pull_request_reviews=true
+```
+
+Alternatywnie (org z ograniczeniami): wygeneruj fine-grained PAT scoped na repo, dodaj jako secret `RELEASE_PLEASE_TOKEN`, zmień workflow żeby używał `token: ${{ secrets.RELEASE_PLEASE_TOKEN }}`.
+
+---
+
+## Strażnicy commita
+
+Instalacja jest zautomatyzowana przez `npm install`. Ten krok tylko gdy automat zawiedzie.
+
+**Ubuntu 24.04+** (PEP 668 blokuje `pip install --user`):
+
+```bash
+sudo apt install pipx -y
+pipx install pre-commit
+pipx ensurepath
+# nowa sesja terminala lub: source ~/.bashrc
+```
+
+**Windows**:
+
+```bash
+pip install pre-commit
+pre-commit install --hook-type pre-commit --hook-type commit-msg
+```
+
+> ⚠️ Guard hooki wymagają `python3` w PATH. Na Windows domyślnie jest tylko `python`.
+> Utwórz alias raz (PowerShell jako Administrator):
+>
+> ```powershell
+> New-Item -ItemType HardLink -Path "C:\Python3X\python3.exe" -Target "C:\Python3X\python.exe"
+> ```
+>
+> Zamień `C:\Python3X` na katalog instalacji Pythona (sprawdź: `where python`).
+
+**Starszy Linux**:
+
+```bash
+pip install --user pre-commit
+pre-commit install --hook-type pre-commit --hook-type commit-msg
+```
+
+Weryfikacja:
+
+```bash
+npm run doctor
+pre-commit run --all-files
+```
+
+**Bypass flagi** (tylko z dokumentowanym powodem w body commita):
+- `[skip-docs]` — pomiń sprawdzanie TASKS.md i testów
+- `[no-adr]` — zmiana architektoniczna bez ADR (świadoma decyzja)
+- `[skip-test-check]` — commit bez `[user-tested]` (tylko docs/chore)
+- `[skip-sync]` — sekcja project-specific, nie idzie do AI template
+- `SKIP=guard-lint,guard-tests git commit ...` — env var, nie ląduje w historii
+
+**Język artefaktów (CLAUDE.md reguła 2) — angielski, egzekwowany na dwóch warstwach:**
+- **subject commita** → lokalny guard `guard-commit-lang` (commit-msg stage); bypass `SKIP=guard-commit-lang`
+- **tytuł + opis PR** → CI workflow `PR language` (`pull_request`, bo PR body istnieje tylko na GitHubie — pre-commit go nie widzi); polskie stringi UI w opisie trzymaj w \`backtickach\` (bloki kodu są pomijane); bypass: `[skip-lang]` w body PR
+- wspólny detektor: `scripts/dev-guards/lang.py` (jedna lista, oba checki)
+
+**Dane osobowe — strażnik `guard-pii` (pre-commit stage):**
+
+> Po ludzku: commit, który dodaje dane prawdziwej osoby, nie przechodzi. Z historii Gita takich
+> danych nie da się potem wygodnie usunąć, więc zatrzymujemy je przed wejściem.
+
+- łapie w **dodanych liniach**: PESEL (z sumą kontrolną), numer konta (26 cyfr, mod 97), telefon
+  komórkowy, e-mail w publicznej domenie pocztowej (gmail, wp, onet…) oraz nazwiska z lokalnej listy;
+  w komunikacie wartości są zamaskowane
+- **lista nazwisk nie istnieje, dopóki jej nie założysz** — bez niej strażnik łapie numery i e-maile,
+  ale nazwisk nie. Plik `~/.config/76bit/pii-names.txt`, jedno nazwisko w linii (min. 3 znaki, `#` =
+  komentarz). Inna ścieżka: zmienna `PII_NAMES_FILE`. Lista zostaje na maszynie, nigdy w repo
+- publiczne dane firmowe (telefon biura, adres kontaktowy w prywatnej domenie pocztowej) dopisz do
+  `~/.config/76bit/pii-public.txt` (albo `PII_PUBLIC_FILE`) — przestają być zgłaszane
+- zmyślone dane w testach i przykładach: dopisz `pii-ok` w tej samej linii
+- fałszywy alarm, który sprawdziłeś: `SKIP=guard-pii git commit ...`
+- gdy strażnik nie umie odczytać zmian, **blokuje** commit zamiast przepuścić
+- pomija pliki binarne i lockfile; detektor `scripts/dev-guards/pii.py` da się zaimportować osobno
+  (np. do cyklicznego skanu całego repo)
+- nazwy rodzajów zwracane przez detektor (`PESEL`, `bank account`, `phone`, `private e-mail`,
+  `listed name`) są **kontraktem**: skan, który zapisuje je w kluczach własnej listy wyjątków, po
+  zmianie nazwy przestaje rozpoznawać stare klucze. Do 2026-10-12 nazwy były polskie — istniejącą
+  listę przepisz raz, z kopią zapasową:
+  ```bash
+  cp lista-wyjatkow.txt lista-wyjatkow.txt.bak
+  sed -i -e 's/:numer konta:/:bank account:/' -e 's/:telefon:/:phone:/' \
+         -e 's/:e-mail prywatny:/:private e-mail:/' -e 's/:nazwisko z listy:/:listed name:/' lista-wyjatkow.txt
+  ```
+
+---
+
+### Testy strażników
+
+Każdy strażnik ma test, który uruchamia go jako osobny proces i sprawdza kod wyjścia. Testy
+leżą obok strażników, więc jadą z nimi do projektu:
+
+- `.claude/hooks/tests/` — hooki Claude Code (blokada = kod `2`)
+- `scripts/dev-guards/tests/` — strażnicy commita i sprawdzenie języka PR (blokada = kod `1`)
+
+```bash
+python3 -m pytest -q        # z katalogu głównego; katalogi wymienia pytest.ini
+```
+
+Wymaga `pytest` (`pip install pytest`; na Ubuntu 24.04+ `sudo apt install python3-pytest`).
+Nowy strażnik bez pliku testów wywala `test_every_guard_has_tests.py` /
+`test_every_hook_has_tests.py` — pokrycie nie może się cofnąć po cichu. Wzór testu:
+`scripts/dev-guards/tests/harness.py` i `.claude/hooks/tests/hook_harness.py` (tymczasowe
+repozytorium, kopia strażników, `run_guard` / `run_hook`).
+
+`npm run doctor` sprawdza, czy `pytest` jest dostępny, i przy braku podaje polecenie instalacji
+(ostrzeżenie, nie błąd — bez `pytest` strażnicy działają, nie da się tylko uruchomić ich testów).
+
+**Projekt o innym stosie niż Python** (np. node): testy strażników są w Pythonie, a
+`guard-tests` przy commicie odpala wyłącznie komendę testów wykrytego stosu — więc **przy
+commicie test własnego strażnika nie uruchamia się sam**. Pilnuje go CI: krok `Run tests`
+w `.github/workflows/guards.yml` (`python3 -m pytest -q`) jedzie z szablonem i chodzi przy każdym
+PR. Lokalnie, po zmianie strażnika albo dopisaniu nowego, uruchom `python3 -m pytest -q` ręcznie
+przed commitem. Katalog `tests/` (testy narzędzi szablonu) znika przy `new-project.py --init`;
+wpis `tests` w `pytest.ini` może zostać — `pytest` pomija nieistniejący katalog.
+
+---
+
+### Końce linii
+
+Repo trzyma wszystkie pliki tekstowe z końcami `LF`, na każdym systemie. Pilnują tego dwie warstwy:
+
+- **`.gitattributes` w katalogu głównym** (`* text=auto eol=lf`) — działa w każdym klonie, bez
+  żadnej konfiguracji. To właściwa ochrona.
+- **`core.autocrlf=input` lokalnie** — ustawia je start projektu (`new-project.py --init`, krok
+  „Repozytorium Git” w `project-setup.py`) oraz `npm install`. Druga warstwa, dla klonu sprzed
+  dodania pliku.
+
+Bez nich klon na Windows (domyślnie `core.autocrlf=true`) pokazuje setki plików jako zmienione
+bez zmiany treści, a strażnik końców linii odbija commity. Sprawdzenie: `npm run doctor`, sekcja
+„Repository state” — `✓ Line endings: .gitattributes (eol=lf)` albo ostrzeżenie o braku reguły.
+Projekt postawiony przed tą zmianą nie ma `.gitattributes`: skopiuj go z szablonu, a potem
+`git add --renormalize .` pokaże, czy jakieś pliki mają jeszcze końce Windows.
+
+---
+
+## Hooki Claude Code
+
+Per maszyna.
+
+### Interpreter
+
+```bash
+cp .claude/settings.local.json.example .claude/settings.local.json
+```
+
+Zamień `INTERPRETER` na właściwy: `python3` (Ubuntu/macOS) lub `py` (Windows).
+
+Sprawdzenie: `npm run doctor`, sekcja „Claude Code hooks”. Ten plik jest per-maszyna i poza
+repozytorium, więc warstwa commita może być cała zielona, gdy żaden hook Claude Code nie działa:
+
+| Co widać w raporcie | Co to znaczy | Skutek |
+|---|---|---|
+| `⚠ .claude/settings.local.json missing` | pliku nie skopiowano — żaden hook się nie odpala | ostrzeżenie |
+| `✗ ... still contains the INTERPRETER placeholder` | znacznik niepodmieniony — każdy hook wywala się przy starcie | błąd, kod wyjścia `1` |
+| `✗ .claude/settings.local.json unreadable` | plik nie jest poprawnym JSON-em | błąd, kod wyjścia `1` |
+| `⚠ Guard hooks present ... but not wired: <nazwy>` | strażnik `guard-*.py` jest w `.claude/hooks/`, ale nie ma go w pliku (np. doszedł z szablonu później) — dopisz wpis z `settings.local.json.example` | ostrzeżenie |
+| `✓ Claude Code hooks wired (N guard hook(s))` | wszystkie strażniki z repo są podpięte | — |
+
+### Konfiguracja strażników
+
+Dwa pliki:
+
+| Plik | Dla kogo | W repozytorium? | Co w nim trzymać |
+|---|---|---|---|
+| `.claude/hooks/config.json` | cały zespół | **tak, commitowany** | ustawienia projektu: komendy `lint` / `test`, `src_dirs`, `adr_patterns`, `dev_user_ports`, `repos` |
+| `.claude/hooks/config.local.json` | jedna maszyna | nie (`.gitignore`) | to, co różni się między maszynami — przede wszystkim lokalna ścieżka klona szablonu |
+
+```bash
+cp .claude/hooks/config.json.example .claude/hooks/config.json   # dostosuj do projektu i zacommituj
+```
+
+`config.local.json` nakłada się na `config.json` — wartość z pliku lokalnego wygrywa. Czytają go
+tak samo **obie warstwy strażników** (hooki Claude Code i strażnicy commita) oraz `npm run doctor`.
+
+**Ścieżki ze swojego komputera nie wpisuj do `config.json`** — ten plik trafia do commita. Lokalny
+klon szablonu wskaż jednym z dwóch sposobów (kolejność: pierwszy znaleziony wygrywa):
+
+1. `export AI_TEMPLATE_PATH=/sciezka/do/klona` w `~/.bashrc` — jeden wpis obsługuje wszystkie projekty
+2. `{"ai_template_path": "/sciezka/do/klona"}` w `.claude/hooks/config.local.json`
+3. `ai_template_path` w `config.json` — tylko adres wspólny dla wszystkich (publiczny URL szablonu)
+
+Bez żadnego z nich działa autodetekcja klona obok projektu, a potem publiczny URL. `npm run doctor`
+pokazuje w sekcji „Optional integrations”, skąd wziął ścieżkę (`from $AI_TEMPLATE_PATH` /
+`from config.local.json` / `from config.json`).
+
+**Dwa ustawienia, które decydują, kiedy strażnik commita się odzywa — oba wynikają ze stosu projektu.**
+Nikt nie jest pytany o katalogi i nikt nie edytuje pliku ręcznie: stos ustala **wywiad o zakresie**
+(hasło `scope` w Claude Code, pytanie „Stack i środowisko?”), a po nim Claude uruchamia
+`python3 scripts/set-stack.py <stos>`, który wpisuje wynik do `config.json`. Kto zna stos od razu,
+może podać go przy starcie (`new-project.py --init --stack <stos>`) albo uruchomić skrypt sam;
+ponowne uruchomienie z innym stosem jest bezpieczne. Tabelę drukuje `python3 scripts/set-stack.py --list`
+(skąd te decyzje: [ADR-005](adr/ADR-005-stack-from-scope-interview.md)):
+
+| Stos | Katalogi kodu (`src_dirs`) | Włączona grupa wzorców ADR |
+|---|---|---|
+| `node` | `src` | — |
+| `laravel` | `app` | — |
+| `symfony` | `src` | — |
+| `wordpress` | `wp-content/themes`, `wp-content/plugins` | WordPress |
+| `prestashop` | `modules`, `override` | PrestaShop |
+| `magento` | `app/code` | Magento |
+| `python` | `src` | — |
+| `go` | `cmd`, `internal`, `pkg` | — |
+| `rails` | `app`, `lib` | — |
+| `inny` (domyślny) | `src` | — |
+
+- **`src_dirs` — gdzie leży kod aplikacji.** Strażnik „kod wymaga testów” (`guard-tests-with-src`)
+  sprawdza tylko pliki w tych katalogach. Projekt o innym układzie niż w tabeli poprawia listę
+  w `config.json`. Plik testu strażnik rozpoznaje sam, dla każdego stosu: `*.test.*`, `*.spec.*`,
+  `__tests__/`, `test_*.py`, `*_test.py`, `*_test.go`, `*Test.php`, `*_spec.rb`, `*_test.rb` oraz
+  dowolny plik z kodem w `tests/`, `test/` albo `spec/`.
+- **`adr_patterns` — które ścieżki wyglądają na decyzję architektoniczną.** Zawsze aktywne są
+  wzorce ogólne (baza, infrastruktura, architektura). Wzorce platform leżą w tym samym pliku
+  w `_adr_patterns_optional` i są **nieaktywne**, dopóki `set-stack.py` ich nie włączy — aktywne
+  wszędzie dawały fałszywe alarmy (katalog `modules/` w projekcie bez sklepu = „nowy moduł
+  PrestaShop”). Projekt postawiony przed tą zmianą ma stare wzorce w swoim `config.json` —
+  przytnij je ręcznie.
+
+**Start projektu to prowadzone kroki, nie lista do przepisania.** `new-project.py` po sprzątaniu
+przekazuje sterowanie do `scripts/project-setup.py`, który zostaje w projekcie:
+
+| Krok | Co robi | Kiedy pomijany |
+|---|---|---|
+| Repozytorium Git | `git init -b main` | repozytorium już jest |
+| Repo na GitHubie | podpina podany adres albo zakłada `wlasciciel/nazwa` (`gh repo create`, bez `push`) | `origin` już podpięty; Enter |
+| Ustawienia repo | kasowanie gałęzi po scaleniu — zawsze; uprawnienia automatów GitHuba (zapis, zatwierdzanie PR) — tylko gdy projekt ma automat wydań (`.github/workflows/release-please*.yml`). Jedno pytanie, potem `gh api` | brak repo na GitHubie albo brak `gh`; ustawienia już są; GitHub odmawia → polecenia do ręcznego wykonania |
+| Etykiety zgłoszeń | zakłada `owner` i `idea` | brak repo na GitHubie albo brak `gh`; etykiety są |
+| Kontrola środowiska | `python3 scripts/doctor.py`; czerwony raport = błąd kroku | — |
+| Brief projektu | uruchamia Claude Code z hasłem `scope` | brief, stos i ADR-001 już są |
+| Skille | wybór grup skilli, które zostają w projekcie (`scripts/select-skills.py`), potem odświeżenie pozostałych | brak skryptów skilli |
+| Szablon graficzny | uruchamia Claude Code z zadaniem: dwa kierunki wyglądu (jasny i ciemny) jako makiety w `mockups/propozycje/`, po wyborze zasady w `docs/UI_GUIDELINES.md` | makiety i sekcja „Kierunek wizualny projektu” już są; odpowiedź „nie” (projekt bez interfejsu) |
+
+**Wybór skilli.** Szablon ma komplet skilli dla wszystkich technologii; projekt zostawia sobie
+potrzebne grupy, reszta znika. Brief jest przed skillami, bo stos z wywiadu podpowiada wybór,
+a skille przed szablonem graficznym, żeby powstawał on już w projekcie bez zbędnych skilli
+(`●` przy proponowanych grupach; Enter je przyjmuje, `w` zostawia wszystko, numery wybierają ręcznie).
+Skille ogólne (`scope`, `adr`, `api`, `debug`, `deploy`, `git`, `retro`) zostają zawsze.
+
+| Grupa (`--keep`) | Skille | Proponowana dla stosu |
+|---|---|---|
+| `wordpress` | pięć skilli `wp-*` | wordpress |
+| `php` | `laravel-rules`, `php-modernization`, `symfony` | laravel, symfony, magento, wordpress, prestashop |
+| `shops` | `prestashop`, `shoper` | prestashop |
+| `typescript` | `typescript`, `nextjs` | node |
+| `design` | `design-taste-frontend`, `redesign-existing-projects` | wszystkie poza python i go |
+| `ui` | `ui-ux-pro-max`, `a11y`, pakiet jakości stron (`perf`) | wszystkie |
+| `marketing` | `copywriting`, `cro` | wordpress |
+| `review` | `review`, `security` | wszystkie |
+
+Stos `inny` albo nieustawiony proponuje wszystkie grupy. Wybór zapisuje się w `skills-manifest.json`
+(`skill_groups`, `excluded_skills`) — synchronizacja z szablonu pomija wyłączone skille, więc nie
+wracają przy następnej wiadomości. Zmiana zdania: `python3 scripts/select-skills.py` jeszcze raz;
+grupa dodana z powrotem wraca przy najbliższej synchronizacji
+(`python3 scripts/update-skills.py --sync --apply`, potem `--apply`). Bez terminala:
+`--keep php,ui,review` albo `--all`; stan pokazuje `--list`. Katalogi skilli spoza manifestu
+(`seo`, `performance`, `core-web-vitals`, `best-practices`, `web-quality-audit`) nie należą do
+żadnej grupy i zostają.
+
+- **Wznawianie:** `python3 scripts/project-setup.py` — kroki zrobione są pomijane, więc po naprawie
+  błędu wystarczy uruchomić ponownie. Sama lista: `--list`.
+- **Claude Code otwiera się „na chwilę”.** Skrypt uruchamia go jako proces potomny: po wyjściu
+  (`/exit`) wracasz do kroków startu, a nie do pustego terminala.
+- **Błąd kroku:** skrypt pokazuje polecenie i końcówkę wyniku, pyta „Poprosić Claude o pomoc z tym
+  krokiem?”, a po powrocie „Ponowić ten krok teraz?” — „tak” uruchamia krok jeszcze raz i idzie dalej.
+- **Po wywiadzie skrypt sprawdza, co powstało:** własna treść w `docs/PROJECT_SCOPE.md`, stos
+  zapisany w `.claude/hooks/config.json` (klucz `stack`, ustawia go `set-stack.py`) i ADR-001
+  w `docs/adr/`. Każdy punkt dostaje `✓` albo `✗`; gdy czegoś brakuje, pada pytanie „Wrócić do wywiadu?”.
+- **Szablon graficzny** nie wskazuje jednego skilla: Claude dobiera sposób pracy do projektu
+  (`design-taste-frontend` przy stronach i landingach, `ui-ux-pro-max` przy panelach i produktach
+  z wieloma ekranami, `impeccable` — jeśli jest w projekcie). Przed otwarciem Claude Code krok pyta
+  „Zainstalować skill impeccable w tym projekcie?”; tu Enter znaczy **nie**, bo to cudzy kod spoza
+  szablonu (powód w `docs/SKILLS.md`). Na „t” uruchamia instalator z `--scope=project --no-hooks`.
+  Po powrocie skrypt sprawdza, czy są makiety i sekcja „Kierunek wizualny projektu” w `docs/UI_GUIDELINES.md`.
+- **Podsumowanie na końcu:** każdy krok ze znakiem `✓` zrobione / `–` pominięte / `✗` nieudane /
+  `·` nie doszło, oraz lista tego, co zostało do zrobienia ręcznie.
+- **Bez terminala** (AI, skrypt, CI) nic nie jest pytane ani uruchamiane — drukowana jest lista kroków.
+- **Brief:** szkielet `docs/PROJECT_SCOPE.md` z szablonu liczy się jak brak briefu. Kreator zakresu
+  przy gotowym briefie nie pyta ponownie, ustawia tylko stos.
+- Ustawienia repo z sekcji „Ustawienia repo na GitHubie” (usuwanie gałęzi po merge'u, uprawnienia Actions) nadal
+  ustawiasz ręcznie — skrypt ich nie zmienia.
+
+**Polecenia lintu i testów — skąd strażnicy je biorą.** Nowy projekt nie dostaje żadnych poleceń
+„na zapas” (wzorzec konfiguracji kiedyś niósł `composer lint` / `composer test` i każdy projekt
+je dziedziczył). Strażnik dobiera polecenie tak:
+
+| Sytuacja | Polecenie | Gdy nie da się go uruchomić |
+|---|---|---|
+| `lint` / `test` wpisane w `config.json` | dokładnie to, co wpisane | **blokada commita** — projekt coś obiecał i tego nie ma |
+| brak wpisu | wykryte po plikach projektu: `package.json` → `npm run lint` / `npm test`, `composer.json` → `composer lint` / `composer test`, `pyproject.toml` / `requirements.txt` → `ruff` / `pytest`, `Gemfile` → `rubocop` / `rspec`, `go.mod` → `golangci-lint` / `go test` | commit przechodzi z ostrzeżeniem „checks NOTHING” widocznym przy **każdym** commicie |
+| brak wpisu i nieznany stos | — | jak wyżej: ostrzeżenie |
+
+„Nie da się uruchomić” to nie tylko brak narzędzia: `npm run lint` bez skryptu `lint`
+w `package.json` też się liczy. Stan w dowolnej chwili pokazuje `npm run doctor`, sekcja
+„Guard system”: `✓ Lint guard runs: …`, `⚠ Lint guard checks nothing: …` albo
+`⚠ Lint guard BLOCKS every commit: …`. Świeży projekt po kreatorze zobaczy ostrzeżenie — to
+poprawny stan do chwili ustawienia lintu i testów, nie awaria. Projekt postawiony wcześniej ma
+w swoim `config.json` odziedziczone `composer lint` / `composer test`: usuń je albo zastąp własnymi.
+
+Pułapka: `config.local.json` potrafi też nadpisać komendę `lint` albo `test` — wtedy strażnik
+commita na tej jednej maszynie sprawdza co innego niż u reszty zespołu i w repozytorium tego nie
+widać. Trzymaj tam ścieżki i porty, nie komendy sprawdzające.
+
+### Klucz API Anthropic
+
+Per projekt, opcjonalnie.
+
+W `.claude/settings.local.json` dodaj sekcję `env` z kluczem z [console.anthropic.com](https://console.anthropic.com):
+
+```json
+{
+  "env": {
+    "ANTHROPIC_API_KEY": "sk-ant-api03-..."
+  },
+  "hooks": { ... }
+}
+```
+
+Plik jest w `.gitignore` — klucz nie trafia do repo. Pełna instrukcja + troubleshooting (Auth conflict, rotacja, cross-platform): [`CLAUDE_AUTH.md`](./CLAUDE_AUTH.md).
+
+### Lektor po turze
+
+Opcjonalny, działa na każdym systemie.
+
+Wygoda: system mówi na głos „Done" + nazwę projektu (folder roboczy), gdy Claude kończy turę —
+przydatne, gdy nie patrzysz na ekran i masz otwartych kilka projektów naraz.
+Realizuje to hook `Stop` w `~/.claude/settings.json`. Bramkowany **plikiem-przełącznikiem**
+`~/.claude/speak.on`: hook odzywa się tylko gdy plik istnieje, więc włączasz/wyłączasz bez edycji configu.
+Domyślnie **wyłączony** (nie twórz pliku, dopóki nie chcesz). Jest osobisty i per-maszyna — nie wpisuj go do repo.
+
+Wybierz wariant dla swojego OS i dołóż sekcję `hooks` do `~/.claude/settings.json` (scal z istniejącą,
+nie nadpisuj):
+
+```jsonc
+// macOS / Linux — używa pierwszego dostępnego: say (macOS), spd-say lub espeak (Linux)
+{
+  "hooks": {
+    "Stop": [
+      { "hooks": [ {
+        "type": "command",
+        "async": true,
+        "command": "[ -f \"$HOME/.claude/speak.on\" ] && { p=$(basename \"$PWD\"); command -v say >/dev/null && say \"Done $p\" || command -v spd-say >/dev/null && spd-say \"Done $p\" || command -v espeak >/dev/null && espeak \"Done $p\"; } || true"
+      } ] }
+    ]
+  }
+}
+```
+
+```jsonc
+// Windows — wbudowany lektor .NET (nic nie instalujesz). Wybiera polski głos "Paulina" jeśli
+// jest w systemie, w przeciwnym razie używa domyślnego (try/catch nie wywala się przy jego braku).
+{
+  "hooks": {
+    "Stop": [
+      { "hooks": [ {
+        "type": "command",
+        "shell": "powershell",
+        "async": true,
+        "command": "if (Test-Path \"$env:USERPROFILE\\.claude\\speak.on\") { Add-Type -AssemblyName System.Speech; $s = New-Object System.Speech.Synthesis.SpeechSynthesizer; try { $s.SelectVoice('Microsoft Paulina Desktop') } catch {}; $proj = Split-Path -Leaf $PWD; $s.Speak(\"Gotowe. $proj\") }"
+      } ] }
+    ]
+  }
+}
+```
+
+Włącz / wyłącz (działa na każdym OS z basha; Windows — Git Bash):
+
+```bash
+touch ~/.claude/speak.on   # włącz
+rm -f ~/.claude/speak.on   # wyłącz
+```
+
+Dla wygody repo dostarcza gotowe komendy slash w `.claude/commands/speak-on.md` i `speak-off.md` —
+tworzą/usuwają plik-przełącznik, więc włączasz lektora wpisując `/speak-on`, a wyłączasz `/speak-off`
+(bez ręcznego `touch`/`rm`). Komendy są per-repo; skopiuj je do `~/.claude/commands/`, jeśli chcesz mieć
+je globalnie w każdym projekcie.
+
+Uwagi: hook odzywa się po **każdej** turze (zdarzenie `Stop`), nie tylko „koniec dużego tematu".
+Nazwa projektu to nazwa folderu roboczego (`basename $PWD` / `Split-Path -Leaf $PWD`) — hooki nie mają
+dostępu do tytułu okna Claude, więc folder jest pewnym, cross-platformowym źródłem. Wariant macOS/Linux
+mówi „Done <projekt>" (celowo ASCII — `say`/`espeak` z domyślnym głosem potrafią zepsuć znaki
+diakrytyczne); wariant Windows z polskim głosem czyta „Gotowe. <projekt>" poprawnie. Podmień frazę
+i głos na własne, jeśli Twój lektor czyta lokalny język dobrze.
+
+---
+
+## Znane pułapki
+
+| Problem | Przyczyna | Rozwiązanie |
+|---|---|---|
+| `npm install` → `pre-commit install failed (exit 2)` z `/usr/bin/py` | Ubuntu 24.04: `/usr/bin/py` to nie Python launcher; `pip install --user` zablokowany przez PEP 668 | `sudo apt install pipx -y && pipx install pre-commit && pipx ensurepath`, nowa sesja, retry `npm install` |
+| `error: externally-managed-environment` przy `pip install` | Ubuntu 24.04+ blokuje pip globalnie (PEP 668) | `pipx install pre-commit` |
+| Guard hooki → `python3: not found` (Windows) | Guard hooki wymagają `python3` w PATH | utwórz alias — patrz sekcja „Strażnicy commita” |
+| Release PR (release-please) → CI w stanie `action_required` | GitHub od 2026-06-11 wstrzymuje workflowy z PR-ów tworzonych przez `github-actions[bot]` (zdarzenia z `GITHUB_TOKEN`) — zmiana bezpieczeństwa, nie błąd repo | kliknij „Approve workflows to run" w merge boxie release PR-a, albo zmerguj jeśli brak wymaganych checków; stałe obejście = App token/PAT zamiast `GITHUB_TOKEN` ([changelog](https://github.blog/changelog/2026-06-11-bot-created-pull-requests-can-run-workflows-if-approved/)) |

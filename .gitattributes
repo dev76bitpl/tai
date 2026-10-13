@@ -1,0 +1,24 @@
+# Line endings: LF in the repository and in every working tree, on every system.
+# Without this file a Windows clone checks text out as CRLF (core.autocrlf=true is the
+# default there): hundreds of files show as modified with no change in content, and the
+# line-ending guard rejects commits. A file in the repo works for every clone — a local
+# git setting works only where someone ran the setup.
+* text=auto eol=lf
+
+# Windows command scripts must keep CRLF to run.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary — never touched by line-ending conversion.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary

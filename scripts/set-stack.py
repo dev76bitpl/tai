@@ -89,7 +89,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if not CONFIG_PATH.is_file():
         print(f"❌ Brak {CONFIG_PATH.relative_to(ROOT)} — skopiuj go z config.json.example "
-              "(docs/SETUP.md, krok 8b).", file=sys.stderr)
+              "(docs/GUARDS.md, sekcja „Konfiguracja strażników”).", file=sys.stderr)
         return 1
     try:
         config = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))

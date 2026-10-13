@@ -245,7 +245,7 @@ def test_should_exit_0_when_pytest_is_missing(doctor_rest_green, tmp_path, monke
     assert doctor_rest_green.main() == 0
 
 
-# ── GitHub repository settings (docs/SETUP.md step 1) ────────────────────────
+# ── GitHub repository settings (docs/GUARDS.md) ────────────────────────
 
 def _gh(results):
     def run(command):
@@ -301,3 +301,22 @@ def test_should_never_fail_doctor_because_of_repo_settings(doctor_rest_green, tm
         "gh api repos/acme/shop": (0, "false\n"),
     }))
     assert doctor_rest_green.main() == 0
+
+
+# ── line endings ─────────────────────────────────────────────────────────────
+
+def test_should_report_line_endings_fine_when_gitattributes_has_the_rule(doctor, tmp_path, capsys):
+    (tmp_path / ".gitattributes").write_text("* text=auto eol=lf\n", encoding="utf-8")
+    doctor.check_line_endings()
+    out = capsys.readouterr().out
+    assert "✓" in out and ".gitattributes (eol=lf)" in out
+
+
+@pytest.mark.parametrize("content", [None, "*.png binary\n"])
+def test_should_warn_when_there_is_no_repo_level_rule_for_line_endings(doctor, tmp_path, monkeypatch, capsys, content):
+    if content is not None:
+        (tmp_path / ".gitattributes").write_text(content, encoding="utf-8")
+    monkeypatch.setattr(doctor, "run", lambda cmd: (0, "input\n"))
+    doctor.check_line_endings()
+    out = capsys.readouterr().out
+    assert "⚠" in out and "core.autocrlf=input" in out and "* text=auto eol=lf" in out
