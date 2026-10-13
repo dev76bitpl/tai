@@ -74,7 +74,7 @@ Nieoczekiwane błędy (DB niedostępna, sieć) — rzucaj wyjątek, łap na gran
 
 ## Testy
 
-- Lokalizacja: testy obok testowanego kodu (np. `*.test.ts`, `*_test.go`, `test_*.py`) lub w `__tests__/` / `tests/`
+- Lokalizacja: testy obok testowanego kodu (np. `*.test.ts`, `*.spec.ts`, `*_test.go`, `test_*.py`, `*_test.py`, `*Test.php`, `*_spec.rb`) lub w `__tests__/` / `tests/` / `test/` / `spec/` — dokładnie te konwencje rozpoznaje strażnik „kod wymaga testów”; plik nazwany inaczej nie liczy się jako test
 - Naming: `should_do_X_when_Y` — nazwa testu mówi co sprawdza bez czytania body
 - Każda funkcja domenowa ma testy jednostkowe — piszemy je razem z kodem, nie po fakcie
 - Testy integracyjne dla krytycznych flow (happy path + główny error case)

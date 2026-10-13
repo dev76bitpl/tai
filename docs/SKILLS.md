@@ -9,7 +9,7 @@ krótkie słowo które wpisujesz świadomie. Nie używaj składni `/command` (to
 
 | Wpisz | Skill | Co robi |
 |-------|-------|---------|
-| `scope` | new-project-scope | Wywiad 6 pytań → `docs/PROJECT_SCOPE.md` + `ADR-001` |
+| `scope` | new-project-scope | Interaktywny wywiad (pytania po jednym, z dopytaniem) → `docs/PROJECT_SCOPE.md` + `ADR-001` + stos dla strażników |
 | `debug` | debug | Protokół debugowania krok po kroku |
 | `deploy` | deploy | Checklist przed wdrożeniem |
 | `retro` | retro | Retrospektywa → action items |
@@ -56,7 +56,7 @@ krótkie słowo które wpisujesz świadomie. Nie używaj składni `/command` (to
 
 | Skill | Trigger | Opis |
 |-------|---------|------|
-| `new-project-scope` | `scope` | Wizard projektu — 6 pytań → `docs/PROJECT_SCOPE.md` + `ADR-001` |
+| `new-project-scope` | `scope` | Wizard projektu — interaktywny wywiad z dopytaniem → `docs/PROJECT_SCOPE.md` + `ADR-001` + stos dla strażników |
 | `git` | `git` | Workflow git: strategia branchy, format commita (Conventional Commits), protokół PR |
 | `adr` | `adr` | Generator ADR — wywiad → `docs/adr/ADR-NNN.md` |
 | `api` | `api design` | Przegląd projektu REST API: nazewnictwo, metody HTTP, kody statusu, paginacja |

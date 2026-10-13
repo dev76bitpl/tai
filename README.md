@@ -11,16 +11,22 @@ Fundament nowego projektu z AI. Skille, guardy workflow i scaffoldy dokumentacji
 git clone https://github.com/dev76bitpl/tai.git moj-projekt
 cd moj-projekt
 
-# 2. Wyczyść template meta (testy, README, ten skrypt)
+# 2. Wyczyść template meta (testy, README, ten skrypt) i przejdź kroki startu
 python3 scripts/new-project.py --init
 
-# 3. Nowy git + scope
-rm -rf .git && git init && git remote add origin <url>
-python3 scripts/update-skills.py --apply
-claude   # napisz: scope
+# 3. Przerwane albo któryś krok się nie udał? Dokończ — zrobione kroki są pomijane
+python3 scripts/project-setup.py
 ```
 
-`--init` usuwa pliki template-only (`tests/`, `README.md` → scaffold, sam siebie) i konfiguruje Claude Code hooks. Skille zostają gotowe do pracy. Testy strażników zostają — mieszkają obok nich (`.claude/hooks/tests/`, `scripts/dev-guards/tests/`), a `tests/` to testy narzędzi samego szablonu.
+`--init` usuwa pliki template-only (`tests/`, `README.md` → scaffold, sam siebie), zakłada świeżą historię Gita na gałęzi `main`, instaluje strażników commita i konfiguruje Claude Code hooks. Potem prowadzi przez kroki startu, każdy z pytaniem i wynikiem ✓ / ✗:
+
+1. **Repo** — adres istniejącego albo `wlasciciel/nazwa` nowego do założenia na GitHubie (Enter = pomiń)
+2. **Etykiety zgłoszeń** — `owner` i `idea`
+3. **Skille** — instalacja vendored skilli
+4. **Kontrola środowiska** — raport `doctor`
+5. **Brief** — wywiad `scope` w Claude Code: zakres, dla kogo i stos; ze stosu `scripts/set-stack.py` ustawia strażników (katalogi kodu, wzorce ADR platformy — tabela w `docs/SETUP.md`, krok 8b). Projekt z gotowym briefem wywiad pomija
+
+Gdy krok się nie uda, skrypt proponuje uruchomienie Claude Code z opisem błędu. Bez terminala (AI, CI) o nic nie pyta — drukuje listę kroków. Skille zostają gotowe do pracy. Testy strażników zostają — mieszkają obok nich (`.claude/hooks/tests/`, `scripts/dev-guards/tests/`), a `tests/` to testy narzędzi samego szablonu.
 
 ---
 
@@ -30,7 +36,7 @@ claude   # napisz: scope
 
 | Skill | Jak wywołać |
 |-------|-------------|
-| `scope` | Wywiad 6 pytań → `docs/PROJECT_SCOPE.md` + `ADR-001` |
+| `scope` | Interaktywny wywiad (pytania po jednym, z dopytaniem) → `docs/PROJECT_SCOPE.md` + `ADR-001` + stos dla strażników |
 | `debug` | Protokół debugowania krok po kroku |
 | `deploy` | Checklist przed wdrożeniem na produkcję |
 | `retro` | Retrospektywa → action items do `TASKS.md` |

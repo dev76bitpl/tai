@@ -177,7 +177,21 @@ def mkdir(path: Path, dest: Path, dry_run: bool) -> None:
     (path / ".gitkeep").touch()
 
 
-def create_config_json(dest: Path, template_root: Path, dry_run: bool) -> None:
+def _load_set_stack():
+    """scripts/set-stack.py as a module — it owns the stack table and stays in the project
+    (the scope wizard runs it later), while this script deletes itself after --init."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("set_stack", ROOT / "scripts" / "set-stack.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+set_stack = _load_set_stack()
+
+
+def create_config_json(dest: Path, template_root: Path, dry_run: bool,
+                       stack: str | None = None) -> None:
     """Creates .claude/hooks/config.json from the template's example.
 
     ai_template_path is left as the example placeholder, not auto-filled (ADR-002
@@ -185,17 +199,25 @@ def create_config_json(dest: Path, template_root: Path, dry_run: bool) -> None:
     the generator can't know, and the sync guard works without it (acknowledgment
     mode). Auto-filling it was the source of bug A — in --init the project's own
     remote got written as the template path.
+
+    stack is optional here: normally the scope wizard decides it after the interview and
+    runs scripts/set-stack.py. Passing --stack applies the same table right away, for
+    someone who already knows the stack.
     """
     example_src = template_root / ".claude" / "hooks" / "config.json.example"
     if not example_src.exists():
         return
-    log("auto-config", ".claude/hooks/config.json  (ai_template_path = placeholder)", dry_run)
+    preset = set_stack.STACK_PRESETS.get(stack) if stack else None
+    suffix = f", stack = {stack}: {', '.join(preset['src_dirs'])}" if preset else ""
+    log("auto-config", f".claude/hooks/config.json  (ai_template_path = placeholder{suffix})", dry_run)
     if dry_run:
         return
     config = json.loads(example_src.read_text(encoding="utf-8"))
     if config.get("repos") and isinstance(config["repos"], list):
         config["repos"][0]["name"] = dest.name
         config["repos"][0]["tasks"] = "docs/TASKS.md"
+    if preset:
+        set_stack.apply_stack(config, stack)
     out = dest / ".claude" / "hooks" / "config.json"
     out.write_text(json.dumps(config, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
@@ -269,14 +291,16 @@ def fresh_git_history(root: Path, dry_run: bool) -> None:
     """
     git_dir = root / ".git"
     log("rmdir", ".git  (template history)", dry_run)
-    log("git", "init", dry_run)
+    log("git", "init -b main", dry_run)
     log("git", 'commit -m "chore: initialize project from AI template"', dry_run)
     if dry_run:
         return
     if git_dir.exists():
         shutil.rmtree(git_dir, onerror=_on_rm_error)
     try:
-        subprocess.run(["git", "init", "-q"], cwd=str(root), check=True)
+        # -b main: the guards and the whole described workflow assume main, while a bare
+        # `git init` follows the machine's init.defaultBranch and may start on master
+        subprocess.run(["git", "init", "-q", "-b", "main"], cwd=str(root), check=True)
         subprocess.run(["git", "add", "-A"], cwd=str(root), check=True)
         subprocess.run(
             ["git", "commit", "-q", "-m", "chore: initialize project from AI template"],
@@ -286,7 +310,7 @@ def fresh_git_history(root: Path, dry_run: bool) -> None:
         warn(
             f"git init/commit failed (exit {exc.returncode}). "
             "Cleaning is done; finish git manually:\n"
-            "    git init && git add -A && "
+            "    git init -b main && git add -A && "
             'git commit -m "chore: initialize project from AI template"'
         )
 
@@ -342,7 +366,24 @@ def install_guards(root: Path, dry_run: bool) -> None:
 
 # ── Init in-place ─────────────────────────────────────────────────────────────
 
-def init_in_place(root: Path, dry_run: bool, do_git: bool = True) -> None:
+def hand_over_to_setup(root: Path) -> None:
+    """Continue with the guided steps (remote, labels, skills, doctor, brief).
+
+    They live in scripts/project-setup.py because this script deletes itself after --init,
+    and the steps have to be runnable again after a failed one is fixed. Without a terminal
+    project-setup.py only prints the steps.
+    """
+    setup = root / "scripts" / "project-setup.py"
+    if not setup.is_file():
+        print("  ⚠ Brak scripts/project-setup.py — dalsze kroki: docs/SETUP.md\n")
+        return
+    sys.stdout.flush()
+    os.chdir(root)
+    os.execv(sys.executable, [sys.executable, str(setup)])
+
+
+def init_in_place(root: Path, dry_run: bool, do_git: bool = True,
+                  stack: str | None = None) -> None:
     """Remove template meta and turn this clone into a clean project directory."""
     print("🚀  new-project.py — INIT IN-PLACE")
     print(f"    Directory: {root}\n")
@@ -363,7 +404,7 @@ def init_in_place(root: Path, dry_run: bool, do_git: bool = True) -> None:
         (root / "README.md").write_text(README_SCAFFOLD, encoding="utf-8")
 
     print("\n── Claude Code hooks (auto) ────────────────────────────")
-    create_config_json(root, root, dry_run)
+    create_config_json(root, root, dry_run, stack)
     create_settings_local(root, root, dry_run)
 
     # Remove this script before any git commit — it's template-only.
@@ -381,18 +422,11 @@ def init_in_place(root: Path, dry_run: bool, do_git: bool = True) -> None:
         return
 
     print(f"\n✅  Gotowe: {root}\n")
-    print("── Następne kroki ──────────────────────────────────────\n")
     if not do_git:
-        print("  # 0. Nowa historia git (pominięta przez --no-git)")
-        print("  rm -rf .git && git init")
+        print("  Historia git szablonu została (--no-git). Nową założysz tak:")
+        print("  rm -rf .git && git init -b main")
         print("  pre-commit install --hook-type pre-commit --hook-type commit-msg\n")
-    print("  # 1. Podłącz zdalne repo")
-    print("  git remote add origin <url>\n")
-    print("  # 2. Zainstaluj vendored skille")
-    print("  python3 scripts/update-skills.py --apply\n")
-    print("  # 3. Zdefiniuj scope projektu")
-    print("  claude   # napisz: scope\n")
-    print("────────────────────────────────────────────────────────\n")
+    hand_over_to_setup(root)
 
 
 # ── Main ─────────────────────────────────────────────────────────────────────
@@ -403,7 +437,8 @@ def main() -> None:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=(
             "In-place (after git clone):\n"
-            "  python3 scripts/new-project.py --init\n\n"
+            "  python3 scripts/new-project.py --init\n"
+            "  python3 scripts/new-project.py --init --stack laravel\n\n"
             "New directory:\n"
             "  python3 scripts/new-project.py ~/Projekty/my-app"
         ),
@@ -424,14 +459,22 @@ def main() -> None:
         "--no-git", action="store_true",
         help="Skip git history reset and init commit (--init only)",
     )
+    parser.add_argument(
+        "--stack", choices=list(set_stack.STACK_PRESETS), metavar="STACK",
+        help="Optional. Project stack: " + ", ".join(set_stack.STACK_PRESETS) + ". Sets the code "
+             "directories and platform ADR patterns for the commit guards right away. Without "
+             "it the scope wizard sets them after its interview (scripts/set-stack.py)",
+    )
     args = parser.parse_args()
 
-    if args.init:
-        init_in_place(ROOT, args.dry_run, do_git=not args.no_git)
-        return
-
-    if not args.dest:
+    if not args.init and not args.dest:
         parser.error("dest is required (or use --init for in-place initialization)")
+
+    stack = args.stack
+
+    if args.init:
+        init_in_place(ROOT, args.dry_run, do_git=not args.no_git, stack=stack)
+        return
 
     dest = Path(args.dest).resolve()
     dry_run = args.dry_run
@@ -490,7 +533,7 @@ def main() -> None:
     mkdir(docs_dst / "adr", dest, dry_run)
 
     print("\n── Claude Code hooks (auto) ────────────────────────────")
-    create_config_json(dest, ROOT, dry_run)
+    create_config_json(dest, ROOT, dry_run, stack)
     create_settings_local(dest, ROOT, dry_run)
 
     if dry_run:
@@ -498,12 +541,7 @@ def main() -> None:
         return
 
     print(f"\n✅  Project created: {dest}\n")
-    print("── Następne kroki ──────────────────────────────────────\n")
-    print(f"  cd {dest}\n")
-    print("  git init && git remote add origin <url>\n")
-    print("  python3 scripts/update-skills.py --apply\n")
-    print("  claude   # napisz: scope\n")
-    print("────────────────────────────────────────────────────────\n")
+    hand_over_to_setup(dest)
 
 
 if __name__ == "__main__":

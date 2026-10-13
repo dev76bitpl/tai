@@ -10,8 +10,7 @@
   "_dev_user_ports_comment": "Porty serwera dev usera — guard-process-kill.py blokuje kill wymierzony w te porty (CLAUDE.md 3d). Domyślnie [3000].",
   "dev_user_ports": [3000],
 
-  "_adr_patterns_comment": "Dodatkowe wzorce plików sugerujące decyzję architektoniczną (regex, opis). Zostaw pasujące do projektu, resztę usuń.",
-  "_adr_patterns_categories": "Baza/schemat | Infrastruktura | Architektura | WordPress | PrestaShop | Magento",
+  "_adr_patterns_comment": "Dodatkowe wzorce plików sugerujące decyzję architektoniczną (regex, opis). Aktywne są tylko te z adr_patterns — poniżej wzorce ogólne, pasujące do każdego projektu.",
   "adr_patterns": [
     ["migrations/", "migracja bazy danych — zmiana schematu"],
     ["schema\\.(prisma|graphql|sql)", "zmiana schematu danych"],
@@ -24,16 +23,29 @@
     ["auth/", "zmiana mechanizmu uwierzytelniania"],
     ["api/v[0-9]", "wersjonowanie API"],
     ["queue/", "zmiana systemu kolejkowania"],
-    ["cache/", "zmiana strategii cachowania"],
-    ["wp-content/plugins/", "nowy plugin WordPress"],
-    ["wp-content/themes/", "nowy motyw WordPress"],
-    ["wp-config", "zmiana konfiguracji WordPress"],
-    ["modules/", "nowy moduł PrestaShop"],
-    ["override/", "override klasy PrestaShop"],
-    ["themes/", "zmiana motywu PrestaShop"],
-    ["app/code/", "nowy moduł Magento"],
-    ["app/design/", "zmiana motywu Magento"]
+    ["cache/", "zmiana strategii cachowania"]
   ],
+
+  "_adr_patterns_optional_comment": "Wzorce platform — NIEAKTYWNE, dopóki projekt ich nie włączy. Włącza je scripts/set-stack.py (uruchamiany przez wywiad scope po ustaleniu stosu): dla wordpress / prestashop / magento kopiuje wpisy grupy do adr_patterns. Tej listy nie edytuj — to katalog. Aktywne w każdym projekcie dawały fałszywe alarmy (katalog modules/ w projekcie bez sklepu = 'nowy moduł PrestaShop').",
+  "_adr_patterns_optional": {
+    "WordPress": [
+      ["wp-content/plugins/", "nowy plugin WordPress"],
+      ["wp-content/themes/", "nowy motyw WordPress"],
+      ["wp-config", "zmiana konfiguracji WordPress"]
+    ],
+    "PrestaShop": [
+      ["modules/", "nowy moduł PrestaShop"],
+      ["override/", "override klasy PrestaShop"],
+      ["themes/", "zmiana motywu PrestaShop"]
+    ],
+    "Magento": [
+      ["app/code/", "nowy moduł Magento"],
+      ["app/design/", "zmiana motywu Magento"]
+    ]
+  },
+
+  "_src_dirs_comment": "Katalogi z kodem aplikacji — strażnik 'kod wymaga testów' (guard-tests-with-src) sprawdza tylko pliki w nich. Ustawia je scripts/set-stack.py na podstawie stosu ustalonego w wywiadzie scope, np. laravel = [\"app\"], go = [\"cmd\", \"internal\", \"pkg\"]. Tabela: python3 scripts/set-stack.py --list.",
+  "src_dirs": ["src"],
 
   "_session_context_comment": "Używane przez session-context.py (UserPromptSubmit hook).",
   "repos": [

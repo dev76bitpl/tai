@@ -200,6 +200,8 @@ Historia (zrobione przed przejściem):
   `scripts/new-project.py` ma 548 linii (limit 400).
   Poza tematem, wyszło w trakcie: synchronizacja skilli w projektach czyta katalog roboczy klona szablonu,
   także z gałęzi w toku → #179; od tej chwili praca nad szablonem idzie w osobnym worktree.
+  Kolejność commitów na gałęzi: najpierw izolacja testów (#181), dopiero potem ta paczka — bez #181
+  commit z worktree uszkadzał repozytorium, więc paczki nie dało się bezpiecznie zapisać.
 
 - 2026-10-13: **Plik ustawień per maszyna działa dla obu warstw strażników (#152), a instrukcja
   przestała kazać commitować ścieżkę z własnego komputera (#153).** Po ludzku: strażnicy mają

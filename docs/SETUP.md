@@ -230,7 +230,7 @@ repozytorium, więc warstwa commita może być cała zielona, gdy żaden hook Cl
 
 | Plik | Dla kogo | W repozytorium? | Co w nim trzymać |
 |---|---|---|---|
-| `.claude/hooks/config.json` | cały zespół | **tak, commitowany** | ustawienia projektu: komendy `lint` / `test`, `adr_patterns`, `dev_user_ports`, `repos` |
+| `.claude/hooks/config.json` | cały zespół | **tak, commitowany** | ustawienia projektu: komendy `lint` / `test`, `src_dirs`, `adr_patterns`, `dev_user_ports`, `repos` |
 | `.claude/hooks/config.local.json` | jedna maszyna | nie (`.gitignore`) | to, co różni się między maszynami — przede wszystkim lokalna ścieżka klona szablonu |
 
 ```bash
@@ -250,6 +250,60 @@ klon szablonu wskaż jednym z dwóch sposobów (kolejność: pierwszy znaleziony
 Bez żadnego z nich działa autodetekcja klona obok projektu, a potem publiczny URL. `npm run doctor`
 pokazuje w sekcji „Optional integrations”, skąd wziął ścieżkę (`from $AI_TEMPLATE_PATH` /
 `from config.local.json` / `from config.json`).
+
+**Dwa ustawienia, które decydują, kiedy strażnik commita się odzywa — oba wynikają ze stosu projektu.**
+Nikt nie jest pytany o katalogi i nikt nie edytuje pliku ręcznie: stos ustala **wywiad o zakresie**
+(hasło `scope` w Claude Code, pytanie „Stack i środowisko?”), a po nim Claude uruchamia
+`python3 scripts/set-stack.py <stos>`, który wpisuje wynik do `config.json`. Kto zna stos od razu,
+może podać go przy starcie (`new-project.py --init --stack <stos>`) albo uruchomić skrypt sam;
+ponowne uruchomienie z innym stosem jest bezpieczne. Tabelę drukuje `python3 scripts/set-stack.py --list`:
+
+| Stos | Katalogi kodu (`src_dirs`) | Włączona grupa wzorców ADR |
+|---|---|---|
+| `node` | `src` | — |
+| `laravel` | `app` | — |
+| `symfony` | `src` | — |
+| `wordpress` | `wp-content/themes`, `wp-content/plugins` | WordPress |
+| `prestashop` | `modules`, `override` | PrestaShop |
+| `magento` | `app/code` | Magento |
+| `python` | `src` | — |
+| `go` | `cmd`, `internal`, `pkg` | — |
+| `rails` | `app`, `lib` | — |
+| `inny` (domyślny) | `src` | — |
+
+- **`src_dirs` — gdzie leży kod aplikacji.** Strażnik „kod wymaga testów” (`guard-tests-with-src`)
+  sprawdza tylko pliki w tych katalogach. Projekt o innym układzie niż w tabeli poprawia listę
+  w `config.json`. Plik testu strażnik rozpoznaje sam, dla każdego stosu: `*.test.*`, `*.spec.*`,
+  `__tests__/`, `test_*.py`, `*_test.py`, `*_test.go`, `*Test.php`, `*_spec.rb`, `*_test.rb` oraz
+  dowolny plik z kodem w `tests/`, `test/` albo `spec/`.
+- **`adr_patterns` — które ścieżki wyglądają na decyzję architektoniczną.** Zawsze aktywne są
+  wzorce ogólne (baza, infrastruktura, architektura). Wzorce platform leżą w tym samym pliku
+  w `_adr_patterns_optional` i są **nieaktywne**, dopóki `set-stack.py` ich nie włączy — aktywne
+  wszędzie dawały fałszywe alarmy (katalog `modules/` w projekcie bez sklepu = „nowy moduł
+  PrestaShop”). Projekt postawiony przed tą zmianą ma stare wzorce w swoim `config.json` —
+  przytnij je ręcznie.
+
+**Start projektu to prowadzone kroki, nie lista do przepisania.** `new-project.py` po sprzątaniu
+przekazuje sterowanie do `scripts/project-setup.py`, który zostaje w projekcie:
+
+| Krok | Co robi | Kiedy pomijany |
+|---|---|---|
+| Repozytorium Git | `git init -b main` | repozytorium już jest |
+| Repo na GitHubie | podpina podany adres albo zakłada `wlasciciel/nazwa` (`gh repo create`, bez `push`) | `origin` już podpięty; Enter |
+| Etykiety zgłoszeń | zakłada `owner` i `idea` | brak repo na GitHubie; etykiety są |
+| Skille | `python3 scripts/update-skills.py --apply` | odpowiedź „nie” |
+| Kontrola środowiska | `python3 scripts/doctor.py`; czerwony raport = błąd kroku | — |
+| Brief projektu | uruchamia Claude Code z hasłem `scope` | brief już jest (własna treść w `docs/PROJECT_SCOPE.md`) |
+
+- **Wznawianie:** `python3 scripts/project-setup.py` — kroki zrobione są pomijane, więc po naprawie
+  błędu wystarczy uruchomić ponownie. Sama lista: `--list`.
+- **Błąd kroku:** skrypt pokazuje polecenie i końcówkę wyniku, po czym pyta „Poprosić Claude o pomoc
+  z tym krokiem?” — „tak” uruchamia Claude Code z opisem kroku, polecenia i błędu.
+- **Bez terminala** (AI, skrypt, CI) nic nie jest pytane ani uruchamiane — drukowana jest lista kroków.
+- **Brief:** szkielet `docs/PROJECT_SCOPE.md` z szablonu liczy się jak brak briefu. Kreator zakresu
+  przy gotowym briefie nie pyta ponownie, ustawia tylko stos.
+- Ustawienia repo z kroku 1 tej instrukcji (usuwanie gałęzi po merge'u, uprawnienia Actions) nadal
+  ustawiasz ręcznie — skrypt ich nie zmienia.
 
 Pułapka: `config.local.json` potrafi też nadpisać komendę `lint` albo `test` — wtedy strażnik
 commita na tej jednej maszynie sprawdza co innego niż u reszty zespołu i w repozytorium tego nie
