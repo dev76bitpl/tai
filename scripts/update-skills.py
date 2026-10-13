@@ -331,6 +331,8 @@ def sync_from_template(template_root: Path, apply: bool) -> None:
     project_custom = project_manifest.get("custom_skills", {})
     template_vendored = template_manifest.get("skills", {})
     project_vendored = project_manifest.get("skills", {})
+    # Skills the project switched off (scripts/select-skills.py) — sync must not bring them back.
+    excluded = set(project_manifest.get("excluded_skills", []) or [])
 
     mode = "APPLY" if apply else "DRY-RUN"
     print(f"🔄  update-skills.py --sync — tryb: {mode}")
@@ -343,6 +345,9 @@ def sync_from_template(template_root: Path, apply: bool) -> None:
     # ── Custom skills ─────────────────────────────────────────────────────────
     print("── Custom skills ───────────────────────────────────────")
     for skill_name in template_custom:
+        if skill_name in excluded:
+            print(f"  – {skill_name:<25} wyłączony w projekcie")
+            continue
         src = template_root / ".claude" / "skills" / skill_name
         dst = ROOT / ".claude" / "skills" / skill_name
         if not src.exists():
@@ -373,6 +378,9 @@ def sync_from_template(template_root: Path, apply: bool) -> None:
     print("\n── Vendored skills (manifest) ──────────────────────────")
     new_vendored = 0
     for skill_name, skill_data in template_vendored.items():
+        if skill_name in excluded:
+            print(f"  – {skill_name:<25} wyłączony w projekcie")
+            continue
         if skill_name not in project_vendored:
             print(f"  + {skill_name:<25} NOWY wpis w manifeście")
             new_vendored += 1

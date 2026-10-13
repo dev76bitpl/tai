@@ -291,15 +291,55 @@ przekazuje sterowanie do `scripts/project-setup.py`, który zostaje w projekcie:
 |---|---|---|
 | Repozytorium Git | `git init -b main` | repozytorium już jest |
 | Repo na GitHubie | podpina podany adres albo zakłada `wlasciciel/nazwa` (`gh repo create`, bez `push`) | `origin` już podpięty; Enter |
-| Etykiety zgłoszeń | zakłada `owner` i `idea` | brak repo na GitHubie; etykiety są |
-| Skille | `python3 scripts/update-skills.py --apply` | odpowiedź „nie” |
+| Etykiety zgłoszeń | zakłada `owner` i `idea` | brak repo na GitHubie albo brak `gh`; etykiety są |
 | Kontrola środowiska | `python3 scripts/doctor.py`; czerwony raport = błąd kroku | — |
-| Brief projektu | uruchamia Claude Code z hasłem `scope` | brief już jest (własna treść w `docs/PROJECT_SCOPE.md`) |
+| Brief projektu | uruchamia Claude Code z hasłem `scope` | brief, stos i ADR-001 już są |
+| Skille | wybór grup skilli, które zostają w projekcie (`scripts/select-skills.py`), potem odświeżenie pozostałych | brak skryptów skilli |
+| Szablon graficzny | uruchamia Claude Code z zadaniem: dwa kierunki wyglądu (jasny i ciemny) jako makiety w `mockups/propozycje/`, po wyborze zasady w `docs/UI_GUIDELINES.md` | makiety i sekcja „Kierunek wizualny projektu” już są; odpowiedź „nie” (projekt bez interfejsu) |
+
+**Wybór skilli.** Szablon ma komplet skilli dla wszystkich technologii; projekt zostawia sobie
+potrzebne grupy, reszta znika. Brief jest przed skillami, bo stos z wywiadu podpowiada wybór,
+a skille przed szablonem graficznym, żeby powstawał on już w projekcie bez zbędnych skilli
+(`●` przy proponowanych grupach; Enter je przyjmuje, `w` zostawia wszystko, numery wybierają ręcznie).
+Skille ogólne (`scope`, `adr`, `api`, `debug`, `deploy`, `git`, `retro`) zostają zawsze.
+
+| Grupa (`--keep`) | Skille | Proponowana dla stosu |
+|---|---|---|
+| `wordpress` | pięć skilli `wp-*` | wordpress |
+| `php` | `laravel-rules`, `php-modernization`, `symfony` | laravel, symfony, magento, wordpress, prestashop |
+| `shops` | `prestashop`, `shoper` | prestashop |
+| `typescript` | `typescript`, `nextjs` | node |
+| `design` | `design-taste-frontend`, `redesign-existing-projects` | wszystkie poza python i go |
+| `ui` | `ui-ux-pro-max`, `a11y`, pakiet jakości stron (`perf`) | wszystkie |
+| `marketing` | `copywriting`, `cro` | wordpress |
+| `review` | `review`, `security` | wszystkie |
+
+Stos `inny` albo nieustawiony proponuje wszystkie grupy. Wybór zapisuje się w `skills-manifest.json`
+(`skill_groups`, `excluded_skills`) — synchronizacja z szablonu pomija wyłączone skille, więc nie
+wracają przy następnej wiadomości. Zmiana zdania: `python3 scripts/select-skills.py` jeszcze raz;
+grupa dodana z powrotem wraca przy najbliższej synchronizacji
+(`python3 scripts/update-skills.py --sync --apply`, potem `--apply`). Bez terminala:
+`--keep php,ui,review` albo `--all`; stan pokazuje `--list`. Katalogi skilli spoza manifestu
+(`seo`, `performance`, `core-web-vitals`, `best-practices`, `web-quality-audit`) nie należą do
+żadnej grupy i zostają.
 
 - **Wznawianie:** `python3 scripts/project-setup.py` — kroki zrobione są pomijane, więc po naprawie
   błędu wystarczy uruchomić ponownie. Sama lista: `--list`.
-- **Błąd kroku:** skrypt pokazuje polecenie i końcówkę wyniku, po czym pyta „Poprosić Claude o pomoc
-  z tym krokiem?” — „tak” uruchamia Claude Code z opisem kroku, polecenia i błędu.
+- **Claude Code otwiera się „na chwilę”.** Skrypt uruchamia go jako proces potomny: po wyjściu
+  (`/exit`) wracasz do kroków startu, a nie do pustego terminala.
+- **Błąd kroku:** skrypt pokazuje polecenie i końcówkę wyniku, pyta „Poprosić Claude o pomoc z tym
+  krokiem?”, a po powrocie „Ponowić ten krok teraz?” — „tak” uruchamia krok jeszcze raz i idzie dalej.
+- **Po wywiadzie skrypt sprawdza, co powstało:** własna treść w `docs/PROJECT_SCOPE.md`, stos
+  zapisany w `.claude/hooks/config.json` (klucz `stack`, ustawia go `set-stack.py`) i ADR-001
+  w `docs/adr/`. Każdy punkt dostaje `✓` albo `✗`; gdy czegoś brakuje, pada pytanie „Wrócić do wywiadu?”.
+- **Szablon graficzny** nie wskazuje jednego skilla: Claude dobiera sposób pracy do projektu
+  (`design-taste-frontend` przy stronach i landingach, `ui-ux-pro-max` przy panelach i produktach
+  z wieloma ekranami, `impeccable` — jeśli jest w projekcie). Przed otwarciem Claude Code krok pyta
+  „Zainstalować skill impeccable w tym projekcie?”; tu Enter znaczy **nie**, bo to cudzy kod spoza
+  szablonu (powód w `docs/SKILLS.md`). Na „t” uruchamia instalator z `--scope=project --no-hooks`.
+  Po powrocie skrypt sprawdza, czy są makiety i sekcja „Kierunek wizualny projektu” w `docs/UI_GUIDELINES.md`.
+- **Podsumowanie na końcu:** każdy krok ze znakiem `✓` zrobione / `–` pominięte / `✗` nieudane /
+  `·` nie doszło, oraz lista tego, co zostało do zrobienia ręcznie.
 - **Bez terminala** (AI, skrypt, CI) nic nie jest pytane ani uruchamiane — drukowana jest lista kroków.
 - **Brief:** szkielet `docs/PROJECT_SCOPE.md` z szablonu liczy się jak brak briefu. Kreator zakresu
   przy gotowym briefie nie pyta ponownie, ustawia tylko stos.

@@ -40,6 +40,38 @@ istniał zawsze, jako szkielet).
 6. **Szkielet `docs/PROJECT_SCOPE.md` z szablonu liczy się jak brak briefu**; własna treść
    oznacza „brief jest” i wywiad jest pomijany.
 
+7. **Claude Code jest uruchamiany jako proces potomny, a skrypt sprawdza wynik po powrocie**
+   (uzupełnienie z 2026-10-13, #180). Po wywiadzie: własna treść briefu, klucz `stack`
+   w `config.json`, ADR-001 — każdy punkt osobno; po pomocy AI przy nieudanym kroku: pytanie
+   o ponowienie; na końcu podsumowanie. Dlaczego: pierwsza wersja zastępowała proces skryptu
+   (`os.execvp`), więc po wyjściu z Claude Code użytkownik tracił kontakt z krokami, a nikt
+   nie sprawdzał, czy wywiad cokolwiek zostawił. Sprawdzenie zamienia część założenia
+   „kreator uruchomi `set-stack.py`” z nadziei w fakt widoczny dla użytkownika.
+
+8. **Projekt wybiera, które grupy skilli ma; niewybrane są usuwane i wyłączone z synchronizacji**
+   (uzupełnienie z 2026-10-13, #183). `scripts/select-skills.py` trzyma tabelę grup i propozycje
+   według stosu; wybór zapisuje w `skills-manifest.json` (`skill_groups`, `excluded_skills`).
+   Krok „Skille” idzie po briefie, bo stos podpowiada wybór. Dlaczego: szablon wysyłał każdemu
+   projektowi komplet skilli wszystkich technologii, a krok „Skille” tylko je odświeżał —
+   wybór bez usunięcia nie zmniejszał szumu, a usunięcie bez wyłączenia cofała najbliższa
+   synchronizacja. Odrzucone: wybór tylko „co odświeżyć” (niczego nie zmienia w projekcie).
+
+9. **Start projektu proponuje szablon graficzny; skille do projektowania są vendored z publicznych
+   źródeł, a `impeccable` zostaje poza szablonem** (uzupełnienie z 2026-10-13, #184). Krok po briefie
+   uruchamia Claude Code z zadaniem: dwa kierunki wyglądu, każdy jasny i ciemny, jako makiety
+   w `mockups/propozycje/`, po wyborze zasady w `docs/UI_GUIDELINES.md`. Zadanie nie wskazuje
+   jednego skilla — Claude dobiera sposób pracy do projektu. Dlaczego bez `impeccable` w szablonie:
+   skan bezpieczeństwa `update-skills.py` zatrzymał instalację na zbundlowanych skryptach
+   (ok. 2 MB cudzego kodu, którego nikt nie przejrzał); guard nie jest przeszkodą do obejścia,
+   więc skill instaluje się osobno w projekcie, który go chce: krok pyta o to z domyślną
+   odpowiedzią „nie” i na wyraźne „tak” uruchamia instalator z `--scope=project --no-hooks`
+   (bez `--no-hooks` instalator dopisuje własny hook do `.claude/settings.local.json`, gdzie
+   mieszkają strażnicy — według jego README; nie uruchamialiśmy go). Kolejność kroków: brief →
+   skille → szablon graficzny. Pierwsza wersja miała skille na końcu (żeby szablon graficzny na
+   pewno miał skille do projektowania), ale próba na żywo pokazała, że wywiad i projektowanie
+   odbywały się wtedy w projekcie z kompletem zbędnych skilli; krok szablonu ostrzega teraz,
+   gdy grupa „Projektowanie wyglądu” została odrzucona.
+
 ## Odrzucone alternatywy
 
 | Opcja | Dlaczego odrzucona |
@@ -55,19 +87,22 @@ istniał zawsze, jako szkielet).
 
 **Zweryfikowane w kodzie (stan gałęzi z tą decyzją):**
 
+- `.claude/hooks/session-context.py` `_local_desynced()` i `scripts/update-skills.py`
+  `sync_from_template()` pomijają nazwy z `excluded_skills`
 - `scripts/dev-guards/guard_tests_with_src.py:41` `get_src_dirs()` czyta `src_dirs`, przy wartości
   nieużywalnej wraca do `src`; `:50` `is_test_file()`; `:59` `is_source_file()`
 - `scripts/dev-guards/stack.py:151` `get_adr_patterns()` bierze tylko `adr_patterns` — klucz
   `_adr_patterns_optional` jest dla strażnika niewidoczny
 - `scripts/set-stack.py:43` `apply_stack()` nie usuwa grup z katalogu i przy zmianie stosu
   wyłącza poprzednią grupę
-- `scripts/project-setup.py:99` `scope_is_filled()`, `:197` `STEPS` (brief ostatni)
+- `scripts/project-setup.py`: `scope_is_filled()`, `STEPS` (brief ostatni)
 
 **Założenia nieegzekwowane = ryzyko:**
 
 - to, że kreator po wywiadzie faktycznie uruchomi `set-stack.py`, wynika z instrukcji dla AI
   (`.claude/skills/new-project-scope/SKILL.md`, „Artifact 3”), nie z kodu; test pilnuje tylko
-  sformułowań. Projekt, w którym wywiad się nie odbył, zostaje na ustawieniach domyślnych
+  sformułowań. Projekt, w którym wywiad się nie odbył, zostaje na ustawieniach domyślnych.
+  Łagodzi to decyzja 7: skrypt startu po powrocie z wywiadu pokazuje `✗` przy nieustawionym stosie
 - katalogi w tabeli stosów dla WordPressa, PrestaShop, Magento, Go i Rails pochodzą z wiedzy
   ogólnej, nie z pomiaru na projektach; projekt o innym układzie poprawia `src_dirs` sam
 
@@ -76,4 +111,3 @@ istniał zawsze, jako szkielet).
 - projekty postawione wcześniej mają stare wzorce platform we własnym `config.json`
 - synchronizacja z szablonu nie przenosi `scripts/`, więc starszy projekt nie dostanie
   `set-stack.py` (skill to przewiduje i pomija krok)
-- po wyjściu z Claude Code użytkownik nie wraca do kroków startu (#180)

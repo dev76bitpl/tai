@@ -194,3 +194,4 @@ line that the guards stay on their defaults until the script is copied from the 
 - "Done when" criteria must be verifiable (observable behavior, not "działa")
 - After writing the files, remind user to also stage them before the first commit: `git add docs/PROJECT_SCOPE.md docs/adr/ADR-001.md .claude/hooks/config.json`
 - Do not ask the user where the code lives — derive it from the stack answer (Artifact 3)
+- When the session was started by the project start script (the first message is the single word `scope`), finish with one line telling the user to leave Claude Code (`/exit`): the script is waiting behind this session, checks that the brief, the stack and ADR-001 are in place, and shows the summary of the start. Do not end the wizard before all three exist — the script reports each missing one

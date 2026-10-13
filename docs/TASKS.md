@@ -151,6 +151,42 @@ Historia (zrobione przed przejściem):
 
 ## Stan sesji
 
+- 2026-10-13: **Start projektu: kreator wraca do kroków, projekt wybiera skille, dochodzi szablon graficzny (#180, #183, #184).**
+  Po ludzku: (1) po wyjściu z Claude Code użytkownik wraca do kroków startu zamiast do pustego
+  terminala, skrypt sprawdza, co wywiad naprawdę zostawił, a na końcu jest podsumowanie; całość
+  dostała czytelny wygląd z kolorami i paskiem postępu; (2) projekt zostawia sobie tylko potrzebne
+  grupy skilli — reszta znika i nie wraca przy synchronizacji z szablonu; (3) po briefie i wyborze
+  skilli start proponuje szablon graficzny: dwa kierunki wyglądu jako makiety i zasady, których
+  trzymają się kolejne ekrany.
+  Decyzje właściciela (w kolejności; kilka zmieniało poprzednią wersję): przebieg powrotu i sprawdzeń;
+  „bardziej przyjazne, kolorki” i spójny wygląd także dla części sprzątającej; wybór skilli w pełnej
+  wersji (usuwanie + wyłączenie z synchronizacji), z propozycją według stosu; skille do projektowania
+  z publicznych źródeł, nie z prywatnej konfiguracji; krok nie wskazuje jednego skilla; `impeccable`
+  poza szablonem, z pytaniem o instalację domyślnie „nie”; kolejność brief → skille → szablon
+  graficzny (pierwsza wersja miała skille na końcu i próba pokazała komplet zbędnych skilli podczas
+  wywiadu i projektowania).
+  Technicznie: `scripts/project-setup.py` — `start_claude()` przez `subprocess.call` (SIGINT
+  ignorowany w rodzicu na czas sesji) zamiast `os.execvp`; `claude_stage()` wspólne dla briefu
+  i szablonu graficznego (pytanie → Claude Code → sprawdzenie → ewentualny powrót); `handle_failure()`
+  zwraca decyzję o ponowieniu; `run_steps()` zbiera wyniki do podsumowania; `confirm(default=)`;
+  `offer_impeccable()` (`npx impeccable install --providers=claude --scope=project --no-hooks`).
+  Nowe pliki: `scripts/start_ui.py` (kolory tylko na terminalu, `NO_COLOR` / `FORCE_COLOR`, baner,
+  pasek postępu, podsumowanie), `scripts/start_checks.py` (`scope_is_filled`, `brief_checks`,
+  `design_checks`), `scripts/start_prompts.py` (zadania dla Claude Code; `design_prompt(impeccable)`),
+  `scripts/select-skills.py` (8 grup, `STACK_DEFAULTS`, `apply_selection()` usuwa katalogi i wpisy,
+  zapisuje `skill_groups` + `excluded_skills`). `scripts/set-stack.py` zapisuje klucz `stack`.
+  `.claude/hooks/session-context.py` `_local_desynced()` i `scripts/update-skills.py`
+  `sync_from_template()` pomijają `excluded_skills`. Krok etykiet rozpoznaje GitHuba przez
+  `gh repo view`, nie po `github.com` w adresie (alias SSH gubił repo — znalezione w próbie).
+  Vendored: `design-taste-frontend`, `redesign-existing-projects` (`Leonxlnx/taste-skill`, MIT).
+  `impeccable` zatrzymany przez skan bezpieczeństwa `update-skills.py` (zbundlowane skrypty) —
+  nie obchodzony, opisany w `docs/SKILLS.md`. ADR-005: decyzje 7–9.
+  Sprawdzone: 748 testów; pełne próby w pseudo-terminalu z atrapą `claude`; cztery próby właściciela
+  na żywo na kopii poza repo (ostatnia z `impeccable`: `PRODUCT.md`, makiety, zasady wyglądu).
+  Znane ograniczenia: pięć katalogów skilli jakości stron leży poza manifestem i wybór ich nie
+  rusza (#183); synchronizacja nadal czyta katalog roboczy klona szablonu (#179) — projekt
+  próbny testowany z gałęzi dostał starsze `update-skills.py` i skill wywiadu z `main`.
+
 - 2026-10-13: **`new-project.py` podzielony, decyzje paczki zapisane w ADR-005.** Po ludzku: skrypt startu
   projektu urósł do 548 linii przy limicie 400 dla plików logiki — właściciel uznał to za błąd do
   naprawy od razu. Teraz ma 371. Decyzje z całej paczki (stos z wywiadu ustawia strażników, wzorce

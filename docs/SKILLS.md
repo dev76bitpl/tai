@@ -35,6 +35,7 @@ krótkie słowo które wpisujesz świadomie. Nie używaj składni `/command` (to
 | `nextjs` | nextjs-app-router | Next.js App Router, RSC, Server Actions, streaming, caching |
 | `copywriting` | copywriting | Pisanie/poprawa marketingowego copy (landing, hero, CTA, pricing) |
 | `cro` | cro | Optymalizacja konwersji strony/formularza |
+| `szablon graficzny`, `landing`, `redesign` | design-taste-frontend, redesign-existing-projects | Kierunek wyglądu stron i landingów bez „stylu AI”; przebudowa wyglądu istniejącego projektu |
 | `audyt` | audyt *(poza repo)* | **Pomiar** RWD i dostępności na żywej aplikacji — `npm run audit:rwd` / `audit:uix` |
 
 ## Skille zewnętrzne (vendored)
@@ -51,6 +52,18 @@ krótkie słowo które wpisujesz świadomie. Nie używaj składni `/command` (to
 | `wp-security-review` | [jorgerosal/wordpress-skills](https://github.com/jorgerosal/wordpress-skills) | Bezpieczeństwo WP: sanitization, escaping, nonces, capabilities, vulnerability patterns |
 | `wp-woocommerce-dev` | [jorgerosal/wordpress-skills](https://github.com/jorgerosal/wordpress-skills) | WooCommerce: rozszerzenia, szablony, REST API, optymalizacja wydajności |
 | `wp-block-development` | [jorgerosal/wordpress-skills](https://github.com/jorgerosal/wordpress-skills) | Gutenberg: block.json, dynamic blocks, Interactivity API, wzorce edytora |
+| `design-taste-frontend` | [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) (MIT) | Kierunek wyglądu dla stron, landingów i portfolio: czyta brief, dobiera język wizualny, pilnuje, żeby wynik nie wyglądał jak szablon |
+| `redesign-existing-projects` | [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) (MIT) | Przebudowa wyglądu istniejącej strony albo aplikacji: najpierw audyt, potem poprawki układu, odstępów i hierarchii bez psucia działania |
+
+**`impeccable` — celowo poza szablonem.** [pbakaus/impeccable](https://github.com/pbakaus/impeccable)
+(Apache-2.0) to więcej niż instrukcje: niesie zbundlowane skrypty przeglądarkowe (ok. 2 MB), na których
+skan bezpieczeństwa `update-skills.py` zatrzymuje instalację („dynamiczne wykonanie kodu”). Szablon nie
+przepuszcza cudzego kodu, którego nikt u nas nie przejrzał, więc skill instaluje się osobno, w projekcie,
+który go chce. Krok „Szablon graficzny” w starcie projektu pyta o to wprost — „Zainstalować skill impeccable
+w tym projekcie?”, z domyślną odpowiedzią **nie** — i na wyraźne „t” uruchamia
+`npx impeccable install --providers=claude --scope=project --no-hooks`. Instalator zapisuje
+`.claude/skills/impeccable` w projekcie i pobiera swój program do `~/.impeccable/bin`; `--no-hooks`
+trzyma go z dala od `.claude/settings.local.json`, gdzie mieszkają strażnicy.
 
 ## Skille własne
 
