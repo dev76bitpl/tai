@@ -151,6 +151,23 @@ Historia (zrobione przed przejściem):
 
 ## Stan sesji
 
+- 2026-10-13: **Końce linii są ustawione w każdym klonie i w każdym nowym projekcie (#187, #173, #174).**
+  Po ludzku: szablon nie miał pliku ustalającego końce linii, a jedyną ochronę ustawiał
+  `npm install`, którego prowadzony start nie uruchamia. Na Windows kończy się to setkami
+  „zmienionych” plików bez zmiany treści i strażnikiem odbijającym commity. Teraz reguła jest
+  w repo, start projektu ustawia też ustawienie lokalne, a doctor pokazuje, czy ochrona jest.
+  Technicznie: nowy `.gitattributes` (`* text=auto eol=lf`, CRLF dla `*.bat` / `*.cmd`, typy
+  binarne) — w repo nie było plików CRLF, `git add --renormalize .` niczego nie zmienia.
+  `scripts/new_project_git.py` `fresh_git_history()` i krok „Repozytorium Git”
+  w `scripts/project-setup.py` ustawiają `core.autocrlf=input`. `scripts/doctor.py`
+  `check_line_endings()` w „Repository state”. `scripts/setup-hooks.mjs`: komentarz o
+  `.gitattributes` jest wreszcie prawdziwy. #174: odesłanie „step 12” → krok 7, przy braku Node
+  → tabela wymagań; `tests/test_line_endings.py` sprawdza, że każde odesłanie do kroku
+  `docs/SETUP.md` w komunikatach skryptów wskazuje istniejący krok.
+  Sprawdzone: 805 testów; `--init` na kopii z pustą konfiguracją Gita; próba właściciela.
+  Nie sprawdzone: skutek na Windows (praca w WSL). Tryb kopiowania do nowego katalogu nadal nie
+  przenosi plików kropkowych (#127).
+
 - 2026-10-13: **Strażnicy lintu i testów w nowym projekcie przestali udawać, że coś sprawdzają (#185).**
   Po ludzku: świeży projekt dziedziczył z przykładu polecenia dla PHP. Bez `composer` strażnik
   wypisywał ostrzeżenie, którego nikt nie widział, i przepuszczał każdy commit — raport środowiska

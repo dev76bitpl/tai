@@ -207,6 +207,24 @@ wpis `tests` w `pytest.ini` może zostać — `pytest` pomija nieistniejący kat
 
 ---
 
+### Końce linii
+
+Repo trzyma wszystkie pliki tekstowe z końcami `LF`, na każdym systemie. Pilnują tego dwie warstwy:
+
+- **`.gitattributes` w katalogu głównym** (`* text=auto eol=lf`) — działa w każdym klonie, bez
+  żadnej konfiguracji. To właściwa ochrona.
+- **`core.autocrlf=input` lokalnie** — ustawia je start projektu (`new-project.py --init`, krok
+  „Repozytorium Git” w `project-setup.py`) oraz `npm install`. Druga warstwa, dla klonu sprzed
+  dodania pliku.
+
+Bez nich klon na Windows (domyślnie `core.autocrlf=true`) pokazuje setki plików jako zmienione
+bez zmiany treści, a strażnik końców linii odbija commity. Sprawdzenie: `npm run doctor`, sekcja
+„Repository state” — `✓ Line endings: .gitattributes (eol=lf)` albo ostrzeżenie o braku reguły.
+Projekt postawiony przed tą zmianą nie ma `.gitattributes`: skopiuj go z szablonu, a potem
+`git add --renormalize .` pokaże, czy jakieś pliki mają jeszcze końce Windows.
+
+---
+
 ## Krok 8 – Claude Code hooks (per-maszyna)
 
 **Krok 8a — interpreter Python:**

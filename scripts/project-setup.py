@@ -151,6 +151,7 @@ def step_git() -> tuple[str, str]:
     if not confirm("Założyć repozytorium Git (gałąź main)?"):
         return SKIPPED, "pominięte — bez repozytorium strażnicy commita nie działają"
     must(["git", "init", "-q", "-b", "main"])
+    must(["git", "config", "--local", "core.autocrlf", "input"])
     return DONE, "założone, gałąź main"
 
 

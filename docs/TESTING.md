@@ -133,6 +133,13 @@ Na świeżej kopii szablonu **poza** repo szablonu (w samym szablonie tylko `--d
 - [ ] Dodaj do `package.json` skrypt `lint`, który kończy się błędem → commit zablokowany „Lint failed”; skrypt przechodzący → `✅ Lint [node] OK`, a doctor pokazuje `✓ Lint guard runs: …`
 - [ ] Wpisz w `.claude/hooks/config.json` `"lint": "nie-ma-takiego-polecenia"` → commit zablokowany „Lint command from .claude/hooks/config.json cannot run”, doctor: `⚠ Lint guard BLOCKS every commit: …`
 
+### Scenariusz 10i — końce linii
+
+- [ ] Po `--init`: `git config core.autocrlf` → `input`; w katalogu głównym jest `.gitattributes` z `* text=auto eol=lf`
+- [ ] `npm run doctor` → w „Repository state” `✓ Line endings: .gitattributes (eol=lf)`; po usunięciu pliku → ostrzeżenie „No .gitattributes rule for line endings”
+- [ ] Klon na Windows bez wcześniejszego `npm install`: `git status` czysty, commit pliku tekstowego nie jest odbijany przez `mixed-line-ending`
+- [ ] `git check-attr eol -- README.md` → `eol: lf`
+
 ### Scenariusz 10e — wybór skilli
 
 - [ ] Krok „Skille” po wywiadzie: `●` przy grupach proponowanych dla stosu z wywiadu; Enter je przyjmuje, `w` zostawia wszystko, numery wybierają ręcznie

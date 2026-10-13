@@ -121,7 +121,7 @@ def test_should_skip_git_step_when_repository_exists(mod, tmp_path):
 def test_should_create_repository_on_main_when_user_agrees(mod):
     fake = Fake(mod, answers=[""])
     assert mod.step_git()[0] == mod.DONE
-    assert fake.commands() == ["git init -q -b main"]
+    assert fake.commands() == ["git init -q -b main", "git config --local core.autocrlf input"]
 
 
 def test_should_really_create_repository_on_main(tmp_path, monkeypatch):

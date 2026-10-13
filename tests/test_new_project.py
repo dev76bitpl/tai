@@ -269,6 +269,10 @@ class TestMainBranch:
         branch = subprocess.run(["git", "branch", "--show-current"], cwd=tmp_path,
                                 capture_output=True, text=True).stdout.strip()
         assert branch == "main"
+        # the guided start never runs `npm install`, so it must set what setup-hooks.mjs sets
+        autocrlf = subprocess.run(["git", "config", "--local", "core.autocrlf"], cwd=tmp_path,
+                                  capture_output=True, text=True).stdout.strip()
+        assert autocrlf == "input"
 
 
 # ── create_settings_local ─────────────────────────────────────────────────────
@@ -500,10 +504,11 @@ class TestFreshGitHistory:
             with mock.patch.object(git_mod.shutil, "rmtree") as rmtree:
                 mod.fresh_git_history(tmp_path, dry_run=False)
         rmtree.assert_called_once()
-        # git init, git add -A, git commit ... in order
+        # git init, line-ending setting, git add -A, git commit ... in order
         assert calls[0][:2] == ["git", "init"]
-        assert calls[1][:3] == ["git", "add", "-A"]
-        assert calls[2][:2] == ["git", "commit"]
+        assert calls[1] == ["git", "config", "--local", "core.autocrlf", "input"]
+        assert calls[2][:3] == ["git", "add", "-A"]
+        assert calls[3][:2] == ["git", "commit"]
 
     def test_dry_run_runs_no_git(self, tmp_path):
         (tmp_path / ".git").mkdir()
