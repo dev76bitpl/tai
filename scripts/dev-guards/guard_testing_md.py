@@ -19,6 +19,7 @@ Bypass:
     (pure schema migration, internal refactor, config-only change); include reason
   - SKIP=guard-testing-md git commit ... — env var (not committed)
 """
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -29,6 +30,9 @@ from stack import block, get_current_branch, get_staged_files, read_commit_msg
 ENFORCED_BRANCH_PREFIXES = ("feat/", "fix/")
 BASE_BRANCHES = ("main", "master", "develop")
 TESTING_FILE = "docs/TESTING.md"
+# docs/TESTING.md holds the project's flows; other docs/*TESTING*.md files (e.g. GUARDS_TESTING.md)
+# hold scenarios of what they name. Touching any of them counts as "the checklist was written".
+TESTING_FILES = re.compile(r"^docs/[^/]*TESTING[^/]*\.md$")
 SRC_PREFIXES = ("src/",)
 
 
@@ -43,10 +47,10 @@ def testing_md_touched_in_branch(branch: str) -> bool:
             continue
         merge_base = r.stdout.strip()
         r2 = subprocess.run(
-            ["git", "diff", "--name-only", merge_base, "HEAD", "--", TESTING_FILE],
+            ["git", "diff", "--name-only", merge_base, "HEAD", "--", "docs/"],
             capture_output=True, text=True,
         )
-        if TESTING_FILE in r2.stdout.splitlines():
+        if any(TESTING_FILES.match(name) for name in r2.stdout.splitlines()):
             return True
     return False
 
@@ -70,7 +74,7 @@ def main(argv: list[str]) -> None:
         return  # no src/ files staged — docs or config only commit
 
     # Pass if TESTING.md is staged in this commit
-    if any(TESTING_FILE in f for f in staged):
+    if any(TESTING_FILES.match(f) for f in staged):
         return
 
     # Pass if TESTING.md was touched in any earlier commit on this branch
@@ -84,7 +88,8 @@ def main(argv: list[str]) -> None:
         f"   docs/TESTING.md — not just mentioned in chat.\n"
         f"\n"
         f"   Add or update the checklist for the flow you just changed,\n"
-        f"   then stage docs/TESTING.md alongside the source change.\n"
+        f"   then stage docs/TESTING.md alongside the source change\n"
+        f"   (a scenario for the guard system goes to docs/GUARDS_TESTING.md — it counts too).\n"
         f"\n"
         f"   Bypass (audit trail):  add [skip-docs] to commit body with reason\n"
         f"   Bypass (no audit):     SKIP=guard-testing-md git commit ..."

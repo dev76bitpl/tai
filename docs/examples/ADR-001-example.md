@@ -1,7 +1,8 @@
 # ADR-001 — Guard system: pre-commit + gitlint + gitleaks
 
-> **To jest plik przykładowy** — pokazuje jak wypełnić ADR w tym projekcie.
-> Twój pierwszy ADR zastąpi ten plik lub będzie numerowany ADR-002.
+> **Wzór, nie decyzja tego projektu.** Pokazuje, jak wypełnić ADR: kontekst, decyzje z uzasadnieniem,
+> odrzucone alternatywy, konsekwencje. Zostaje w projekcie na stałe jako odniesienie; pierwszy ADR projektu
+> to `docs/adr/ADR-001-<temat>.md`. Tego pliku nie edytuj i nie usuwaj.
 
 **Status:** accepted
 **Data:** 2026-01-15

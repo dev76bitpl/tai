@@ -43,30 +43,37 @@ def test_should_say_in_setup_hooks_what_really_protects_the_clone():
     assert ".gitattributes" in script and ATTRIBUTES.is_file()  # the comment used to point at a missing file
 
 
-# ── messages must not send people to SETUP steps that do not exist (#174) ────
+# ── messages must not send people to places that do not exist (#174) ─────────
 
-def _setup_steps() -> set[str]:
-    setup = (ROOT / "docs" / "SETUP.md").read_text(encoding="utf-8")
-    steps = set(re.findall(r"^## Krok (\d+)", setup, flags=re.M))
-    steps |= set(re.findall(r"^\*\*Krok (\d+[a-z])", setup, flags=re.M))
-    return steps
+GUARDS = ROOT / "docs" / "GUARDS.md"
+SCRIPT_FILES = [*ROOT.glob("scripts/*.py"), *ROOT.glob("scripts/*.mjs"), *ROOT.glob("scripts/dev-guards/*.py"),
+                *ROOT.glob(".claude/hooks/*.py")]
 
 
-def _step_references() -> list[tuple[str, str]]:
+def _guards_sections() -> set[str]:
+    return set(re.findall(r"^#{2,3} (.+)$", GUARDS.read_text(encoding="utf-8"), flags=re.M))
+
+
+def _section_references() -> list[tuple[str, str]]:
     found = []
-    files = [*ROOT.glob("scripts/*.py"), *ROOT.glob("scripts/*.mjs"), *ROOT.glob("scripts/dev-guards/*.py"),
-             *ROOT.glob(".claude/hooks/*.py")]
-    for path in files:
-        text = path.read_text(encoding="utf-8")
-        for match in re.finditer(r"SETUP\.md,? (?:step|krok) (\d+[a-z]?)", text):
+    for path in SCRIPT_FILES:
+        text = path.read_text(encoding="utf-8").replace('\\"', '"')
+        for match in re.finditer(r'GUARDS\.md, (?:sekcja|section) [„"]([^”"]+)[”"]', text):
             found.append((path.name, match.group(1)))
     return found
 
 
-def test_should_find_step_references_to_check():
-    assert len(_step_references()) >= 5
+def test_should_find_section_references_to_check():
+    assert len(_section_references()) >= 5
 
 
-@pytest.mark.parametrize("source, step", _step_references())
-def test_should_point_messages_only_at_setup_steps_that_exist(source, step):
-    assert step in _setup_steps(), f"{source} refers to docs/SETUP.md step {step}, which does not exist"
+@pytest.mark.parametrize("source, name", _section_references())
+def test_should_point_messages_only_at_guards_sections_that_exist(source, name):
+    assert name in _guards_sections(), f"{source} refers to docs/GUARDS.md section {name!r}, which does not exist"
+
+
+@pytest.mark.parametrize("path", SCRIPT_FILES, ids=lambda p: p.name)
+def test_should_not_refer_to_numbered_setup_steps_from_scripts(path):
+    # numbers drift when a step is added; messages name a section of docs/GUARDS.md instead
+    text = path.read_text(encoding="utf-8")
+    assert not re.search(r"SETUP\.md,? (?:step|krok) \d", text)

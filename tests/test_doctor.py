@@ -245,7 +245,7 @@ def test_should_exit_0_when_pytest_is_missing(doctor_rest_green, tmp_path, monke
     assert doctor_rest_green.main() == 0
 
 
-# ── GitHub repository settings (docs/SETUP.md step 1) ────────────────────────
+# ── GitHub repository settings (docs/GUARDS.md) ────────────────────────
 
 def _gh(results):
     def run(command):

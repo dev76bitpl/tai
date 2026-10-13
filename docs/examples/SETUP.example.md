@@ -1,7 +1,7 @@
 # Setup — przykład wypełnienia
 
-> **To jest plik przykładowy** — pokazuje poziom szczegółowości i format SETUP.md.
-> Wypełnij `docs/SETUP.md` dla swojego projektu i usuń ten plik.
+> **Wzór, nie dokument projektu.** Pokazuje poziom szczegółowości i format `docs/SETUP.md`.
+> Zostaje w projekcie na stałe jako odniesienie: pisz w `docs/SETUP.md`, tego pliku nie edytuj i nie usuwaj.
 
 ---
 

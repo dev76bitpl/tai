@@ -13,7 +13,7 @@ Reports prerequisites:
   - Claude Code hooks wired in .claude/settings.local.json (per machine)
   - AI template source: $AI_TEMPLATE_PATH, config.local.json or config.json (optional)
   - Docker running (optional but recommended)
-  - GitHub repo settings from docs/SETUP.md step 1 (optional — asks gh)
+  - GitHub repo settings from docs/GUARDS.md (optional — asks gh)
 
 Exit code 0 if all REQUIRED checks pass (optional checks may be ✗ without
 failing the overall exit code). Exit code 1 if any required check fails.
@@ -291,7 +291,7 @@ def main() -> int:
     header("Repository state")
     check_git_branch()
     check_line_endings()
-    repo_settings.doctor_check(REPO_ROOT, run, ok, warn)  # docs/SETUP.md step 1
+    repo_settings.doctor_check(REPO_ROOT, run, ok, warn)
 
     print()
     if all(required):

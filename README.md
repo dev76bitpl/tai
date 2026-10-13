@@ -24,7 +24,7 @@ python3 scripts/project-setup.py
 2. **Ustawienia repo** — kasowanie gałęzi po scaleniu i, gdy projekt ma automat wydań, uprawnienia automatów GitHuba; jedno pytanie
 3. **Etykiety zgłoszeń** — `owner` i `idea`
 4. **Kontrola środowiska** — raport `doctor`
-5. **Brief** — wywiad `scope` w Claude Code: zakres, dla kogo i stos; ze stosu `scripts/set-stack.py` ustawia strażników (katalogi kodu, wzorce ADR platformy — tabela w `docs/SETUP.md`, krok 8b). Projekt z gotowym briefem wywiad pomija
+5. **Brief** — wywiad `scope` w Claude Code: zakres, dla kogo i stos; ze stosu `scripts/set-stack.py` ustawia strażników (katalogi kodu, wzorce ADR platformy — tabela w `docs/GUARDS.md`, sekcja „Konfiguracja strażników”). Projekt z gotowym briefem wywiad pomija
 6. **Skille** — wybór grup, które zostają w projekcie (stos podpowiada, które); niewybrane znikają i nie wracają przy synchronizacji. Zmiana później: `python3 scripts/select-skills.py`
 7. **Szablon graficzny** — Claude Code przygotowuje dwa kierunki wyglądu (każdy jasny i ciemny) jako makiety w `mockups/propozycje/`; po wyborze zasady trafiają do `docs/UI_GUIDELINES.md`. Projekt bez interfejsu pomija krok
 
@@ -65,7 +65,7 @@ Gdy krok się nie uda, skrypt proponuje uruchomienie Claude Code z opisem błęd
 
 **Guard system** — pre-commit blokuje złe commity: format, brak testów, brak ADR, brak `[user-tested]`.
 
-**Scaffoldy docs** — `TASKS.md`, `ROADMAP.md`, `CONVENTIONS.md`, `SETUP.md`, `UI_GUIDELINES.md` i inne w `docs/`.
+**Scaffoldy docs** — `TASKS.md`, `ROADMAP.md`, `SETUP.md`, `TESTING.md`, `PROJECT_SCOPE.md` jako puste szkielety, a obok wypełnione wzory w `docs/examples/`. `docs/GUARDS.md` opisuje strażników i narzędzia AI, które projekt dostaje gotowe.
 
 ---
 

@@ -300,7 +300,7 @@ STEPS = [
      "Historia zmian projektu. Bez niej strażnicy commita nie mają czego pilnować.", step_git),
     ("Repo na GitHubie", "git remote add origin <adres>   albo   gh repo create <wlasciciel/nazwa>",
      "Miejsce na kod, zgłoszenia i pull requesty. Nic nie jest wypychane.", step_remote),
-    ("Ustawienia repo", "gh api …   # kasowanie gałęzi po scaleniu, uprawnienia automatów — docs/SETUP.md krok 1",
+    ("Ustawienia repo", "gh api …   # kasowanie gałęzi po scaleniu, uprawnienia automatów — docs/GUARDS.md",
      "Dwa ustawienia, bez których automat wydań pada, a gałęzie zostają po scaleniu.", step_repo_settings),
     ("Etykiety zgłoszeń", "gh label create owner / idea",
      "Dwie etykiety, po których widać sprawy czekające na właściciela i pomysły.", step_labels),

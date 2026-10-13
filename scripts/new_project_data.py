@@ -18,6 +18,8 @@ COPY_DOCS = [
     "AI_TEMPLATE_NOTES.md",
     "CONVENTIONS.md",
     "DELIVERY_CHECKLIST.md",
+    "GUARDS.md",
+    "GUARDS_TESTING.md",
     "SETUP.md",
     "SKILLS.md",
     "TESTING.md",
@@ -29,17 +31,16 @@ SCAFFOLD_DOCS: dict[str, str] = {
     "TASKS.md": """\
 # Tasks
 
-> Stan sesji: projekt zainicjalizowany — scope do zdefiniowania.
+Ten plik jest **logiem sesji**: co się wydarzyło i dlaczego. Otwarta praca żyje w GitHub Issues
+(`gh issue list`), nie tutaj. Fazy definiuje [docs/ROADMAP.md](ROADMAP.md).
+Wzór wpisu: [docs/examples/TASKS.example.md](examples/TASKS.example.md).
 
 ---
 
-## Backlog
+## Stan sesji
 
-- [ ] Zdefiniuj scope projektu — napisz Claude'owi: `scope`
-
-## In Progress
-
-## Done
+<!-- Najnowszy wpis na górze. Jeden akapit na domknięty krok: data, co się zmieniło po ludzku,
+     potem technicznie (pliki, funkcje, pułapki). -->
 """,
     "ROADMAP.md": """\
 # Roadmap
@@ -80,9 +81,12 @@ README_SCAFFOLD = """\
 ## Dokumentacja
 
 - [Scope projektu](docs/PROJECT_SCOPE.md)
+- [Instalacja i uruchomienie](docs/SETUP.md)
 - [Konwencje](docs/CONVENTIONS.md)
-- [Zadania](docs/TASKS.md)
+- [Log sesji](docs/TASKS.md) — otwarta praca jest w GitHub Issues
 - [Roadmapa](docs/ROADMAP.md)
+- [Strażnicy i narzędzia AI](docs/GUARDS.md)
+- [Wzory dokumentów](docs/examples/README.md)
 """
 
 # Paths relative to ROOT that are template-only and removed during --init.
@@ -90,9 +94,13 @@ README_SCAFFOLD = """\
 TEMPLATE_META: list[str] = [
     "tests",
     "README.md",
-    "docs/SETUP.example.md",
-    "docs/TASKS.example.md",
-    "docs/ROADMAP.example.md",
+    "docs/TEMPLATE_TESTING.md",
 ]
-# docs/adr/ is reset wholesale by reset_adr_dir (not listed here) — the template's
-# own ADRs (ADR-002+) plus the example must all go, leaving a clean docs/adr/.
+# docs/adr/ is reset wholesale by reset_adr_dir (not listed here) — the template's own ADRs
+# must all go, leaving a clean docs/adr/. The worked examples live in docs/examples/ and STAY
+# in the project: they used to be deleted here, before anyone could use them as a pattern.
+
+# Documents the template keeps for its own work under the names a project needs empty.
+# --init replaces them with the skeletons from SCAFFOLD_DOCS (the template's session log,
+# for one, must not become the first 600 lines of a new project's log).
+INIT_SKELETONS: list[str] = ["TASKS.md"]

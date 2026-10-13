@@ -1,6 +1,7 @@
 """Tests for scripts/new-project.py"""
 import importlib.util
 import json
+import re
 import sys
 from pathlib import Path
 from unittest import mock
@@ -111,6 +112,73 @@ def _generated_config(template_root: Path, dest: Path, stack):
     (dest / ".claude" / "hooks").mkdir(parents=True)
     create_config_json(dest, template_root, dry_run=False, stack=stack)
     return json.loads((dest / ".claude" / "hooks" / "config.json").read_text(encoding="utf-8"))
+
+
+class TestDocsOfANewProject:
+    """What is left in docs/ after --init, checked on a copy of the real template docs.
+
+    The worked examples used to be deleted before anyone could use them, while the template's
+    own session log (600+ lines) and its own test scenarios travelled into every project.
+    """
+
+    @pytest.fixture()
+    def started(self, tmp_path):
+        import shutil as _shutil
+        root = tmp_path / "project"
+        _shutil.copytree(ROOT / "docs", root / "docs")
+        (root / ".claude" / "hooks").mkdir(parents=True)
+        (root / "scripts").mkdir()
+        (root / "README.md").write_text("# AI Template\n")
+        with mock.patch.object(mod, "create_config_json"), mock.patch.object(mod, "create_settings_local"), \
+             mock.patch.object(mod, "hand_over_to_setup"):
+            mod.init_in_place(root, dry_run=False, do_git=False)
+        return root / "docs"
+
+    @pytest.mark.parametrize("example", ["SETUP.example.md", "TASKS.example.md", "ROADMAP.example.md",
+                                         "ADR-001-example.md", "README.md"])
+    def test_should_keep_worked_examples_in_the_project(self, started, example):
+        assert (started / "examples" / example).is_file()
+
+    def test_should_start_the_project_with_an_empty_session_log(self, started):
+        log = (started / "TASKS.md").read_text(encoding="utf-8")
+        assert "## Stan sesji" in log and "examples/TASKS.example.md" in log
+        assert len(log.splitlines()) < 20
+        assert not re.search(r"^- 20\d\d-\d\d-\d\d", log, flags=re.M)  # no entries of the template
+
+    def test_should_not_teach_backlog_in_the_session_log_pattern(self):
+        # open work lives in issues; the old pattern showed "Backlog" and "Aktualny fokus" checklists
+        for path in (ROOT / "docs" / "examples" / "TASKS.example.md",):
+            text = path.read_text(encoding="utf-8")
+            assert "- [ ]" not in text and "## Backlog" not in text
+        assert "- [ ]" not in mod.SCAFFOLD_DOCS["TASKS.md"] and "Backlog" not in mod.SCAFFOLD_DOCS["TASKS.md"]
+
+    @pytest.mark.parametrize("name, limit", [("SETUP.md", 160), ("TESTING.md", 60)])
+    def test_should_leave_project_skeletons_not_template_documents(self, started, name, limit):
+        text = (started / name).read_text(encoding="utf-8")
+        assert len(text.splitlines()) <= limit, f"{name} is no longer a skeleton"
+        assert "new-project.py" not in text and "Scenariusz 1" not in text
+
+    def test_should_remove_template_only_scenarios_and_decisions(self, started):
+        assert not (started / "TEMPLATE_TESTING.md").exists()
+        assert [p.name for p in (started / "adr").glob("*.md")] == []
+
+    @pytest.mark.parametrize("name", ["GUARDS.md", "GUARDS_TESTING.md"])
+    def test_should_keep_the_description_of_the_guards_the_project_uses(self, started, name):
+        assert (started / name).is_file()
+
+    def test_should_not_mention_the_deleted_start_script_in_documents_that_stay(self, started):
+        # GUARDS.md describes the guided start, which begins with new-project.py; nothing else should
+        for path in started.rglob("*.md"):
+            if path.name in ("GUARDS.md", "GUARDS_TESTING.md", "AI_TEMPLATE_NOTES.md"):
+                continue
+            assert "new-project.py" not in path.read_text(encoding="utf-8"), path.name
+
+    def test_should_refer_to_the_examples_from_the_rules(self):
+        assert "docs/examples/" in (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
+
+    def test_should_list_in_readme_scaffold_only_documents_the_project_has(self, started):
+        for target in re.findall(r"\]\((docs/[^)]+)\)", mod.README_SCAFFOLD):
+            assert (started.parent / target).exists(), target
 
 
 class TestGuardCommandsInNewProject:

@@ -79,3 +79,26 @@ def test_should_block_when_commit_message_file_is_missing(feature):
     result = run_guard(GUARD, feature, message=None)
     assert result.returncode == BLOCKED
     assert "guard_testing_md: no commit message file given" in result.stderr
+
+
+# ── any docs/*TESTING*.md is a checklist: a guard-system scenario goes to its own file ──
+
+@pytest.mark.parametrize("checklist", ["docs/GUARDS_TESTING.md", "docs/TEMPLATE_TESTING.md"])
+def test_should_pass_when_another_testing_checklist_is_staged(feature, checklist):
+    stage(feature, "src/orders.ts")
+    stage(feature, checklist)
+    assert run_guard(GUARD, feature).returncode == 0
+
+
+def test_should_pass_when_another_testing_checklist_was_committed_earlier_on_the_branch(feature):
+    stage(feature, "docs/GUARDS_TESTING.md")
+    commit(feature, "docs: guard scenario")
+    stage(feature, "src/orders.ts")
+    assert run_guard(GUARD, feature).returncode == 0
+
+
+@pytest.mark.parametrize("not_a_checklist", ["docs/NOTES.md", "docs/testing/notes.md", "TESTING.md", "docs/SETUP.md"])
+def test_should_block_when_staged_doc_is_not_a_testing_checklist(feature, not_a_checklist):
+    stage(feature, "src/orders.ts")
+    stage(feature, not_a_checklist)
+    assert run_guard(GUARD, feature).returncode == BLOCKED

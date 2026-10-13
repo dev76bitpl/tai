@@ -35,7 +35,8 @@ ROOT = Path(__file__).resolve().parent.parent
 # Sibling modules (data and git steps) — importable also when this file is loaded by path.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from new_project_data import (  # noqa: E402
-    COPY_DIRS, COPY_DOCS, COPY_FILES, README_SCAFFOLD, SCAFFOLD_DOCS, TEMPLATE_META, TEMPLATE_ONLY_SCRIPTS,
+    COPY_DIRS, COPY_DOCS, COPY_FILES, INIT_SKELETONS, README_SCAFFOLD, SCAFFOLD_DOCS, TEMPLATE_META,
+    TEMPLATE_ONLY_SCRIPTS,
 )
 from new_project_git import fresh_git_history, install_guards, log  # noqa: E402
 from start_ui import BOLD, GREEN, RED, banner, mark, notice, paint, section, DONE, FAILED  # noqa: E402
@@ -222,6 +223,10 @@ def init_in_place(root: Path, dry_run: bool, do_git: bool = True,
     section("Decyzje projektu (docs/adr) — czysty start")
     reset_adr_dir(root, dry_run)
 
+    section("Dokumenty projektu — puste szkielety zamiast dokumentów szablonu")
+    for name in INIT_SKELETONS:
+        scaffold_file(root / "docs" / name, root, SCAFFOLD_DOCS[name], dry_run)
+
     section("README projektu — szkielet")
     log("scaffold", "README.md", dry_run)
     if not dry_run:
@@ -349,6 +354,8 @@ def main() -> None:
         src = ROOT / "docs" / doc
         if src.exists():
             copy_file(src, docs_dst / doc, dry_run)
+    if (ROOT / "docs" / "examples").is_dir():
+        copy_dir(ROOT / "docs" / "examples", docs_dst / "examples", dry_run)
 
     section("Dokumenty projektu — szkielety")
     for name, content in SCAFFOLD_DOCS.items():

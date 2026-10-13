@@ -139,7 +139,7 @@ if (!resolvePreCommitInvocation()) {
   const installed = tryInstallPreCommit();
   if (!installed || !resolvePreCommitInvocation()) {
     warn("Could not auto-install pre-commit.");
-    warn("Install manually (see docs/SETUP.md, step 7 — Guard system):");
+    warn('Install manually (see docs/GUARDS.md, section "Strażnicy commita"):');
     warn("    python -m pip install --user pre-commit");
     warn("    python -m pre_commit install --hook-type pre-commit --hook-type commit-msg");
     warn("Skipping hook install — commits will not be guarded locally.");

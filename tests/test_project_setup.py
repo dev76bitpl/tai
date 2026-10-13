@@ -727,7 +727,7 @@ def test_should_print_plain_text_when_output_is_not_a_terminal(mod, tmp_path, ca
     assert "\033[" not in capsys.readouterr().out
 
 
-# ── step: repository settings (docs/SETUP.md step 1) ─────────────────────────
+# ── step: repository settings (docs/GUARDS.md) ─────────────────────────
 
 SETTINGS_OFF = {"git remote get-url origin": (0, "git@github-work:acme/shop.git\n"),
                 "gh repo view": (0, "acme/shop\n"),
@@ -773,7 +773,7 @@ def test_should_change_nothing_when_user_declines_repo_settings(mod, tmp_path):
     _release_workflow(tmp_path)
     fake = Fake(mod, answers=["n"], results=SETTINGS_OFF)
     mark, message = mod.step_repo_settings()
-    assert mark == mod.SKIPPED and "krok 1" in message
+    assert mark == mod.SKIPPED and "docs/GUARDS.md" in message
     assert not any(" -X " in c for c in fake.commands())
 
 

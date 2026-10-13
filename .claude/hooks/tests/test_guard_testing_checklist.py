@@ -102,3 +102,26 @@ def test_should_pass_commit_aimed_at_another_repository(feature, tmp_path):
     other = tmp_path / "other"
     other.mkdir()
     assert run_hook(HOOK, feature, f'git -C {other} commit -m "feat: x"').returncode == 0
+
+
+# ── any docs/*TESTING*.md is a checklist: a guard-system scenario goes to its own file ──
+
+@pytest.mark.parametrize("checklist", ["docs/GUARDS_TESTING.md", "docs/TEMPLATE_TESTING.md"])
+def test_should_pass_when_another_testing_checklist_is_staged(feature, checklist):
+    stage(feature, "src/orders.ts")
+    stage(feature, checklist)
+    assert run_hook(HOOK, feature, COMMIT).returncode == 0
+
+
+def test_should_pass_when_another_testing_checklist_was_committed_earlier_on_the_branch(feature):
+    stage(feature, "docs/GUARDS_TESTING.md")
+    commit(feature, "docs: guard scenario")
+    stage(feature, "src/orders.ts")
+    assert run_hook(HOOK, feature, COMMIT).returncode == 0
+
+
+@pytest.mark.parametrize("not_a_checklist", ["docs/NOTES.md", "docs/testing/notes.md", "TESTING.md", "docs/SETUP.md"])
+def test_should_block_when_staged_doc_is_not_a_testing_checklist(feature, not_a_checklist):
+    stage(feature, "src/orders.ts")
+    stage(feature, not_a_checklist)
+    assert run_hook(HOOK, feature, COMMIT).returncode == BLOCKED
