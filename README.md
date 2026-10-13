@@ -22,17 +22,18 @@ python3 scripts/project-setup.py
 
 1. **Repo** — adres istniejącego albo `wlasciciel/nazwa` nowego do założenia na GitHubie (Enter = pomiń)
 2. **Etykiety zgłoszeń** — `owner` i `idea`
-3. **Skille** — instalacja vendored skilli
-4. **Kontrola środowiska** — raport `doctor`
-5. **Brief** — wywiad `scope` w Claude Code: zakres, dla kogo i stos; ze stosu `scripts/set-stack.py` ustawia strażników (katalogi kodu, wzorce ADR platformy — tabela w `docs/SETUP.md`, krok 8b). Projekt z gotowym briefem wywiad pomija
+3. **Kontrola środowiska** — raport `doctor`
+4. **Brief** — wywiad `scope` w Claude Code: zakres, dla kogo i stos; ze stosu `scripts/set-stack.py` ustawia strażników (katalogi kodu, wzorce ADR platformy — tabela w `docs/SETUP.md`, krok 8b). Projekt z gotowym briefem wywiad pomija
+5. **Skille** — wybór grup, które zostają w projekcie (stos podpowiada, które); niewybrane znikają i nie wracają przy synchronizacji. Zmiana później: `python3 scripts/select-skills.py`
+6. **Szablon graficzny** — Claude Code przygotowuje dwa kierunki wyglądu (każdy jasny i ciemny) jako makiety w `mockups/propozycje/`; po wyborze zasady trafiają do `docs/UI_GUIDELINES.md`. Projekt bez interfejsu pomija krok
 
-Gdy krok się nie uda, skrypt proponuje uruchomienie Claude Code z opisem błędu. Bez terminala (AI, CI) o nic nie pyta — drukuje listę kroków. Skille zostają gotowe do pracy. Testy strażników zostają — mieszkają obok nich (`.claude/hooks/tests/`, `scripts/dev-guards/tests/`), a `tests/` to testy narzędzi samego szablonu.
+Gdy krok się nie uda, skrypt proponuje uruchomienie Claude Code z opisem błędu, a po powrocie ponowienie kroku. Claude Code otwiera się jako etap: po wyjściu z niego (`/exit`) wracasz do kroków, skrypt sprawdza, czy brief, stos i ADR-001 powstały, i kończy podsumowaniem. Bez terminala (AI, CI) o nic nie pyta — drukuje listę kroków. Skille zostają gotowe do pracy. Testy strażników zostają — mieszkają obok nich (`.claude/hooks/tests/`, `scripts/dev-guards/tests/`), a `tests/` to testy narzędzi samego szablonu.
 
 ---
 
 ## Co dostajesz
 
-**24 skille** — Claude ładuje je automatycznie gdy wykryje pasujący kontekst:
+**26 skilli** — Claude ładuje je automatycznie gdy wykryje pasujący kontekst (projekt wybiera przy starcie, które grupy zostają):
 
 | Skill | Jak wywołać |
 |-------|-------------|

@@ -105,7 +105,17 @@ def test_should_name_only_adr_groups_that_exist_in_the_example():
 
 
 def test_should_set_directories_when_config_has_no_platform_catalogue():
-    assert mod.apply_stack({"lint": "x"}, "laravel") == {"lint": "x", "src_dirs": ["app"]}
+    assert mod.apply_stack({"lint": "x"}, "laravel") == {"lint": "x", "stack": "laravel", "src_dirs": ["app"]}
+
+
+@pytest.mark.parametrize("stack", ["node", "python", "inny", "laravel"])
+def test_should_record_the_stack_name_even_when_directories_equal_the_default(stack):
+    # project-setup.py tells "stack set" from "defaults untouched" by this key
+    assert mod.apply_stack(_example(), stack)["stack"] == stack
+
+
+def test_should_not_ship_a_stack_name_in_the_example():
+    assert "stack" not in _example()
 
 
 # ── command line: what the scope wizard runs ─────────────────────────────────

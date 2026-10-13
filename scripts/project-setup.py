@@ -11,13 +11,17 @@ steps get finished after a failed one has been fixed.
 When a step fails the script offers to start Claude Code with the step, the command and the
 error, so the AI helps with the repair instead of leaving the user alone with a traceback.
 
+Claude Code runs as a child process: when the user leaves it, they are back here. After the
+brief interview the script checks what was actually produced; after help with a failed step
+it offers to run that step again. Every run ends with a summary.
+
 Without a terminal (AI, script, CI) nothing is asked and nothing is run: the steps are
 printed as a list. new-project.py deletes itself after --init; this script stays.
 """
 import argparse
-import os
 import re
 import shutil
+import signal
 import subprocess
 import sys
 from pathlib import Path
@@ -28,17 +32,21 @@ sys.stderr.reconfigure(encoding="utf-8")
 ROOT = Path(__file__).resolve().parent.parent
 RESUME = "python3 scripts/project-setup.py"
 
-# A line only the template's own docs/PROJECT_SCOPE.md skeleton contains. While it is there the
-# file is a form to fill in, not a brief (a test pins the marker to the real skeleton).
-SCOPE_SCAFFOLD_MARKER = "sekcje są scaffoldem"
-
 # Issue labels a project starts with: (name, colour, description).
 PROJECT_LABELS = [
     ("owner", "D93F0B", "Sprawa czeka na właściciela projektu"),
     ("idea", "FBCA04", "Pomysł: czeka na potwierdzenie, plan albo odrzucenie"),
 ]
 
-DONE, SKIPPED = "✓", "–"
+# Look (colours, marks, progress bar) is shared with new-project.py.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from start_ui import (  # noqa: E402
+    BOLD, CYAN, DIM, DONE, FAILED, PENDING, RED, SKIPPED, YELLOW,
+    banner, mark, notice, paint, progress, question_line, steps_list, summary,
+)
+from start_prompts import SCOPE_PROMPT, design_prompt, help_prompt  # noqa: E402
+import start_checks  # noqa: E402
+from start_checks import SCOPE_SCAFFOLD_MARKER  # noqa: E402,F401
 
 
 class StepFailed(Exception):
@@ -57,9 +65,11 @@ def ask(prompt: str) -> str:
     return input(prompt).strip()
 
 
-def confirm(question: str) -> bool:
-    """Enter means yes — the steps are what a new project normally wants."""
-    return ask(f"  {question} [T/n]: ").lower() in ("", "t", "tak", "y", "yes")
+def confirm(question: str, default: bool = True) -> bool:
+    """Enter means yes — the steps are what a new project normally wants. default=False
+    flips it for things that should happen only on an explicit "t"."""
+    answer = ask(question_line(question, "[T/n]" if default else "[t/N]")).lower()
+    return default if not answer else answer in ("t", "tak", "y", "yes")
 
 
 def run(command: list[str], show: bool = False) -> tuple[int, str]:
@@ -73,8 +83,13 @@ def run(command: list[str], show: bool = False) -> tuple[int, str]:
     for line in process.stdout:
         lines.append(line)
         if show:
-            print(f"    {line}", end="")
+            print(f"  {paint('│', DIM)} {paint(line.rstrip(), DIM)}")
     return process.wait(), "".join(lines)
+
+
+def run_interactive(command: list[str]) -> int:
+    """Run a command that talks to the user itself (the terminal stays attached)."""
+    return subprocess.call(command, cwd=str(ROOT))
 
 
 def must(command: list[str], show: bool = False) -> str:
@@ -84,25 +99,41 @@ def must(command: list[str], show: bool = False) -> str:
     return output
 
 
-def start_claude(prompt: str) -> None:
-    """Hand the terminal over to Claude Code. Does not return when claude is installed."""
+def start_claude(prompt: str) -> bool:
+    """Run Claude Code with `prompt` and come back when the user leaves it.
+
+    A child process, not a replacement of this one — otherwise leaving Claude Code would
+    drop the user into an empty terminal with the remaining steps lost. Returns False when
+    claude is not installed (nothing was started).
+    """
     if not shutil.which("claude"):
-        print("  ⚠ Nie znalazłem polecenia `claude`. Uruchom Claude Code w katalogu projektu i wklej:")
-        print(f"    {prompt.splitlines()[0]}\n")
-        return
-    os.chdir(ROOT)
-    os.execvp("claude", ["claude", prompt])
+        notice(f"Nie znalazłem polecenia `claude`. Uruchom Claude Code w katalogu projektu i wklej: "
+               f"{prompt.splitlines()[0]}\n")
+        return False
+    print(f"\n  {paint('→ Otwieram Claude Code.', CYAN, BOLD)} Gdy skończysz, wyjdź z niego "
+          f"({paint('/exit', BOLD)}) — wrócisz do kroków startu.\n")
+    # Ctrl+C belongs to Claude Code while it runs; it must not kill this script behind it.
+    previous = signal.signal(signal.SIGINT, signal.SIG_IGN)
+    try:
+        subprocess.call(["claude", prompt], cwd=str(ROOT))
+    finally:
+        signal.signal(signal.SIGINT, previous)
+    print(f"\n  {paint('← Z powrotem w krokach startu projektu.', CYAN, BOLD)}\n")
+    return True
 
 
 # ── helpers ──────────────────────────────────────────────────────────────────
 
 def scope_is_filled() -> bool:
-    """True when the project already has its own brief in docs/PROJECT_SCOPE.md."""
-    scope = ROOT / "docs" / "PROJECT_SCOPE.md"
-    if not scope.is_file():
-        return False
-    text = scope.read_text(encoding="utf-8", errors="ignore")
-    return bool(text.strip()) and SCOPE_SCAFFOLD_MARKER not in text
+    return start_checks.scope_is_filled(ROOT)
+
+
+def brief_checks() -> list[tuple[bool, str]]:
+    return start_checks.brief_checks(ROOT)
+
+
+def design_checks() -> list[tuple[bool, str]]:
+    return start_checks.design_checks(ROOT)
 
 
 def origin_url() -> str:
@@ -134,16 +165,15 @@ def step_remote() -> tuple[str, str]:
     url = origin_url()
     if url:
         return DONE, f"podpięte: {url}"
-    print("  Podaj adres istniejącego repo (git@… / https://…)")
-    print("  albo nazwę nowego do założenia na GitHubie (wlasciciel/nazwa). Enter = pomiń.")
+    print(paint("  Podaj adres istniejącego repo (git@… / https://…) albo wlasciciel/nazwa nowego.", DIM))
     while True:
-        answer = ask("  Repo: ")
+        answer = ask(question_line("Repo:", "[Enter = pomiń]"))
         if not answer:
             return SKIPPED, "pominięte — podepniesz później: git remote add origin <adres>"
         kind = classify_repo_answer(answer)
         if kind:
             break
-        print("  ❌ to nie wygląda na adres ani na wlasciciel/nazwa")
+        print(f"  {mark(FAILED)} to nie wygląda na adres ani na wlasciciel/nazwa — spróbuj jeszcze raz")
     if kind == "url":
         must(["git", "remote", "add", "origin", answer])
         return DONE, f"podpięte: {answer}"
@@ -153,9 +183,15 @@ def step_remote() -> tuple[str, str]:
 
 
 def step_labels() -> tuple[str, str]:
-    url = origin_url()
-    if "github.com" not in url:
-        return SKIPPED, "pominięte — etykiety zakładam w repo na GitHubie, a takiego nie ma podpiętego"
+    if not origin_url():
+        return SKIPPED, "pominięte — etykiety zakładam w repo na GitHubie, a żadnego repo nie ma podpiętego"
+    # Ask gh, do not read the address: with an SSH host alias (git@github-work:owner/name.git)
+    # the URL never contains "github.com", and gh resolves such aliases itself.
+    code, repo = run(["gh", "repo", "view", "--json", "nameWithOwner", "--jq", ".nameWithOwner"])
+    if code == 127:
+        return SKIPPED, "pominięte — brak polecenia `gh` (GitHub CLI), etykiety założysz później"
+    if code != 0:
+        return SKIPPED, "pominięte — podpięte repo nie jest na GitHubie albo `gh` nie ma do niego dostępu"
     existing = set(must(["gh", "label", "list", "--limit", "200", "--json", "name", "--jq", ".[].name"]).split("\n"))
     missing = [label for label in PROJECT_LABELS if label[0] not in existing]
     if not missing:
@@ -169,12 +205,21 @@ def step_labels() -> tuple[str, str]:
 
 
 def step_skills() -> tuple[str, str]:
+    """Choose which skill groups the project keeps, then refresh the kept ones."""
+    chooser = ROOT / "scripts" / "select-skills.py"
+    if chooser.is_file():
+        code = run_interactive([sys.executable, "scripts/select-skills.py"])
+        if code != 0:
+            raise StepFailed([sys.executable, "scripts/select-skills.py"], code, "wybór skilli nie powiódł się")
+        print()
     if not (ROOT / "scripts" / "update-skills.py").is_file():
-        return SKIPPED, "pominięte — brak scripts/update-skills.py"
-    if not confirm("Zainstalować vendored skille (pobiera z sieci)?"):
-        return SKIPPED, "pominięte — później: python3 scripts/update-skills.py --apply"
+        if chooser.is_file():
+            return DONE, "wybór zapisany"
+        return SKIPPED, "pominięte — brak skryptów skilli"
+    if not confirm("Odświeżyć pozostałe vendored skille do najnowszych wersji (pobiera z sieci)?"):
+        return DONE, "wybór zapisany; odświeżenie później: python3 scripts/update-skills.py --apply"
     must([sys.executable, "scripts/update-skills.py", "--apply"], show=True)
-    return DONE, "skille zainstalowane"
+    return DONE, "skille wybrane i odświeżone"
 
 
 def step_doctor() -> tuple[str, str]:
@@ -184,56 +229,146 @@ def step_doctor() -> tuple[str, str]:
     return DONE, "wymagane sprawdzenia przeszły"
 
 
+def claude_stage(question: str, prompt: str, checks, done: str, later: str) -> tuple[str, str]:
+    """A step done inside Claude Code: ask, open it, then check what was actually produced."""
+    while True:
+        if not confirm(question):
+            return SKIPPED, f"pominięte — {later}"
+        if not start_claude(prompt):
+            return SKIPPED, f"Claude Code nie ruszył — {later}"
+        results = checks()
+        for ok, label in results:
+            print(f"    {mark(DONE if ok else FAILED)} {label}")
+        if all(ok for ok, _ in results):
+            return DONE, done
+        print()
+        question = "Czegoś brakuje. Wrócić do Claude Code i dokończyć?"
+        later = "brakuje: " + "; ".join(label for ok, label in results if not ok) + f" — {later}"
+
+
 def step_brief() -> tuple[str, str]:
+    if all(ok for ok, _ in brief_checks()):
+        return DONE, "brief, stos i ADR-001 już są — wywiad pominięty"
     if scope_is_filled():
-        return DONE, ("brief już jest (docs/PROJECT_SCOPE.md) — wywiad pominięty; "
-                      "strażników pod stos ustawia: python3 scripts/set-stack.py <stos>")
-    if not confirm("Ustalamy brief projektu teraz? (wywiad: co budujemy, dla kogo, w jakim stosie)"):
-        return SKIPPED, "pominięte — później: uruchom `claude` w katalogu projektu i napisz: scope"
-    start_claude("scope")
-    return SKIPPED, "wywiad nie ruszył — napisz `scope` w Claude Code"
+        question = "Brief już jest, ale nie wszystko po nim. Otworzyć Claude Code, żeby dokończyć (stos, ADR-001)?"
+    else:
+        question = "Ustalamy brief projektu teraz? (wywiad: co budujemy, dla kogo, w jakim stosie)"
+    return claude_stage(question, SCOPE_PROMPT, brief_checks, "brief gotowy, strażnicy ustawieni pod stos",
+                        "później: uruchom `claude` w katalogu projektu i napisz: scope")
 
 
+IMPECCABLE_INSTALL = ["npx", "impeccable", "install", "--providers=claude", "--scope=project", "--no-hooks"]
+
+
+def offer_impeccable() -> None:
+    """Optionally install the impeccable design skill into this project — only on an explicit yes.
+
+    It is not part of the template: the template's security scan stops on its bundled scripts.
+    --no-hooks keeps the installer away from .claude/settings.local.json, where the guards live.
+    """
+    if (ROOT / ".claude" / "skills" / "impeccable").exists():
+        return
+    print(paint("  impeccable to osobne narzędzie do projektowania (poza szablonem): instalator zapisze", DIM))
+    print(paint("  .claude/skills/impeccable w projekcie i pobierze swój program do ~/.impeccable/bin.", DIM))
+    if not confirm("Zainstalować skill impeccable w tym projekcie?", default=False):
+        return
+    code = run_interactive(IMPECCABLE_INSTALL)
+    if code != 0:
+        notice(f"Instalacja impeccable nie powiodła się (kod {code}) — szablon graficzny powstanie bez niego. "
+               f"Ręcznie: {' '.join(IMPECCABLE_INSTALL)}")
+    print()
+
+
+def step_design() -> tuple[str, str]:
+    if all(ok for ok, _ in design_checks()):
+        return DONE, "szablon graficzny już jest — makiety i zasady wyglądu"
+    if not (ROOT / ".claude" / "skills" / "design-taste-frontend").exists():
+        notice("Grupa skilli „Projektowanie wyglądu” nie jest w projekcie — szablon powstanie na pozostałych. "
+               "Przywrócisz ją: python3 scripts/select-skills.py")
+    offer_impeccable()
+    return claude_stage(
+        "Założyć szablon graficzny projektu? (makiety dwóch kierunków wyglądu; projekt bez interfejsu: n)",
+        design_prompt((ROOT / ".claude" / "skills" / "impeccable").exists()), design_checks, "szablon graficzny gotowy: makiety i zasady wyglądu",
+        "później: uruchom `claude` i poproś o szablon graficzny projektu")
+
+
+# (title, the command shown in the plain list, one line saying what the step is for, function)
+# Brief first: its stack proposes the skill groups, and the design stage reads the brief.
+# Skille before the design stage, so it already runs in a project without the unneeded skills.
 STEPS = [
-    ("Repozytorium Git", "git init -b main", step_git),
-    ("Repo na GitHubie", "git remote add origin <adres>   albo   gh repo create <wlasciciel/nazwa>", step_remote),
-    ("Etykiety zgłoszeń", "gh label create owner / idea", step_labels),
-    ("Skille", "python3 scripts/update-skills.py --apply", step_skills),
-    ("Kontrola środowiska", "python3 scripts/doctor.py", step_doctor),
-    ("Brief projektu", "claude   # napisz: scope — wywiad ustawi też strażników pod Twój stos", step_brief),
+    ("Repozytorium Git", "git init -b main",
+     "Historia zmian projektu. Bez niej strażnicy commita nie mają czego pilnować.", step_git),
+    ("Repo na GitHubie", "git remote add origin <adres>   albo   gh repo create <wlasciciel/nazwa>",
+     "Miejsce na kod, zgłoszenia i pull requesty. Nic nie jest wypychane.", step_remote),
+    ("Etykiety zgłoszeń", "gh label create owner / idea",
+     "Dwie etykiety, po których widać sprawy czekające na właściciela i pomysły.", step_labels),
+    ("Kontrola środowiska", "python3 scripts/doctor.py",
+     "Sprawdzenie, czy narzędzia i strażnicy naprawdę działają na tej maszynie.", step_doctor),
+    ("Brief projektu", "claude   # napisz: scope — wywiad ustawi też strażników pod Twój stos",
+     "Krótki wywiad z Claude: co budujemy, dla kogo i w jakim stosie.", step_brief),
+    ("Skille", "python3 scripts/select-skills.py   # potem: python3 scripts/update-skills.py --apply",
+     "Wybór, które zestawy instrukcji dla Claude zostają w projekcie — reszta to szum.", step_skills),
+    ("Szablon graficzny", "claude   # poproś: przygotuj szablon graficzny projektu (makiety w mockups/propozycje/)",
+     "Dwa kierunki wyglądu do obejrzenia w przeglądarce i zasady, których trzymają się kolejne ekrany.", step_design),
 ]
 
 
 # ── flow ─────────────────────────────────────────────────────────────────────
 
-def print_steps() -> None:
-    print("── Kroki startu projektu ───────────────────────────────\n")
-    for number, (title, command, _) in enumerate(STEPS, start=1):
-        print(f"  # {number}. {title}")
-        print(f"  {command}\n")
-    print(f"  Z terminala przeprowadzi przez nie: {RESUME}")
-    print("────────────────────────────────────────────────────────\n")
-
-
-def help_prompt(title: str, failure: StepFailed) -> str:
-    tail = "\n".join(failure.output.strip().splitlines()[-30:])[-3000:]
-    return (
-        f"Krok startu projektu „{title}” nie powiódł się.\n"
-        f"Polecenie: {' '.join(failure.command)}\n"
-        f"Kod wyjścia: {failure.code}\n"
-        f"Końcówka wyniku:\n{tail or '(brak wyniku)'}\n\n"
-        f"Pomóż mi to naprawić. Po naprawie pozostałe kroki dokończy: {RESUME}"
-    )
-
-
-def handle_failure(title: str, failure: StepFailed) -> None:
-    print(f"  ✗ nie udało się: {' '.join(failure.command)}  (kod {failure.code})")
+def handle_failure(title: str, failure: StepFailed) -> bool:
+    """Show the failure, offer the AI's help; True when the step should be run again."""
+    print(f"  {mark(FAILED)} {paint('nie udało się:', RED, BOLD)} {' '.join(failure.command)}  "
+          f"{paint(f'(kod {failure.code})', DIM)}")
     for line in failure.output.strip().splitlines()[-8:]:
-        print(f"    {line}")
+        print(f"  {paint('│', RED)} {line}")
     print()
     if confirm("Poprosić Claude o pomoc z tym krokiem?"):
-        start_claude(help_prompt(title, failure))
-    print(f"  Po naprawie dokończ pozostałe kroki: {RESUME}\n")
+        start_claude(help_prompt(title, " ".join(failure.command), failure.code, failure.output, RESUME))
+    return confirm("Ponowić ten krok teraz?")
+
+
+def print_banner() -> None:
+    banner("🚀 Start projektu", ROOT.name,
+           f"{len(STEPS)} kroków. Enter wybiera odpowiedź domyślną; Ctrl+C przerywa — "
+           "dokończysz później tym samym poleceniem.")
+    print()
+
+
+def what_is_left(results: list[tuple[str, str, str]]) -> list[str]:
+    marks = {title: symbol for title, symbol, _ in results}
+    todo: list[str] = []
+    if FAILED in marks.values() or PENDING in marks.values():
+        todo.append(f"dokończ kroki: {RESUME}  (zrobione zostaną pominięte)")
+    if marks.get("Brief projektu") == DONE:
+        todo.append("zapisz wynik startu pierwszym commitem na gałęzi roboczej: git add docs/ mockups/ "
+                    ".claude/hooks/config.json skills-manifest.json .claude/skills")
+    if marks.get("Repo na GitHubie") == SKIPPED:
+        todo.append("podepnij repo, gdy będzie: git remote add origin <adres>")
+    return todo
+
+
+def run_steps() -> tuple[list[tuple[str, str, str]], bool]:
+    """Walk the steps; returns (results for the summary, True when nothing failed)."""
+    results: list[tuple[str, str, str]] = []
+    total = len(STEPS)
+    for number, (title, _, why, step) in enumerate(STEPS, start=1):
+        print(f"  {progress(number, total)}  {paint(f'Krok {number}/{total}', DIM)} {paint('·', DIM)} {paint(title, BOLD)}")
+        print(paint(f"  {why}", DIM))
+        while True:
+            try:
+                symbol, message = step()
+            except StepFailed as failure:
+                if handle_failure(title, failure):
+                    print()
+                    continue
+                results.append((title, FAILED, f"nie udało się: {' '.join(failure.command)}"))
+                results.extend((later, PENDING, "nie doszło — czeka na naprawę poprzedniego kroku")
+                               for later, _, _, _ in STEPS[number:])
+                return results, False
+            break
+        print(f"  {mark(symbol)} {message}\n")
+        results.append((title, symbol, message))
+    return results, True
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -242,23 +377,17 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     if args.list or not is_tty():
-        print_steps()
+        steps_list([(title, command) for title, command, _, _ in STEPS], RESUME)
         return 0
 
+    print_banner()
     try:
-        for number, (title, _, step) in enumerate(STEPS, start=1):
-            print(f"── Krok {number}/{len(STEPS)}: {title}")
-            try:
-                mark, message = step()
-            except StepFailed as failure:
-                handle_failure(title, failure)
-                return 1
-            print(f"  {mark} {message}\n")
+        results, complete = run_steps()
     except (KeyboardInterrupt, EOFError):
-        print(f"\n  Przerwane. Dokończ później: {RESUME}\n")
+        print(f"\n\n  {paint('Przerwane.', YELLOW, BOLD)} Dokończ później: {paint(RESUME, BOLD)}\n")
         return 130
-    print("✅  Start projektu zakończony.\n")
-    return 0
+    summary(results, what_is_left(results), complete, RESUME)
+    return 0 if complete else 1
 
 
 if __name__ == "__main__":

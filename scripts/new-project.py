@@ -37,7 +37,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from new_project_data import (  # noqa: E402
     COPY_DIRS, COPY_DOCS, COPY_FILES, README_SCAFFOLD, SCAFFOLD_DOCS, TEMPLATE_META, TEMPLATE_ONLY_SCRIPTS,
 )
-from new_project_git import fresh_git_history, install_guards, log, warn  # noqa: E402,F401
+from new_project_git import fresh_git_history, install_guards, log  # noqa: E402
+from start_ui import BOLD, GREEN, RED, banner, mark, notice, paint, section, DONE, FAILED  # noqa: E402
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -197,7 +198,7 @@ def hand_over_to_setup(root: Path) -> None:
     """
     setup = root / "scripts" / "project-setup.py"
     if not setup.is_file():
-        print("  ⚠ Brak scripts/project-setup.py — dalsze kroki: docs/SETUP.md\n")
+        notice("Brak scripts/project-setup.py — dalsze kroki: docs/SETUP.md\n")
         return
     sys.stdout.flush()
     os.chdir(root)
@@ -207,48 +208,49 @@ def hand_over_to_setup(root: Path) -> None:
 def init_in_place(root: Path, dry_run: bool, do_git: bool = True,
                   stack: str | None = None) -> None:
     """Remove template meta and turn this clone into a clean project directory."""
-    print("🚀  new-project.py — INIT IN-PLACE")
-    print(f"    Directory: {root}\n")
+    banner("🧹 Przygotowanie projektu", root.name,
+           "Próba na sucho — pokazuję, co bym zrobił, niczego nie zapisuję." if dry_run
+           else "Sprzątam pliki szablonu i ustawiam projekt. Potem przejdziemy kroki startu.")
 
-    print("── Usuwam template meta ────────────────────────────────")
+    section("Pliki szablonu — usuwam")
     for name in TEMPLATE_META:
         remove(root / name, root, dry_run)
 
-    print("\n── Reset wersjonowania ─────────────────────────────────")
+    section("Wersjonowanie — od zera")
     reset_versioning(root, dry_run)
 
-    print("\n── Reset docs/adr (czysty start) ───────────────────────")
+    section("Decyzje projektu (docs/adr) — czysty start")
     reset_adr_dir(root, dry_run)
 
-    print("\n── README scaffold ─────────────────────────────────────")
+    section("README projektu — szkielet")
     log("scaffold", "README.md", dry_run)
     if not dry_run:
         (root / "README.md").write_text(README_SCAFFOLD, encoding="utf-8")
 
-    print("\n── Claude Code hooks (auto) ────────────────────────────")
+    section("Hooki Claude Code — konfiguruję")
     create_config_json(root, root, dry_run, stack)
     create_settings_local(root, root, dry_run)
 
     # Remove this script before any git commit — it's template-only.
-    print("\n── Usuwam template-only skrypt ──────────────────────────")
+    section("Skrypty potrzebne tylko szablonowi — usuwam")
     for name in TEMPLATE_ONLY_SCRIPTS:
         remove(root / "scripts" / name, root, dry_run)
 
     if do_git:
-        print("\n── Świeża historia git + init commit ────────────────────")
+        section("Nowa historia Git — gałąź main, pierwszy commit")
         fresh_git_history(root, dry_run)
-        print("\n── Instalacja guardów (pre-commit + commit-msg) ─────────")
+        section("Strażnicy commita — instaluję")
         install_guards(root, dry_run)
 
     if dry_run:
-        print("\n✅  Dry-run complete — no files were written.\n")
+        print(f"\n  {paint('Próba na sucho zakończona — nic nie zostało zapisane.', BOLD)}\n")
         return
 
-    print(f"\n✅  Gotowe: {root}\n")
+    print(f"\n  {mark(DONE)} {paint('Projekt przygotowany.', GREEN, BOLD)}\n")
     if not do_git:
-        print("  Historia git szablonu została (--no-git). Nową założysz tak:")
-        print("  rm -rf .git && git init -b main")
-        print("  pre-commit install --hook-type pre-commit --hook-type commit-msg\n")
+        notice("Historia Git szablonu została (--no-git). Nową założysz tak:")
+        print("    rm -rf .git && git init -b main")
+        print("    pre-commit install --hook-type pre-commit --hook-type commit-msg\n")
     hand_over_to_setup(root)
 
 
@@ -304,28 +306,27 @@ def main() -> None:
 
     # Guard: don't overwrite a non-empty directory
     if dest.exists() and any(dest.iterdir()):
-        print(f"❌  Destination exists and is not empty: {dest}")
-        print("    Remove it first or choose a different path.")
+        print(f"  {mark(FAILED)} {paint('Katalog docelowy istnieje i nie jest pusty:', RED, BOLD)} {dest}")
+        print("    Usuń go albo wybierz inną ścieżkę.")
         sys.exit(1)
 
-    mode = "DRY-RUN" if dry_run else "CREATING"
-    print(f"🚀  new-project.py — {mode}")
-    print(f"    Template:    {ROOT}")
-    print(f"    Destination: {dest}\n")
+    banner("📦 Nowy projekt z szablonu", dest.name,
+           "Próba na sucho — pokazuję, co bym zrobił, niczego nie zapisuję." if dry_run
+           else f"Kopiuję szablon do {dest}. Potem przejdziemy kroki startu.")
 
-    print("── Directories ─────────────────────────────────────────")
+    section("Katalogi — kopiuję")
     for d in COPY_DIRS:
         src = ROOT / d
         if src.exists():
             copy_dir(src, dest / d, dry_run)
 
-    print("\n── Root files ──────────────────────────────────────────")
+    section("Pliki główne — kopiuję")
     for f in COPY_FILES:
         src = ROOT / f
         if src.exists():
             copy_file(src, dest / f, dry_run)
 
-    print("\n── scripts/ ────────────────────────────────────────────")
+    section("Skrypty — kopiuję")
     scripts_src = ROOT / "scripts"
     scripts_dst = dest / "scripts"
     if not dry_run:
@@ -340,7 +341,7 @@ def main() -> None:
         rel = item.relative_to(scripts_src)
         copy_file(item, scripts_dst / rel, dry_run)
 
-    print("\n── docs/ (generic) ─────────────────────────────────────")
+    section("Dokumenty wspólne — kopiuję")
     docs_dst = dest / "docs"
     if not dry_run:
         docs_dst.mkdir(parents=True, exist_ok=True)
@@ -349,21 +350,21 @@ def main() -> None:
         if src.exists():
             copy_file(src, docs_dst / doc, dry_run)
 
-    print("\n── docs/ (scaffolded) ──────────────────────────────────")
+    section("Dokumenty projektu — szkielety")
     for name, content in SCAFFOLD_DOCS.items():
         scaffold_file(docs_dst / name, dest, content, dry_run)
 
     mkdir(docs_dst / "adr", dest, dry_run)
 
-    print("\n── Claude Code hooks (auto) ────────────────────────────")
+    section("Hooki Claude Code — konfiguruję")
     create_config_json(dest, ROOT, dry_run, stack)
     create_settings_local(dest, ROOT, dry_run)
 
     if dry_run:
-        print("\n✅  Dry-run complete — no files were written.\n")
+        print(f"\n  {paint('Próba na sucho zakończona — nic nie zostało zapisane.', BOLD)}\n")
         return
 
-    print(f"\n✅  Project created: {dest}\n")
+    print(f"\n  {mark(DONE)} {paint('Projekt utworzony:', GREEN, BOLD)} {dest}\n")
     hand_over_to_setup(dest)
 
 

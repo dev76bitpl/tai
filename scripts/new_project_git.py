@@ -11,10 +11,12 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from start_ui import BOLD, YELLOW, item, paint  # noqa: E402
+
 
 def log(label: str, path: str, dry_run: bool) -> None:
-    prefix = "  [dry]" if dry_run else "  ✓"
-    print(f"{prefix} {label:<12} {path}")
+    item(label, path, planned=dry_run)
 
 
 def _on_rm_error(func, path, _exc_info) -> None:
@@ -57,7 +59,8 @@ def fresh_git_history(root: Path, dry_run: bool) -> None:
 
 
 def warn(msg: str) -> None:
-    print(f"⚠️  {msg}", file=sys.stderr)
+    sys.stdout.flush()
+    print(f"  {paint('⚠', YELLOW, BOLD)} {msg}", file=sys.stderr)
 
 
 def _resolve_pre_commit() -> list[str] | None:

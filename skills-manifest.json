@@ -163,6 +163,20 @@
       "remote_path": "nextjs-app-router-patterns",
       "commit": "7897700422f2196591457f2ae39c822ed37dc147",
       "checked": "2026-06-12"
+    },
+    "design-taste-frontend": {
+      "repo": "https://github.com/Leonxlnx/taste-skill",
+      "local_path": ".claude/skills/design-taste-frontend",
+      "remote_path": "skills/taste-skill",
+      "commit": "d237dd399d57524945c0c81327da5da19f7a468d",
+      "checked": "2026-10-13"
+    },
+    "redesign-existing-projects": {
+      "repo": "https://github.com/Leonxlnx/taste-skill",
+      "local_path": ".claude/skills/redesign-existing-projects",
+      "remote_path": "skills/redesign-skill",
+      "commit": "d237dd399d57524945c0c81327da5da19f7a468d",
+      "checked": "2026-10-13"
     }
   }
 }

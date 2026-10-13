@@ -106,15 +106,34 @@ Checklisty testów manualnych dla krytycznych flow.
 
 Na świeżej kopii szablonu **poza** repo szablonu (w samym szablonie tylko `--dry-run`):
 
-- [ ] `python3 scripts/new-project.py --init` w terminalu → po sprzątaniu idą kroki 1–6, każdy z pytaniem i wynikiem `✓` / `–`
+- [ ] `python3 scripts/new-project.py --init` w terminalu → baner „Przygotowanie projektu”, sprzątanie z nagłówkami, potem baner „Start projektu” i siedem kroków z paskiem postępu: Git, repo, etykiety, kontrola środowiska, brief, skille, szablon graficzny
 - [ ] `git branch --show-current` → `main`, także na maszynie bez `init.defaultBranch`
 - [ ] Krok „Repo na GitHubie”: Enter → pominięty; adres → `git remote -v` pokazuje `origin`; `wlasciciel/nazwa` → repo powstaje na GitHubie, nic nie jest wypychane
-- [ ] Krok „Etykiety zgłoszeń” bez repo na GitHubie → pominięty z wyjaśnieniem
-- [ ] Krok „Kontrola środowiska” → raport `doctor`; przy czerwonym raporcie pytanie „Poprosić Claude o pomoc z tym krokiem?”
-- [ ] Krok „Brief projektu”: „tak” → Claude Code startuje i od razu prowadzi wywiad, po jednym pytaniu; mętna odpowiedź → dopytanie
-- [ ] Po wywiadzie i zgodzie: `.claude/hooks/config.json` ma `src_dirs` zgodne z tabelą stosów (`python3 scripts/set-stack.py --list`), a dla wordpress / prestashop / magento aktywną grupę wzorców ADR
-- [ ] `python3 scripts/project-setup.py` uruchomiony ponownie → kroki zrobione są pomijane; projekt z własnym briefem → „wywiad pominięty”
-- [ ] `python3 scripts/new-project.py --init < /dev/null` (bez terminala) → żadnego pytania, sama lista kroków
+- [ ] Krok „Etykiety zgłoszeń”: bez repo → pominięty z wyjaśnieniem; z repo podpiętym przez alias SSH (adres bez `github.com`) → proponuje założenie `owner` i `idea`
+- [ ] Krok „Kontrola środowiska” → raport `doctor`; przy czerwonym raporcie pytanie „Poprosić Claude o pomoc z tym krokiem?”, a po powrocie „Ponowić ten krok teraz?”
+- [ ] Krok „Brief projektu”: „tak” → Claude Code startuje i prowadzi wywiad po jednym pytaniu; po `/exit` wracasz do kroków i widzisz trzy `✓` (brief, stos, ADR-001)
+- [ ] Wyjście z Claude Code w połowie wywiadu → `✗` przy brakujących punktach i pytanie „Wrócić do Claude Code i dokończyć?”
+- [ ] Na końcu „Podsumowanie” ze znakiem przy każdym kroku i lista „Co dalej”; przy nieudanym kroku „Start niedokończony” z poleceniem wznowienia
+- [ ] `python3 scripts/project-setup.py` uruchomiony ponownie → kroki zrobione są pomijane
+- [ ] `python3 scripts/new-project.py --init < /dev/null` (bez terminala) → żadnego pytania, sama lista kroków; wynik przekierowany do pliku nie zawiera kodów kolorów
+
+### Scenariusz 10e — wybór skilli
+
+- [ ] Krok „Skille” po wywiadzie: `●` przy grupach proponowanych dla stosu z wywiadu; Enter je przyjmuje, `w` zostawia wszystko, numery wybierają ręcznie
+- [ ] Przed usunięciem skrypt wymienia skille z nazwy i pyta „Usunąć?”; „n” niczego nie zmienia
+- [ ] Po wyborze w `.claude/skills/` nie ma odrzuconych grup, a `skills-manifest.json` ma `skill_groups` i `excluded_skills`
+- [ ] Nowa sesja Claude Code w projekcie, jedna wiadomość → odrzucone skille nie wracają (synchronizacja z szablonu je pomija)
+- [ ] `python3 scripts/select-skills.py --list` pokazuje aktualny wybór; ponowne uruchomienie pozwala go zmienić
+- [ ] Skille ogólne (`scope`, `adr`, `api`, `debug`, `deploy`, `git`, `retro`) zostają przy każdym wyborze
+
+### Scenariusz 10f — szablon graficzny
+
+- [ ] Krok „Szablon graficzny”: najpierw pytanie o `impeccable` z `[t/N]` — Enter pomija, `t` uruchamia instalator; po nim `.claude/skills/impeccable` istnieje, a `.claude/settings.local.json` nie ma wpisów `impeccable`
+- [ ] Z zainstalowanym `impeccable` Claude Code wczytuje go na początku, tworzy `PRODUCT.md` z briefu i przed pokazaniem makiet robi ich krytykę; bez niego mówi, którym skillem pracuje i dlaczego
+- [ ] Makiety trafiają do `mockups/propozycje/`: `index.html` i dwa kierunki, każdy jasny i ciemny, z treścią z briefu
+- [ ] Po wyborze kierunku `docs/UI_GUIDELINES.md` ma sekcję „Kierunek wizualny projektu”; po `/exit` skrypt pokazuje dwa `✓`
+- [ ] Projekt bez interfejsu: odpowiedź „n” → krok pominięty, start kończy się normalnie
+- [ ] Grupa „Projektowanie wyglądu” odrzucona w wyborze skilli → krok o tym mówi i podaje `python3 scripts/select-skills.py`
 
 ### Scenariusz 10d — strażnicy dopasowani do stosu
 

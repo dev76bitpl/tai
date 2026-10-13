@@ -197,8 +197,13 @@ def _local_desynced(template_root: Path) -> tuple[list[str], list[str], list[str
     skills_dir = MONOREPO_ROOT / ".claude" / "skills"
     tmpl_skills_dir = template_root / ".claude" / "skills"
 
+    # Skills the project switched off (scripts/select-skills.py) are not "missing".
+    excluded = set(proj.get("excluded_skills", []) or [])
+
     missing, outdated = [], []
     for name in tmpl.get("custom_skills", {}):
+        if name in excluded:
+            continue
         pf = skills_dir / name / "SKILL.md"
         tf = tmpl_skills_dir / name / "SKILL.md"
         if not pf.exists():
@@ -206,7 +211,7 @@ def _local_desynced(template_root: Path) -> tuple[list[str], list[str], list[str
         elif tf.exists() and pf.read_text("utf-8") != tf.read_text("utf-8"):
             outdated.append(name)
 
-    missing_v = sorted(set(tmpl.get("skills", {}).keys()) - set(proj.get("skills", {}).keys()))
+    missing_v = sorted(set(tmpl.get("skills", {}).keys()) - set(proj.get("skills", {}).keys()) - excluded)
     return missing, outdated, missing_v
 
 

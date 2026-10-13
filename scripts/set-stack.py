@@ -6,7 +6,8 @@ Run by the scope wizard (skill new-project-scope) once the stack is decided, or 
   python3 scripts/set-stack.py laravel     # set
   python3 scripts/set-stack.py --list      # show the table
 
-Writes two things into .claude/hooks/config.json:
+Writes into .claude/hooks/config.json:
+  - stack         the chosen name, so the guided start can check that the stack was set
   - src_dirs      where the application code lives — guard-tests-with-src checks only these
   - adr_patterns  the chosen platform's group is switched on; the groups of the other
                   platforms stay inactive in _adr_patterns_optional
@@ -47,6 +48,9 @@ def apply_stack(config: dict, stack: str) -> dict:
     adr_patterns holds the project's own patterns plus a copy of at most one group.
     """
     preset = STACK_PRESETS[stack]
+    # the name is recorded so project-setup.py can tell "stack set" from "defaults untouched"
+    # (several stacks use the same directories as the default)
+    config["stack"] = stack
     config["src_dirs"] = list(preset["src_dirs"])
 
     optional = config.get("_adr_patterns_optional")
