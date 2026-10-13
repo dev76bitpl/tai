@@ -106,7 +106,7 @@ Checklisty testów manualnych dla krytycznych flow.
 
 Na świeżej kopii szablonu **poza** repo szablonu (w samym szablonie tylko `--dry-run`):
 
-- [ ] `python3 scripts/new-project.py --init` w terminalu → baner „Przygotowanie projektu”, sprzątanie z nagłówkami, potem baner „Start projektu” i siedem kroków z paskiem postępu: Git, repo, etykiety, kontrola środowiska, brief, skille, szablon graficzny
+- [ ] `python3 scripts/new-project.py --init` w terminalu → baner „Przygotowanie projektu”, sprzątanie z nagłówkami, potem baner „Start projektu” i osiem kroków z paskiem postępu: Git, repo, ustawienia repo, etykiety, kontrola środowiska, brief, skille, szablon graficzny
 - [ ] `git branch --show-current` → `main`, także na maszynie bez `init.defaultBranch`
 - [ ] Krok „Repo na GitHubie”: Enter → pominięty; adres → `git remote -v` pokazuje `origin`; `wlasciciel/nazwa` → repo powstaje na GitHubie, nic nie jest wypychane
 - [ ] Krok „Etykiety zgłoszeń”: bez repo → pominięty z wyjaśnieniem; z repo podpiętym przez alias SSH (adres bez `github.com`) → proponuje założenie `owner` i `idea`
@@ -116,6 +116,14 @@ Na świeżej kopii szablonu **poza** repo szablonu (w samym szablonie tylko `--d
 - [ ] Na końcu „Podsumowanie” ze znakiem przy każdym kroku i lista „Co dalej”; przy nieudanym kroku „Start niedokończony” z poleceniem wznowienia
 - [ ] `python3 scripts/project-setup.py` uruchomiony ponownie → kroki zrobione są pomijane
 - [ ] `python3 scripts/new-project.py --init < /dev/null` (bez terminala) → żadnego pytania, sama lista kroków; wynik przekierowany do pliku nie zawiera kodów kolorów
+
+### Scenariusz 10g — ustawienia repo na GitHubie
+
+- [ ] Świeżo założone repo, projekt z `.github/workflows/release-please.yml`: krok „Ustawienia repo” wymienia dwa braki z powodem i pyta raz; po „tak” w ustawieniach repo włączone jest automatyczne kasowanie gałęzi, a Actions mają zapis i zatwierdzanie PR
+- [ ] Projekt bez pliku automatu wydań: krok proponuje tylko kasowanie gałęzi
+- [ ] Ponowne uruchomienie `python3 scripts/project-setup.py` → „ustawienia repo są na miejscu”, bez pytania
+- [ ] Repo w organizacji z ograniczeniami (albo bez uprawnień właściciela): krok pokazuje polecenia `gh api …` do ręcznego wykonania i start idzie dalej
+- [ ] `npm run doctor` w projekcie z domyślnymi ustawieniami → ostrzeżenie „GitHub repo settings missing: …”; po ustawieniu → „GitHub repo settings in place”
 
 ### Scenariusz 10e — wybór skilli
 

@@ -19,6 +19,8 @@ Instrukcja dla nowego developera lub nowej maszyny. Przejdź kroki po kolei — 
 ## Krok 1 – Init repo na GitHub (BLOKER)
 
 > ⚠️ Bez tych ustawień release-please nie tworzy tagów ani GitHub Releases automatycznie, a branche trzeba sprzątać ręcznie po każdym merge. Ustaw zaraz po stworzeniu repo — przed pierwszym commitem.
+>
+> **Prowadzony start robi to sam:** krok „Ustawienia repo” w `python3 scripts/project-setup.py` odczytuje stan, mówi, czego brakuje, i po jednym „tak” ustawia to przez `gh`. Poniższe polecenia są dla startu bez kreatora i na wypadek, gdy GitHub odmówi (ograniczenia organizacji). Stan w istniejącym projekcie pokazuje `npm run doctor`, sekcja „Repository state”.
 
 **Settings → General → Pull Requests**:
 - ☑ `Automatically delete head branches` — branche usuwane automatycznie po merge
@@ -291,6 +293,7 @@ przekazuje sterowanie do `scripts/project-setup.py`, który zostaje w projekcie:
 |---|---|---|
 | Repozytorium Git | `git init -b main` | repozytorium już jest |
 | Repo na GitHubie | podpina podany adres albo zakłada `wlasciciel/nazwa` (`gh repo create`, bez `push`) | `origin` już podpięty; Enter |
+| Ustawienia repo | kasowanie gałęzi po scaleniu — zawsze; uprawnienia automatów GitHuba (zapis, zatwierdzanie PR) — tylko gdy projekt ma automat wydań (`.github/workflows/release-please*.yml`). Jedno pytanie, potem `gh api` | brak repo na GitHubie albo brak `gh`; ustawienia już są; GitHub odmawia → polecenia do ręcznego wykonania |
 | Etykiety zgłoszeń | zakłada `owner` i `idea` | brak repo na GitHubie albo brak `gh`; etykiety są |
 | Kontrola środowiska | `python3 scripts/doctor.py`; czerwony raport = błąd kroku | — |
 | Brief projektu | uruchamia Claude Code z hasłem `scope` | brief, stos i ADR-001 już są |

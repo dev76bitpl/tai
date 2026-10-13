@@ -45,7 +45,9 @@ from start_ui import (  # noqa: E402
     banner, mark, notice, paint, progress, question_line, steps_list, summary,
 )
 from start_prompts import SCOPE_PROMPT, design_prompt, help_prompt  # noqa: E402
+import repo_settings  # noqa: E402
 import start_checks  # noqa: E402
+from repo_settings import classify_repo_answer  # noqa: E402
 from start_checks import SCOPE_SCAFFOLD_MARKER  # noqa: E402,F401
 
 
@@ -141,13 +143,6 @@ def origin_url() -> str:
     return output.strip() if code == 0 else ""
 
 
-def classify_repo_answer(answer: str) -> str:
-    """'url' for an existing repository address, 'slug' for owner/name to create, else ''."""
-    if "://" in answer or answer.startswith("git@") or answer.endswith(".git"):
-        return "url"
-    return "slug" if re.fullmatch(r"[\w.-]+/[\w.-]+", answer) else ""
-
-
 # ── steps: return (DONE | SKIPPED, message); raise StepFailed when a command fails ──
 
 def step_git() -> tuple[str, str]:
@@ -180,6 +175,10 @@ def step_remote() -> tuple[str, str]:
     visibility = "--private" if confirm("Repo prywatne?") else "--public"
     must(["gh", "repo", "create", answer, visibility, "--source", ".", "--remote", "origin"], show=True)
     return DONE, f"założone na GitHubie ({visibility.lstrip('-')}) i podpięte: {answer}"
+
+
+def step_repo_settings() -> tuple[str, str]:
+    return repo_settings.step(ROOT, run, confirm, bool(origin_url()))
 
 
 def step_labels() -> tuple[str, str]:
@@ -300,6 +299,8 @@ STEPS = [
      "Historia zmian projektu. Bez niej strażnicy commita nie mają czego pilnować.", step_git),
     ("Repo na GitHubie", "git remote add origin <adres>   albo   gh repo create <wlasciciel/nazwa>",
      "Miejsce na kod, zgłoszenia i pull requesty. Nic nie jest wypychane.", step_remote),
+    ("Ustawienia repo", "gh api …   # kasowanie gałęzi po scaleniu, uprawnienia automatów — docs/SETUP.md krok 1",
+     "Dwa ustawienia, bez których automat wydań pada, a gałęzie zostają po scaleniu.", step_repo_settings),
     ("Etykiety zgłoszeń", "gh label create owner / idea",
      "Dwie etykiety, po których widać sprawy czekające na właściciela i pomysły.", step_labels),
     ("Kontrola środowiska", "python3 scripts/doctor.py",
