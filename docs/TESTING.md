@@ -125,6 +125,14 @@ Na świeżej kopii szablonu **poza** repo szablonu (w samym szablonie tylko `--d
 - [ ] Repo w organizacji z ograniczeniami (albo bez uprawnień właściciela): krok pokazuje polecenia `gh api …` do ręcznego wykonania i start idzie dalej
 - [ ] `npm run doctor` w projekcie z domyślnymi ustawieniami → ostrzeżenie „GitHub repo settings missing: …”; po ustawieniu → „GitHub repo settings in place”
 
+### Scenariusz 10h — strażnicy lintu i testów w świeżym projekcie
+
+- [ ] Po `--init`: `grep '"lint"\|"test"' .claude/hooks/config.json` → nic (żadnych odziedziczonych poleceń)
+- [ ] Na gałęzi roboczej, z plikiem w `src/` w indeksie: `pre-commit run guard-lint` (bez `--verbose`) → „Passed” i pod spodem `[WARN] Lint guard checks NOTHING: npm run lint --silent — package.json has no "lint" script`
+- [ ] `npm run doctor` → w „Guard system” `⚠ Lint guard checks nothing: …` i `⚠ Test guard checks nothing: …`
+- [ ] Dodaj do `package.json` skrypt `lint`, który kończy się błędem → commit zablokowany „Lint failed”; skrypt przechodzący → `✅ Lint [node] OK`, a doctor pokazuje `✓ Lint guard runs: …`
+- [ ] Wpisz w `.claude/hooks/config.json` `"lint": "nie-ma-takiego-polecenia"` → commit zablokowany „Lint command from .claude/hooks/config.json cannot run”, doctor: `⚠ Lint guard BLOCKS every commit: …`
+
 ### Scenariusz 10e — wybór skilli
 
 - [ ] Krok „Skille” po wywiadzie: `●` przy grupach proponowanych dla stosu z wywiadu; Enter je przyjmuje, `w` zostawia wszystko, numery wybierają ręcznie

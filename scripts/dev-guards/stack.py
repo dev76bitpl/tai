@@ -128,24 +128,106 @@ def _str_to_cmd(s: str) -> list[str]:
     return s.split()
 
 
-def get_lint_cmd() -> list[str] | None:
+def get_cmd(kind: str) -> tuple[list[str] | None, bool]:
+    """(command, explicit) for kind "lint" or "test".
+
+    explicit = the project wrote it into .claude/hooks/config.json itself; otherwise it comes
+    from stack autodetection (the marker files that are really in the project).
+    """
     config = load_config()
-    if "lint" in config:
-        return _str_to_cmd(config["lint"])
+    if kind in config:
+        return _str_to_cmd(config[kind]), True
     stack = detect_stack()
-    if stack == "unknown":
-        return None
-    return STACKS[stack]["lint"]
+    return (None if stack == "unknown" else STACKS[stack][kind]), False
+
+
+def get_lint_cmd() -> list[str] | None:
+    return get_cmd("lint")[0]
 
 
 def get_test_cmd() -> list[str] | None:
-    config = load_config()
-    if "test" in config:
-        return _str_to_cmd(config["test"])
-    stack = detect_stack()
-    if stack == "unknown":
+    return get_cmd("test")[0]
+
+
+def _script_of(cmd: list[str]) -> tuple[str, str] | None:
+    """(manifest, script name) when the command only forwards to a script the project defines."""
+    if cmd[0] == "npm" and cmd[1:2] == ["test"]:
+        return "package.json", "test"
+    if cmd[0] == "npm" and cmd[1:2] == ["run"] and len(cmd) > 2:
+        return "package.json", cmd[2]
+    if cmd[0] == "composer" and cmd[1:2] in (["run"], ["run-script"]) and len(cmd) > 2:
+        return "composer.json", cmd[2]
+    if cmd[0] == "composer" and cmd[1:2] in (["lint"], ["test"]):
+        return "composer.json", cmd[1]
+    return None
+
+
+def why_unavailable(cmd: list[str]) -> str:
+    """'' when the command can run; otherwise the reason it cannot.
+
+    A tool that is installed is not enough: `npm run lint` without a "lint" script fails on
+    every commit of a project that simply has no lint yet.
+    """
+    if not cmd_exists(cmd):
+        return f"`{cmd[0]}` is not installed"
+    script = _script_of(cmd)
+    if script:
+        manifest, name = script
+        try:
+            scripts = json.loads((get_project_root() / manifest).read_text(encoding="utf-8")).get("scripts", {})
+        except (OSError, json.JSONDecodeError):
+            return f"{manifest} is missing or unreadable"
+        if name not in scripts:
+            return f'{manifest} has no "{name}" script'
+    return ""
+
+
+def guard_command(kind: str, label: str, guard_id: str) -> list[str] | None:
+    """The command the guard should run, or None after saying out loud that nothing is checked.
+
+    A command the project itself put into config.json and that cannot run BLOCKS — a promise
+    that silently checks nothing is worse than no guard. An autodetected command whose tool or
+    script is not there yet lets the commit through with a visible warning: a project that has
+    no lint or tests yet must still be able to make its first commits.
+    """
+    cmd, explicit = get_cmd(kind)
+    if not cmd:
+        print(f'⚠️  [WARN] {label} guard checks NOTHING: unknown stack and no "{kind}" in .claude/hooks/config.json')
         return None
-    return STACKS[stack]["test"]
+    reason = why_unavailable(cmd)
+    if not reason:
+        return cmd
+    text = " ".join(cmd)
+    if explicit:
+        block(
+            f"❌ [BLOCK] {label} command from .claude/hooks/config.json cannot run: {text}\n"
+            f"   {reason}\n\n"
+            f'   Fix the "{kind}" entry, or remove it to use stack autodetection.\n'
+            f"   Bypass (no audit):  SKIP={guard_id} git commit ..."
+        )
+    print(f"⚠️  [WARN] {label} guard checks NOTHING: {text} — {reason}\n"
+          f'   Autodetected for this stack. Set it up, or put your own command under "{kind}" in .claude/hooks/config.json')
+    return None
+
+
+def doctor_lines() -> list[tuple[bool, str, str]]:
+    """What the lint and test guards will really do, for `npm run doctor`: (fine, message, hint)."""
+    lines = []
+    for kind, label in (("lint", "Lint"), ("test", "Test")):
+        cmd, explicit = get_cmd(kind)
+        source = "config.json" if explicit else f"autodetected: {detect_stack()}"
+        if not cmd:
+            lines.append((False, f"{label} guard checks nothing — unknown stack",
+                          f'Add "{kind}" to .claude/hooks/config.json when the project has one.'))
+            continue
+        reason = why_unavailable(cmd)
+        if reason:
+            verdict = "BLOCKS every commit" if explicit else "checks nothing"
+            lines.append((False, f"{label} guard {verdict}: {' '.join(cmd)} ({source}) — {reason}",
+                          f'Set it up, or change "{kind}" in .claude/hooks/config.json.'))
+        else:
+            lines.append((True, f"{label} guard runs: {' '.join(cmd)}  ({source})", ""))
+    return lines
 
 
 def get_adr_patterns() -> list[tuple[str, str]]:

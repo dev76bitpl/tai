@@ -113,6 +113,26 @@ def _generated_config(template_root: Path, dest: Path, stack):
     return json.loads((dest / ".claude" / "hooks" / "config.json").read_text(encoding="utf-8"))
 
 
+class TestGuardCommandsInNewProject:
+    """A new project must not inherit lint/test commands of a stack it does not use."""
+
+    def test_should_not_ship_lint_or_test_commands_in_the_example(self):
+        example = json.loads(REAL_EXAMPLE.read_text(encoding="utf-8"))
+        assert "lint" not in example and "test" not in example
+
+    @pytest.mark.parametrize("stack", [None, "node", "laravel", "prestashop"])
+    def test_should_leave_guard_commands_to_autodetection_after_init(self, real_template, dest, stack):
+        data = _generated_config(real_template, dest, stack)
+        assert "lint" not in data and "test" not in data
+
+    def test_should_show_lint_and_test_guard_output_on_every_commit(self):
+        # verbose: true — otherwise "checks NOTHING" hides behind a green "Passed"
+        config = (ROOT / ".pre-commit-config.yaml").read_text(encoding="utf-8")
+        for hook in ("guard-lint", "guard-tests"):
+            block = config.split(f"- id: {hook}\n", 1)[1].split("- id: ", 1)[0]
+            assert "verbose: true" in block, hook
+
+
 class TestStackFlag:
     def test_should_leave_guards_on_defaults_when_no_stack_is_given(self, real_template, dest):
         data = _generated_config(real_template, dest, None)
