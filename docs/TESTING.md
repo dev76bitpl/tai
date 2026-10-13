@@ -102,6 +102,26 @@ Checklisty testów manualnych dla krytycznych flow.
 - [ ] Usuń z pliku wpis jednego strażnika, `npm run doctor` → ostrzeżenie z jego nazwą; przywróć wpis
 - [ ] Bez `pytest` na maszynie: ostrzeżenie z poleceniem instalacji, raport nadal kończy się sukcesem
 
+### Scenariusz 10c — prowadzony start projektu
+
+Na świeżej kopii szablonu **poza** repo szablonu (w samym szablonie tylko `--dry-run`):
+
+- [ ] `python3 scripts/new-project.py --init` w terminalu → po sprzątaniu idą kroki 1–6, każdy z pytaniem i wynikiem `✓` / `–`
+- [ ] `git branch --show-current` → `main`, także na maszynie bez `init.defaultBranch`
+- [ ] Krok „Repo na GitHubie”: Enter → pominięty; adres → `git remote -v` pokazuje `origin`; `wlasciciel/nazwa` → repo powstaje na GitHubie, nic nie jest wypychane
+- [ ] Krok „Etykiety zgłoszeń” bez repo na GitHubie → pominięty z wyjaśnieniem
+- [ ] Krok „Kontrola środowiska” → raport `doctor`; przy czerwonym raporcie pytanie „Poprosić Claude o pomoc z tym krokiem?”
+- [ ] Krok „Brief projektu”: „tak” → Claude Code startuje i od razu prowadzi wywiad, po jednym pytaniu; mętna odpowiedź → dopytanie
+- [ ] Po wywiadzie i zgodzie: `.claude/hooks/config.json` ma `src_dirs` zgodne z tabelą stosów (`python3 scripts/set-stack.py --list`), a dla wordpress / prestashop / magento aktywną grupę wzorców ADR
+- [ ] `python3 scripts/project-setup.py` uruchomiony ponownie → kroki zrobione są pomijane; projekt z własnym briefem → „wywiad pominięty”
+- [ ] `python3 scripts/new-project.py --init < /dev/null` (bez terminala) → żadnego pytania, sama lista kroków
+
+### Scenariusz 10d — strażnicy dopasowani do stosu
+
+- [ ] Projekt bez platformy sklepowej, nowy plik w `modules/` → `guard-adr` nie blokuje; po `python3 scripts/set-stack.py prestashop` → blokuje „nowy moduł PrestaShop”
+- [ ] `src/price.py` + `tests/test_price.py` w jednym commicie → `guard-tests-with-src` przepuszcza; samo `src/price.py` → blokuje
+- [ ] Po `python3 scripts/set-stack.py laravel`: `app/Service/Order.php` bez testu → blokuje; z `tests/Service/OrderTest.php` → przepuszcza
+
 ### Scenariusz 11 — release-please creates Release PR
 
 - [ ] Po merge feat/fix commitów do main, workflow `Release Please` runs

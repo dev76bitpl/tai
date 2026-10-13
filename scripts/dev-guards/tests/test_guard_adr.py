@@ -1,4 +1,7 @@
 """Tests for scripts/dev-guards/guard_adr.py — architectural changes need an ADR or [no-adr]."""
+import json
+from pathlib import Path
+
 import pytest
 
 from harness import BLOCKED, run_guard, stage, write_config
@@ -76,3 +79,44 @@ def test_should_block_on_pattern_added_in_local_config(repo):
     result = run_guard(GUARD, repo)
     assert result.returncode == BLOCKED
     assert "billing rules change" in result.stderr
+
+
+# ── the config a new project starts with: platform patterns are opt-in ───────
+
+EXAMPLE = Path(__file__).resolve().parents[3] / ".claude" / "hooks" / "config.json.example"
+
+
+def _example_config() -> dict:
+    return json.loads(EXAMPLE.read_text(encoding="utf-8"))
+
+
+@pytest.mark.parametrize("path", [
+    "modules/M4-guards/OUTLINE.md", "themes/notes.md", "override/readme.txt",
+    "wp-content/plugins/demo/demo.php", "app/code/Vendor/Module/registration.php",
+])
+def test_should_pass_platform_looking_path_with_the_config_a_new_project_gets(repo, path):
+    write_config(repo, _example_config())
+    stage(repo, path)
+    result = run_guard(GUARD, repo)
+    assert result.returncode == 0, result.stderr
+
+
+@pytest.mark.parametrize("platform, path, label", [
+    ("PrestaShop", "modules/mymodule/mymodule.php", "nowy moduł PrestaShop"),
+    ("WordPress", "wp-content/plugins/demo/demo.php", "nowy plugin WordPress"),
+    ("Magento", "app/code/Vendor/Module/registration.php", "nowy moduł Magento"),
+])
+def test_should_block_platform_path_once_the_project_enables_its_group(repo, platform, path, label):
+    config = _example_config()
+    config["adr_patterns"] += config["_adr_patterns_optional"][platform]
+    write_config(repo, config)
+    stage(repo, path)
+    result = run_guard(GUARD, repo)
+    assert result.returncode == BLOCKED
+    assert label in result.stderr
+
+
+def test_should_still_block_generic_pattern_with_the_config_a_new_project_gets(repo):
+    write_config(repo, _example_config())
+    stage(repo, "migrations/2026_add_orders.py")
+    assert run_guard(GUARD, repo).returncode == BLOCKED

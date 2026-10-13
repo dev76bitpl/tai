@@ -19,6 +19,7 @@ def _load():
 
 
 mod = _load()
+git_mod = sys.modules["new_project_git"]  # git steps live in their own module
 create_config_json = mod.create_config_json
 create_settings_local = mod.create_settings_local
 README_SCAFFOLD = mod.README_SCAFFOLD
@@ -90,6 +91,164 @@ class TestCreateConfigJson:
         empty_template.mkdir()
         create_config_json(dest, empty_template, dry_run=False)
         assert not (dest / ".claude" / "hooks" / "config.json").exists()
+
+
+# ── --stack is optional: the scope wizard normally sets the stack (set-stack.py) ──
+
+REAL_EXAMPLE = ROOT / ".claude" / "hooks" / "config.json.example"
+
+
+@pytest.fixture()
+def real_template(tmp_path: Path) -> Path:
+    """A template root holding the repository's real config.json.example."""
+    hooks = tmp_path / "real-template" / ".claude" / "hooks"
+    hooks.mkdir(parents=True)
+    (hooks / "config.json.example").write_text(REAL_EXAMPLE.read_text(encoding="utf-8"), encoding="utf-8")
+    return tmp_path / "real-template"
+
+
+def _generated_config(template_root: Path, dest: Path, stack):
+    (dest / ".claude" / "hooks").mkdir(parents=True)
+    create_config_json(dest, template_root, dry_run=False, stack=stack)
+    return json.loads((dest / ".claude" / "hooks" / "config.json").read_text(encoding="utf-8"))
+
+
+class TestStackFlag:
+    def test_should_leave_guards_on_defaults_when_no_stack_is_given(self, real_template, dest):
+        data = _generated_config(real_template, dest, None)
+        assert data["src_dirs"] == ["src"]
+        active = " ".join(description for _, description in data["adr_patterns"])
+        assert "PrestaShop" not in active and "WordPress" not in active and "Magento" not in active
+
+    def test_should_apply_the_stack_table_when_flag_is_given(self, real_template, dest):
+        data = _generated_config(real_template, dest, "prestashop")
+        assert data["src_dirs"] == ["modules", "override"]
+        assert "nowy moduł PrestaShop" in [description for _, description in data["adr_patterns"]]
+
+    def test_should_not_ask_anything_during_init(self):
+        with mock.patch.object(sys, "argv", ["new-project.py", "--init", "--no-git"]):
+            with mock.patch("builtins.input", side_effect=AssertionError("init must not ask")):
+                with mock.patch.object(mod, "init_in_place") as m:
+                    mod.main()
+        m.assert_called_once_with(ROOT, False, do_git=False, stack=None)
+
+    def test_should_pass_stack_from_flag_to_init(self):
+        with mock.patch.object(sys, "argv", ["new-project.py", "--init", "--no-git", "--stack", "laravel"]):
+            with mock.patch.object(mod, "init_in_place") as m:
+                mod.main()
+        m.assert_called_once_with(ROOT, False, do_git=False, stack="laravel")
+
+    def test_should_reject_unknown_stack_flag(self):
+        with mock.patch.object(sys, "argv", ["new-project.py", "--init", "--stack", "cobol"]):
+            with pytest.raises(SystemExit):
+                mod.main()
+
+    def test_should_apply_stack_during_init(self, real_template):
+        (real_template / "scripts").mkdir()
+        with mock.patch.object(mod, "create_settings_local"):
+            mod.init_in_place(real_template, dry_run=False, do_git=False, stack="laravel")
+        data = json.loads((real_template / ".claude" / "hooks" / "config.json").read_text(encoding="utf-8"))
+        assert data["src_dirs"] == ["app"]
+
+    def test_should_keep_set_stack_script_in_the_project_after_init(self, tmp_path):
+        # the scope wizard runs it after the interview; new-project.py itself is deleted
+        (tmp_path / "scripts").mkdir()
+        (tmp_path / "scripts" / "set-stack.py").write_text("# stays")
+        (tmp_path / "scripts" / "new-project.py").write_text("# self")
+        (tmp_path / ".claude" / "hooks").mkdir(parents=True)
+        with mock.patch.object(mod, "create_config_json"):
+            with mock.patch.object(mod, "create_settings_local"):
+                mod.init_in_place(tmp_path, dry_run=False, do_git=False)
+        assert (tmp_path / "scripts" / "set-stack.py").exists()
+        assert not (tmp_path / "scripts" / "new-project.py").exists()
+
+
+# ── after cleaning, init hands over to the guided steps (project-setup.py) ───
+
+class TestHandOver:
+    def _root(self, tmp_path: Path, with_setup: bool = True) -> Path:
+        (tmp_path / ".claude" / "hooks").mkdir(parents=True)
+        (tmp_path / "scripts").mkdir()
+        if with_setup:
+            (tmp_path / "scripts" / "project-setup.py").write_text("# steps")
+        return tmp_path
+
+    def test_should_run_project_setup_in_the_project_at_the_end_of_init(self, tmp_path):
+        root = self._root(tmp_path)
+        with mock.patch.object(mod, "create_config_json"), mock.patch.object(mod, "create_settings_local"), \
+             mock.patch.object(mod.os, "chdir") as chdir, mock.patch.object(mod.os, "execv") as execv:
+            mod.init_in_place(root, dry_run=False, do_git=False)
+        chdir.assert_called_once_with(root)
+        execv.assert_called_once_with(sys.executable, [sys.executable, str(root / "scripts" / "project-setup.py")])
+
+    def test_should_not_hand_over_during_dry_run(self, tmp_path):
+        root = self._root(tmp_path)
+        with mock.patch.object(mod, "hand_over_to_setup") as hand_over:
+            mod.init_in_place(root, dry_run=True, do_git=False)
+        hand_over.assert_not_called()
+
+    def test_should_point_to_setup_docs_when_steps_script_is_missing(self, tmp_path, capsys):
+        root = self._root(tmp_path, with_setup=False)
+        with mock.patch.object(mod.os, "execv") as execv:
+            mod.hand_over_to_setup(root)
+        execv.assert_not_called()
+        assert "docs/SETUP.md" in capsys.readouterr().out
+
+    def test_should_keep_the_steps_script_in_the_project_after_init(self, tmp_path):
+        # it has to be runnable again after a failed step is fixed; new-project.py deletes itself
+        root = self._root(tmp_path)
+        (root / "scripts" / "new-project.py").write_text("# self")
+        with mock.patch.object(mod, "create_config_json"), mock.patch.object(mod, "create_settings_local"), \
+             mock.patch.object(mod, "hand_over_to_setup"):
+            mod.init_in_place(root, dry_run=False, do_git=False)
+        assert (root / "scripts" / "project-setup.py").exists()
+        assert not (root / "scripts" / "new-project.py").exists()
+
+    def test_should_not_tell_the_user_to_delete_git_in_readme(self):
+        # README used to say `rm -rf .git && git init` after --init, wiping the freshly
+        # installed guards and the init commit
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        assert "rm -rf .git" not in readme
+
+
+class TestTemplateOnlyScripts:
+    def test_should_remove_every_template_only_script_during_init(self, tmp_path):
+        (tmp_path / ".claude" / "hooks").mkdir(parents=True)
+        (tmp_path / "scripts").mkdir()
+        for name in [*mod.TEMPLATE_ONLY_SCRIPTS, "set-stack.py", "project-setup.py"]:
+            (tmp_path / "scripts" / name).write_text("# x")
+        with mock.patch.object(mod, "create_config_json"), mock.patch.object(mod, "create_settings_local"), \
+             mock.patch.object(mod, "hand_over_to_setup"):
+            mod.init_in_place(tmp_path, dry_run=False, do_git=False)
+        left = sorted(p.name for p in (tmp_path / "scripts").iterdir())
+        assert left == ["project-setup.py", "set-stack.py"]
+
+    def test_should_list_every_new_project_file_as_template_only(self):
+        on_disk = {p.name for p in (ROOT / "scripts").glob("new[-_]project*.py")}
+        assert on_disk == set(mod.TEMPLATE_ONLY_SCRIPTS)
+
+    @pytest.mark.parametrize("name", ["new-project.py", "new_project_git.py"])
+    def test_should_keep_logic_files_under_the_size_limit(self, name):
+        # CLAUDE.md rule 20: logic files max 400 lines; data files (new_project_data.py) are exempt
+        assert len((ROOT / "scripts" / name).read_text(encoding="utf-8").splitlines()) <= 400
+
+
+class TestMainBranch:
+    def test_should_start_on_main_whatever_the_machine_git_config_says(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("GIT_CONFIG_GLOBAL", "/dev/null")
+        monkeypatch.setenv("GIT_CONFIG_SYSTEM", "/dev/null")
+        for name in ("GIT_AUTHOR_NAME", "GIT_COMMITTER_NAME"):
+            monkeypatch.setenv(name, "Test")
+        for name in ("GIT_AUTHOR_EMAIL", "GIT_COMMITTER_EMAIL"):
+            monkeypatch.setenv(name, "test@example.com")
+        for name in ("GIT_DIR", "GIT_INDEX_FILE", "GIT_WORK_TREE"):
+            monkeypatch.delenv(name, raising=False)
+        (tmp_path / "file.txt").write_text("x")
+        mod.fresh_git_history(tmp_path, dry_run=False)
+        import subprocess
+        branch = subprocess.run(["git", "branch", "--show-current"], cwd=tmp_path,
+                                capture_output=True, text=True).stdout.strip()
+        assert branch == "main"
 
 
 # ── create_settings_local ─────────────────────────────────────────────────────
@@ -236,13 +395,13 @@ class TestInitInPlace:
         with mock.patch.object(sys, "argv", ["new-project.py", "--init", "--dry-run"]):
             with mock.patch.object(mod, "init_in_place") as m:
                 mod.main()
-        m.assert_called_once_with(ROOT, True, do_git=True)
+        m.assert_called_once_with(ROOT, True, do_git=True, stack=None)
 
     def test_no_git_flag_disables_git(self, tmp_path):
         with mock.patch.object(sys, "argv", ["new-project.py", "--init", "--no-git"]):
             with mock.patch.object(mod, "init_in_place") as m:
                 mod.main()
-        m.assert_called_once_with(ROOT, False, do_git=False)
+        m.assert_called_once_with(ROOT, False, do_git=False, stack=None)
 
 
 # ── reset_versioning ───────────────────────────────────────────────────────────
@@ -316,9 +475,9 @@ class TestFreshGitHistory:
     def test_removes_git_dir_and_makes_init_commit(self, tmp_path):
         (tmp_path / ".git").mkdir()
         calls = []
-        with mock.patch.object(mod.subprocess, "run",
+        with mock.patch.object(git_mod.subprocess, "run",
                                side_effect=lambda *a, **k: calls.append(a[0])) as _run:
-            with mock.patch.object(mod.shutil, "rmtree") as rmtree:
+            with mock.patch.object(git_mod.shutil, "rmtree") as rmtree:
                 mod.fresh_git_history(tmp_path, dry_run=False)
         rmtree.assert_called_once()
         # git init, git add -A, git commit ... in order
@@ -328,17 +487,17 @@ class TestFreshGitHistory:
 
     def test_dry_run_runs_no_git(self, tmp_path):
         (tmp_path / ".git").mkdir()
-        with mock.patch.object(mod.subprocess, "run") as run:
-            with mock.patch.object(mod.shutil, "rmtree") as rmtree:
+        with mock.patch.object(git_mod.subprocess, "run") as run:
+            with mock.patch.object(git_mod.shutil, "rmtree") as rmtree:
                 mod.fresh_git_history(tmp_path, dry_run=True)
         run.assert_not_called()
         rmtree.assert_not_called()
 
     def test_git_failure_warns_not_raises(self, tmp_path):
         import subprocess as sp
-        with mock.patch.object(mod.subprocess, "run",
+        with mock.patch.object(git_mod.subprocess, "run",
                                side_effect=sp.CalledProcessError(1, "git")):
-            with mock.patch.object(mod.shutil, "rmtree"):
+            with mock.patch.object(git_mod.shutil, "rmtree"):
                 # Must not raise — cleaning already happened.
                 mod.fresh_git_history(tmp_path, dry_run=False)
 
@@ -387,13 +546,13 @@ class TestInitInPlaceVersioning:
 
 class TestInstallGuards:
     def test_dry_run_runs_nothing(self, tmp_path):
-        with mock.patch.object(mod.subprocess, "run") as run:
+        with mock.patch.object(git_mod.subprocess, "run") as run:
             mod.install_guards(tmp_path, dry_run=True)
         run.assert_not_called()
 
     def test_installs_when_pre_commit_available(self, tmp_path):
-        with mock.patch.object(mod, "_resolve_pre_commit", return_value=["pre-commit"]):
-            with mock.patch.object(mod.subprocess, "run",
+        with mock.patch.object(git_mod, "_resolve_pre_commit", return_value=["pre-commit"]):
+            with mock.patch.object(git_mod.subprocess, "run",
                                    return_value=mock.Mock(returncode=0, stderr="")) as run:
                 mod.install_guards(tmp_path, dry_run=False)
         args = run.call_args[0][0]
@@ -401,9 +560,9 @@ class TestInstallGuards:
         assert "--hook-type" in args and "commit-msg" in args
 
     def test_warns_when_pre_commit_missing(self, tmp_path):
-        with mock.patch.object(mod, "_resolve_pre_commit", return_value=None):
-            with mock.patch.object(mod.subprocess, "run") as run:
-                with mock.patch.object(mod, "warn") as warn:
+        with mock.patch.object(git_mod, "_resolve_pre_commit", return_value=None):
+            with mock.patch.object(git_mod.subprocess, "run") as run:
+                with mock.patch.object(git_mod, "warn") as warn:
                     mod.install_guards(tmp_path, dry_run=False)
         run.assert_not_called()
         warn.assert_called_once()
