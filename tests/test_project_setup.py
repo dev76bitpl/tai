@@ -206,7 +206,10 @@ def test_should_fail_the_step_when_gh_is_missing(mod, tmp_path):
 # ── step: labels ─────────────────────────────────────────────────────────────
 
 GITHUB = {"git remote get-url origin": (0, "git@github.com:acme/shop.git\n"),
-          "gh repo view": (0, "acme/shop\n")}
+          "gh repo view": (0, "acme/shop\n"),
+          # repository settings already in place (longer prefix first: both start with gh api repos/acme/shop)
+          "gh api repos/acme/shop/actions/permissions/workflow": (0, "write true\n"),
+          "gh api repos/acme/shop": (0, "true\n")}
 
 
 def test_should_skip_labels_when_no_github_repository_is_connected(mod):
@@ -668,7 +671,7 @@ def test_should_offer_ai_help_with_command_and_error_when_a_step_fails(mod, tmp_
     assert "Kod wyjścia: 1" in prompt
     assert "pre-commit not available" in prompt
     assert "python3 scripts/project-setup.py" in prompt
-    assert "Krok 5/7" not in capsys.readouterr().out  # later steps wait for the fix
+    assert "Krok 6/8" not in capsys.readouterr().out  # later steps wait for the fix
 
 
 def test_should_run_the_step_again_and_continue_after_ai_help(mod, tmp_path, capsys):
@@ -683,7 +686,7 @@ def test_should_run_the_step_again_and_continue_after_ai_help(mod, tmp_path, cap
     doctor_runs = [c for c in fake.commands() if c.endswith("scripts/doctor.py")]
     assert len(doctor_runs) == 2
     out = capsys.readouterr().out
-    assert "Krok 5/7" in out and "Krok 7/7" in out and "Start projektu zakończony" in out
+    assert "Krok 6/8" in out and "Krok 8/8" in out and "Start projektu zakończony" in out
 
 
 def test_should_ask_about_retry_also_when_user_declines_ai_help(mod, tmp_path):
@@ -722,3 +725,83 @@ def test_should_print_plain_text_when_output_is_not_a_terminal(mod, tmp_path, ca
     Fake(mod, answers=[""], results={**GITHUB, "gh label list": (0, "owner\nidea\n")})
     mod.main([])
     assert "\033[" not in capsys.readouterr().out
+
+
+# ── step: repository settings (docs/SETUP.md step 1) ─────────────────────────
+
+SETTINGS_OFF = {"git remote get-url origin": (0, "git@github-work:acme/shop.git\n"),
+                "gh repo view": (0, "acme/shop\n"),
+                "gh api repos/acme/shop/actions/permissions/workflow": (0, "read false\n"),
+                "gh api repos/acme/shop": (0, "false\n")}
+
+
+def _release_workflow(root: Path) -> None:
+    (root / ".github" / "workflows").mkdir(parents=True)
+    (root / ".github" / "workflows" / "release-please.yml").write_text("name: release\n", encoding="utf-8")
+
+
+def test_should_put_repo_settings_right_after_the_repository_step(mod):
+    order = [step for _, _, _, step in mod.STEPS]
+    assert order.index(mod.step_repo_settings) == order.index(mod.step_remote) + 1
+
+
+def test_should_apply_both_settings_after_one_question_when_project_has_release_automation(mod, tmp_path, capsys):
+    _release_workflow(tmp_path)
+    fake = Fake(mod, answers=[""], results=SETTINGS_OFF)
+    mark, message = mod.step_repo_settings()
+    assert mark == mod.DONE
+    assert len(fake.asked) == 1
+    applied = [c for c in fake.commands() if " -X " in c]
+    assert applied == [
+        "gh api -X PATCH repos/acme/shop -F delete_branch_on_merge=true",
+        "gh api -X PUT repos/acme/shop/actions/permissions/workflow -f default_workflow_permissions=write "
+        "-F can_approve_pull_request_reviews=true",
+    ]
+    out = capsys.readouterr().out
+    assert "automat wydań" in out  # says what the broader permission is for before asking
+
+
+def test_should_not_propose_actions_permissions_when_project_has_no_release_automation(mod, tmp_path, capsys):
+    fake = Fake(mod, answers=[""], results=SETTINGS_OFF)
+    assert mod.step_repo_settings()[0] == mod.DONE
+    applied = [c for c in fake.commands() if " -X " in c]
+    assert applied == ["gh api -X PATCH repos/acme/shop -F delete_branch_on_merge=true"]
+    assert "uprawnienia automatów" not in capsys.readouterr().out
+
+
+def test_should_change_nothing_when_user_declines_repo_settings(mod, tmp_path):
+    _release_workflow(tmp_path)
+    fake = Fake(mod, answers=["n"], results=SETTINGS_OFF)
+    mark, message = mod.step_repo_settings()
+    assert mark == mod.SKIPPED and "krok 1" in message
+    assert not any(" -X " in c for c in fake.commands())
+
+
+def test_should_skip_repo_settings_without_asking_when_they_are_in_place(mod, tmp_path):
+    _release_workflow(tmp_path)
+    fake = Fake(mod, results=GITHUB)
+    assert mod.step_repo_settings()[0] == mod.DONE
+    assert fake.asked == [] and not any(" -X " in c for c in fake.commands())
+
+
+def test_should_show_manual_commands_and_go_on_when_github_refuses(mod, tmp_path, capsys):
+    _release_workflow(tmp_path)
+    Fake(mod, answers=[""], results={**SETTINGS_OFF, "gh api -X PUT": (1, "HTTP 403")})
+    mark, message = mod.step_repo_settings()  # no StepFailed: the start must not stop here
+    assert mark == mod.SKIPPED and "uprawnienia automatów" in message and "kasowanie" not in message
+    out = capsys.readouterr().out
+    assert "gh api -X PUT repos/acme/shop/actions/permissions/workflow" in out
+
+
+@pytest.mark.parametrize("results, reason", [
+    ({"git remote get-url origin": (2, "")}, "nie ma podpiętego repo"),
+    ({"git remote get-url origin": (0, "git@gitlab.com:a/b.git\n"), "gh repo view": (1, "no known host")}, "nie jest na GitHubie"),
+    ({"git remote get-url origin": (0, "git@github.com:a/b.git\n"), "gh repo view": (127, "")}, "gh"),
+    ({"git remote get-url origin": (0, "git@github.com:a/b.git\n"), "gh repo view": (0, "a/b\n"),
+      "gh api repos/a/b": (1, "HTTP 404")}, "nie udało się odczytać"),
+])
+def test_should_skip_repo_settings_with_a_reason_when_they_cannot_be_read(mod, results, reason):
+    fake = Fake(mod, results=results)
+    mark, message = mod.step_repo_settings()
+    assert mark == mod.SKIPPED and reason in message
+    assert fake.asked == [] and not any(" -X " in c for c in fake.commands())

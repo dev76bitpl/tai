@@ -72,6 +72,17 @@ istniał zawsze, jako szkielet).
    odbywały się wtedy w projekcie z kompletem zbędnych skilli; krok szablonu ostrzega teraz,
    gdy grupa „Projektowanie wyglądu” została odrzucona.
 
+10. **Kreator ustawia w repo na GitHubie to, co instrukcja nazywa blokującym — po jednym pytaniu,
+    a uprawnienia automatów tylko projektom z automatem wydań** (uzupełnienie z 2026-10-13, #186).
+    Kasowanie gałęzi po scaleniu jest proponowane zawsze. Zapis do repo i zatwierdzanie pull
+    requestów przez automaty GitHuba to szersze uprawnienie, niż ma świeże repo, więc krok
+    proponuje je tylko wtedy, gdy projekt ma `.github/workflows/release-please*.yml` — bez nich
+    automat wydań pada po każdym scaleniu do `main`. Gdy GitHub odmówi, krok pokazuje polecenia
+    i start idzie dalej. `npm run doctor` ostrzega według tej samej reguły. Dlaczego: kto przechodzi
+    start kreatorem, nie zagląda do kroku 1 instrukcji — pominięto go w co najmniej trzech projektach.
+    Odrzucone: ustawiać oba zawsze (uprawnienia bez potrzeby); lista do wyboru (decyzja właściciela:
+    jedno pytanie tak/nie).
+
 ## Odrzucone alternatywy
 
 | Opcja | Dlaczego odrzucona |

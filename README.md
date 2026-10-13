@@ -21,11 +21,12 @@ python3 scripts/project-setup.py
 `--init` usuwa pliki template-only (`tests/`, `README.md` → scaffold, sam siebie), zakłada świeżą historię Gita na gałęzi `main`, instaluje strażników commita i konfiguruje Claude Code hooks. Potem prowadzi przez kroki startu, każdy z pytaniem i wynikiem ✓ / ✗:
 
 1. **Repo** — adres istniejącego albo `wlasciciel/nazwa` nowego do założenia na GitHubie (Enter = pomiń)
-2. **Etykiety zgłoszeń** — `owner` i `idea`
-3. **Kontrola środowiska** — raport `doctor`
-4. **Brief** — wywiad `scope` w Claude Code: zakres, dla kogo i stos; ze stosu `scripts/set-stack.py` ustawia strażników (katalogi kodu, wzorce ADR platformy — tabela w `docs/SETUP.md`, krok 8b). Projekt z gotowym briefem wywiad pomija
-5. **Skille** — wybór grup, które zostają w projekcie (stos podpowiada, które); niewybrane znikają i nie wracają przy synchronizacji. Zmiana później: `python3 scripts/select-skills.py`
-6. **Szablon graficzny** — Claude Code przygotowuje dwa kierunki wyglądu (każdy jasny i ciemny) jako makiety w `mockups/propozycje/`; po wyborze zasady trafiają do `docs/UI_GUIDELINES.md`. Projekt bez interfejsu pomija krok
+2. **Ustawienia repo** — kasowanie gałęzi po scaleniu i, gdy projekt ma automat wydań, uprawnienia automatów GitHuba; jedno pytanie
+3. **Etykiety zgłoszeń** — `owner` i `idea`
+4. **Kontrola środowiska** — raport `doctor`
+5. **Brief** — wywiad `scope` w Claude Code: zakres, dla kogo i stos; ze stosu `scripts/set-stack.py` ustawia strażników (katalogi kodu, wzorce ADR platformy — tabela w `docs/SETUP.md`, krok 8b). Projekt z gotowym briefem wywiad pomija
+6. **Skille** — wybór grup, które zostają w projekcie (stos podpowiada, które); niewybrane znikają i nie wracają przy synchronizacji. Zmiana później: `python3 scripts/select-skills.py`
+7. **Szablon graficzny** — Claude Code przygotowuje dwa kierunki wyglądu (każdy jasny i ciemny) jako makiety w `mockups/propozycje/`; po wyborze zasady trafiają do `docs/UI_GUIDELINES.md`. Projekt bez interfejsu pomija krok
 
 Gdy krok się nie uda, skrypt proponuje uruchomienie Claude Code z opisem błędu, a po powrocie ponowienie kroku. Claude Code otwiera się jako etap: po wyjściu z niego (`/exit`) wracasz do kroków, skrypt sprawdza, czy brief, stos i ADR-001 powstały, i kończy podsumowaniem. Bez terminala (AI, CI) o nic nie pyta — drukuje listę kroków. Skille zostają gotowe do pracy. Testy strażników zostają — mieszkają obok nich (`.claude/hooks/tests/`, `scripts/dev-guards/tests/`), a `tests/` to testy narzędzi samego szablonu.
 

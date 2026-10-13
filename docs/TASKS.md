@@ -151,6 +151,27 @@ Historia (zrobione przed przejściem):
 
 ## Stan sesji
 
+- 2026-10-13: **Kreator startu ustawia w repo na GitHubie to, co instrukcja nazywa blokującym (#186).**
+  Po ludzku: start projektu zakładał repo i na tym kończył. Dwa ustawienia z kroku 1 instrukcji
+  (kasowanie gałęzi po scaleniu, uprawnienia automatów GitHuba) zostawały w stanie domyślnym, bo
+  kto idzie przez kreator, nie zagląda do instrukcji — a bez drugiego automat wydań pada po każdym
+  scaleniu do `main`. Teraz krok mówi, czego brakuje, pyta raz i ustawia; doctor ostrzega o tym
+  w projektach postawionych wcześniej.
+  Decyzje właściciela: jedno pytanie tak/nie zamiast listy do wyboru; uprawnienia automatów
+  proponowane tylko wtedy, gdy projekt ma automat wydań — to szersze uprawnienie, niż ma świeże repo.
+  Technicznie: nowy `scripts/repo_settings.py` — `repo_slug()` (pyta `gh repo view`, więc działa
+  z aliasem SSH), `read_state()` (`delete_branch_on_merge`, `actions/permissions/workflow`),
+  `missing()` (reguła: `.github/workflows/release-please*.y*ml`), `apply()`, `step()` i
+  `doctor_check()`; moduł nie uruchamia procesów sam, dostaje `run` od wywołującego.
+  `scripts/project-setup.py`: krok „Ustawienia repo” zaraz po kroku repo (osiem kroków); odmowa
+  GitHuba nie zatrzymuje startu — pokazuje polecenia `gh api`. `scripts/doctor.py`: linia
+  w „Repository state”, nigdy nie czerwieni raportu. Testy w `tests/test_project_setup.py`
+  i `tests/test_doctor.py`; `docs/SETUP.md` krok 1 i tabela kroków, scenariusz 10g, ADR-005 decyzja 10.
+  Sprawdzone: 762 testy; odczyt stanu na prawdziwym GitHubie; ustawianie — próba właściciela na
+  repozytorium próbnym.
+  Wyszło przy okazji, nieruszone: doctor uruchomiony w osobnym katalogu roboczym Gita zgłasza brak
+  hooków (`.git` jest tam plikiem, nie katalogiem).
+
 - 2026-10-13: **Start projektu: kreator wraca do kroków, projekt wybiera skille, dochodzi szablon graficzny (#180, #183, #184).**
   Po ludzku: (1) po wyjściu z Claude Code użytkownik wraca do kroków startu zamiast do pustego
   terminala, skrypt sprawdza, co wywiad naprawdę zostawił, a na końcu jest podsumowanie; całość

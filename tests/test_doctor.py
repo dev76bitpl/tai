@@ -243,3 +243,61 @@ def test_should_exit_0_when_pytest_is_missing(doctor_rest_green, tmp_path, monke
     _write_local(tmp_path, _settings())
     monkeypatch.setattr(doctor_rest_green, "run", lambda cmd: (1, ""))
     assert doctor_rest_green.main() == 0
+
+
+# ── GitHub repository settings (docs/SETUP.md step 1) ────────────────────────
+
+def _gh(results):
+    def run(command):
+        text = " ".join(command)
+        for prefix, result in results.items():
+            if text.startswith(prefix):
+                return result
+        return 1, ""
+    return run
+
+
+def _release_workflow(root):
+    (root / ".github" / "workflows").mkdir(parents=True)
+    (root / ".github" / "workflows" / "release-please.yml").write_text("name: release\n", encoding="utf-8")
+
+
+def test_should_warn_when_repo_settings_are_at_github_defaults(doctor, tmp_path, monkeypatch, capsys):
+    _release_workflow(tmp_path)
+    monkeypatch.setattr(doctor, "run", _gh({
+        "gh repo view": (0, "acme/shop\n"),
+        "gh api repos/acme/shop/actions/permissions/workflow": (0, "read false\n"),
+        "gh api repos/acme/shop": (0, "false\n"),
+    }))
+    doctor.repo_settings.doctor_check(tmp_path, doctor.run, doctor.ok, doctor.warn)
+    out = capsys.readouterr().out
+    assert "⚠" in out and "kasowanie gałęzi" in out and "uprawnienia automatów" in out
+    assert "project-setup.py" in out
+
+
+def test_should_report_repo_settings_in_place(doctor, tmp_path, monkeypatch, capsys):
+    _release_workflow(tmp_path)
+    monkeypatch.setattr(doctor, "run", _gh({
+        "gh repo view": (0, "acme/shop\n"),
+        "gh api repos/acme/shop/actions/permissions/workflow": (0, "write true\n"),
+        "gh api repos/acme/shop": (0, "true\n"),
+    }))
+    doctor.repo_settings.doctor_check(tmp_path, doctor.run, doctor.ok, doctor.warn)
+    out = capsys.readouterr().out
+    assert "✓" in out and "acme/shop" in out and "⚠" not in out
+
+
+def test_should_say_nothing_about_repo_settings_without_a_github_repo(doctor, tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(doctor, "run", _gh({"gh repo view": (1, "no git remotes")}))
+    doctor.repo_settings.doctor_check(tmp_path, doctor.run, doctor.ok, doctor.warn)
+    assert capsys.readouterr().out == ""
+
+
+def test_should_never_fail_doctor_because_of_repo_settings(doctor_rest_green, tmp_path, monkeypatch):
+    _write_local(tmp_path, _settings())
+    monkeypatch.setattr(doctor_rest_green, "run", _gh({
+        "gh repo view": (0, "acme/shop\n"),
+        "gh api repos/acme/shop/actions/permissions/workflow": (0, "read false\n"),
+        "gh api repos/acme/shop": (0, "false\n"),
+    }))
+    assert doctor_rest_green.main() == 0

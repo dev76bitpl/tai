@@ -12,6 +12,7 @@ Reports prerequisites:
   - Claude Code hooks wired in .claude/settings.local.json (per machine)
   - AI template source: $AI_TEMPLATE_PATH, config.local.json or config.json (optional)
   - Docker running (optional but recommended)
+  - GitHub repo settings from docs/SETUP.md step 1 (optional — asks gh)
 
 Exit code 0 if all REQUIRED checks pass (optional checks may be ✗ without
 failing the overall exit code). Exit code 1 if any required check fails.
@@ -32,6 +33,8 @@ if os.name == "nt":
     os.system("")
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import repo_settings  # noqa: E402
 
 _USE_COLOR = sys.stdout.isatty() or os.environ.get("FORCE_COLOR") == "1"
 
@@ -381,6 +384,7 @@ def main() -> int:
 
     header("Repository state")
     check_git_branch()
+    repo_settings.doctor_check(REPO_ROOT, run, ok, warn)  # docs/SETUP.md step 1
 
     print()
     if all(required):
