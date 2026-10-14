@@ -134,7 +134,7 @@ export AI_TEMPLATE_PATH="$HOME/Projekty/76bit/tai"
 ```
 
 Ścieżka lokalna daje auto-weryfikację hooków i diff `*.md`; URL wystarcza do
-auto-syncu skilli. Ścieżka z konkretnej maszyny **nie powinna** trafiać do
+auto-syncu skilli. **Skille z lokalnego klona idą zawsze ze stanu `origin/main`**, nie z katalogu roboczego: gałąź w toku i niezacommitowane zmiany w klonie nie trafiają do projektów. Projekty widzą nową wersję szablonu po `git pull` (albo `git fetch`) w klonie. Klon bez `origin/main` → synchronizacja odmawia z komunikatem. Ścieżka z konkretnej maszyny **nie powinna** trafiać do
 commitowanego `config.json` — to warstwy 1 i 2.
 
 Autodetekcja rozpoznaje klon po zawartości (`is_template` + `skills-manifest.json`),

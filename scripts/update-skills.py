@@ -17,6 +17,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tarfile
 import tempfile
 from datetime import date, datetime
 from pathlib import Path
@@ -287,6 +288,44 @@ def clone_template(url: str) -> Path:
     return tmp
 
 
+# A local template clone is read at this ref, never from its working directory: whoever works
+# on the template in that directory would otherwise send unfinished, unmerged files to every
+# project on the machine (#179). Only what the sync reads is exported.
+RELEASED_REF = "origin/main"
+SYNC_PATHS = ["skills-manifest.json", ".claude/skills", "scripts/update-skills.py", ".gitleaksignore"]
+
+
+def is_git_clone(root: Path) -> bool:
+    return (root / ".git").exists()  # a directory in a clone, a file in a worktree
+
+
+def released_snapshot(root: Path) -> "tuple[Path | None, str]":
+    """(temp directory with the template at RELEASED_REF, "") or (None, reason). Caller removes it."""
+    def git(*args: str, **kw) -> subprocess.CompletedProcess:
+        return subprocess.run(["git", "-C", str(root), *args], capture_output=True, **kw)
+
+    head = git("rev-parse", "--verify", "-q", f"{RELEASED_REF}^{{commit}}", text=True)
+    if head.returncode != 0:
+        return None, f"klon szablonu {root} nie ma {RELEASED_REF} (git fetch w szablonie?)"
+    listed = git("ls-tree", "--name-only", RELEASED_REF, "--", *SYNC_PATHS, text=True)
+    paths = listed.stdout.split()
+    if listed.returncode != 0 or not paths:
+        return None, f"{RELEASED_REF} w {root} nie ma plików skilli"
+    archive = git("archive", "--format=tar", RELEASED_REF, "--", *paths)
+    if archive.returncode != 0:
+        return None, f"nie udało się odczytać {RELEASED_REF} z {root}"
+    tmp = Path(tempfile.mkdtemp(prefix="ai-template-released-"))
+    with tempfile.TemporaryFile() as raw:
+        raw.write(archive.stdout)
+        raw.seek(0)
+        with tarfile.open(fileobj=raw) as tar:
+            if hasattr(tarfile, "data_filter"):
+                tar.extractall(tmp, filter="data")
+            else:  # Python without extraction filters; the archive comes from our own repo
+                tar.extractall(tmp)
+    return tmp, ""
+
+
 def find_template_ref() -> "Path | str | None":
     """Returns local Path or git URL, resolved by stack.resolve_template_source().
 
@@ -466,6 +505,13 @@ def main() -> None:
             if not template_root.exists():
                 print(f"❌ Template nie istnieje: {template_root}")
                 sys.exit(1)
+            if is_git_clone(template_root):
+                tmp_clone, reason = released_snapshot(template_root)
+                if not tmp_clone:
+                    print(f"❌ {reason}")
+                    sys.exit(1)
+                print(f"  📌 Źródło: {template_root} w stanie {RELEASED_REF} (katalog roboczy pomijam)")
+                template_root = tmp_clone
 
         try:
             sync_from_template(template_root, apply=args.apply)

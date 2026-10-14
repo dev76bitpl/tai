@@ -151,6 +151,20 @@ Historia (zrobione przed przejściem):
 
 ## Stan sesji
 
+- 2026-10-14: **Synchronizacja skilli bierze szablon ze scalonego `main`, nie z katalogu roboczego (#179).**
+  Po ludzku: projekt z lokalnym klonem szablonu dociągał skille w takim stanie, w jakim klon akurat był
+  — z gałęzi w toku, razem z niezacommitowanymi zmianami. 13.10 robocza wersja skilla trafiła tak do innego
+  projektu. Teraz źródłem jest zawsze `origin/main` klonu; nowa wersja dociera do projektów po `git pull`
+  w szablonie. Decyzja właściciela (rekomendacja sesji; odrzucone: odmowa synchronizacji poza czystym `main`
+  — stałaby przy każdej pracy w katalogu szablonu).
+  Technicznie: `scripts/update-skills.py` `released_snapshot()` — `git archive origin/main` tylko ścieżek, które
+  czyta synchronizacja (`SYNC_PATHS`), do katalogu tymczasowego; `--sync` używa go dla klona Git (zwykły
+  katalog bez `.git` — jak dotąd). `.claude/hooks/session-context.py` porównuje z tą samą migawką, ładując
+  regułę z projektowego `update-skills.py` (jedno źródło; starszy skrypt bez reguły → dotychczasowe
+  zachowanie do najbliższej synchronizacji, która go podmienia). README i `docs/GUARDS.md`. Testy na prawdziwych
+  repo: klon na gałęzi ze zmienionym skillem → projekt nie widzi zmiany; różnica w `main` → synchronizacja.
+  Koszt na wiadomość: ok. 50 ms przy lokalnym klonie.
+
 - 2026-10-14: **Akcje GitHuba na Node 24 (#87).**
   Po ludzku: GitHub od czerwca uruchamia stare akcje na Node 24 na siłę i przy każdym przebiegu
   wypisuje ostrzeżenie; wydania i strażnicy działały, ale na czas pożyczony. Podbite do wersji, które

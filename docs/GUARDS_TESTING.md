@@ -191,6 +191,13 @@ Wymaga projektu postawionego z szablonu, z lokalnym klonem szablonu (`ai_templat
 
 ---
 
+### Scenariusz 13b — skille z lokalnego klona szablonu tylko ze scalonego `main`
+
+- [ ] W klonie szablonu na gałęzi roboczej zmień `SKILL.md` dowolnego skilla (bez commita)
+- [ ] W projekcie z `$AI_TEMPLATE_PATH` na ten klon: `python3 scripts/update-skills.py --sync` → pierwsza linia
+      „Źródło: … w stanie origin/main (katalog roboczy pomijam)”, zmieniony skill „aktualny”
+- [ ] Wiadomość w Claude Code w projekcie → brak „Pobrano zmiany z template” dla tego skilla
+
 ## Rozstrzyganie ścieżki do template (`resolve_template_source`)
 
 Kontekst: `ai_template_path` był czytany tylko z commitowanego `config.json`, więc

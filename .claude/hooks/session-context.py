@@ -10,7 +10,9 @@ config.json (wymagane pola):
   "repos": [{"name": "grupavist-fe", "tasks": "grupavist-fe/docs/TASKS.md"}, ...]
   "ai_template_path": "/ścieżka/do/template"  (opcjonalne — bez niego diff pominięty)
 """
+import importlib.util
 import json
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -215,6 +217,17 @@ def _local_desynced(template_root: Path) -> tuple[list[str], list[str], list[str
     return missing, outdated, missing_v
 
 
+def _load_updater(path: Path):
+    """The project's scripts/update-skills.py as a module (it owns the released-snapshot rule)."""
+    try:
+        spec = importlib.util.spec_from_file_location("update_skills_for_hook", path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+    except Exception:
+        return None
+
+
 def check_template_skills_sync(config: dict) -> str | None:
     """Detects desync with t-ai template and auto-syncs if needed."""
     template_path = resolve_template_path(config)
@@ -245,7 +258,19 @@ def check_template_skills_sync(config: dict) -> str | None:
     if not template_root.exists():
         return None
 
-    missing, outdated, missing_v = _local_desynced(template_root)
+    # Compare with the template's released state, not its working directory (#179) — the
+    # same rule update-skills.py --sync applies when it copies.
+    snapshot: Path | None = None
+    updater = _load_updater(sync_script)
+    if updater and hasattr(updater, "released_snapshot") and updater.is_git_clone(template_root):
+        snapshot, reason = updater.released_snapshot(template_root)
+        if not snapshot:
+            return f"⚠️  [t-ai] Synchronizacja skilli pominięta: {reason}"
+    try:
+        missing, outdated, missing_v = _local_desynced(snapshot or template_root)
+    finally:
+        if snapshot:
+            shutil.rmtree(snapshot, ignore_errors=True)
     if not missing and not outdated and not missing_v:
         return None
 
