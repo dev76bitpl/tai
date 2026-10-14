@@ -249,3 +249,61 @@ class TestManifestWrite:
         monkeypatch.setattr("sys.argv", ["update-skills.py", "--apply"])
         mod.main()
         assert '"checked": "2026-09-28"' in path.read_text(encoding="utf-8")
+
+
+# ── a local template clone is read at origin/main, not from its working directory (#179) ──
+
+import json as _json
+import subprocess as _subprocess
+
+
+def _git(cwd, *args):
+    _subprocess.run(["git", "-c", "user.name=t", "-c", "user.email=t@t", "-c", "init.defaultBranch=main",
+                     *args], cwd=cwd, check=True, capture_output=True)
+
+
+def _template_clone(tmp_path: Path) -> Path:
+    """A template clone whose origin/main has skill text "released", then work in progress on a branch."""
+    source = tmp_path / "source"
+    (source / ".claude" / "skills" / "adr").mkdir(parents=True)
+    (source / ".claude" / "skills" / "adr" / "SKILL.md").write_text("released", encoding="utf-8")
+    (source / "skills-manifest.json").write_text(_json.dumps({"custom_skills": {"adr": {}}, "skills": {}}),
+                                                 encoding="utf-8")
+    (source / "README.md").write_text("not needed by the sync", encoding="utf-8")
+    _git(source, "init", "-q")
+    _git(source, "add", ".")
+    _git(source, "commit", "-qm", "init")
+    clone = tmp_path / "template"
+    _git(tmp_path, "clone", "-q", str(source), str(clone))
+    _git(clone, "switch", "-qc", "feat/work-in-progress")
+    (clone / ".claude" / "skills" / "adr" / "SKILL.md").write_text("unfinished", encoding="utf-8")
+    return clone
+
+
+def test_should_read_a_local_template_clone_at_origin_main_not_its_working_directory(tmp_path):
+    clone = _template_clone(tmp_path)
+    snapshot, reason = mod.released_snapshot(clone)
+    assert reason == "" and snapshot is not None
+    try:
+        assert (snapshot / ".claude" / "skills" / "adr" / "SKILL.md").read_text(encoding="utf-8") == "released"
+        assert not (snapshot / "README.md").exists()  # only what the sync reads
+    finally:
+        import shutil
+        shutil.rmtree(snapshot)
+
+
+def test_should_refuse_a_template_clone_without_origin_main(tmp_path):
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _git(repo, "init", "-q")
+    (repo / "x").write_text("x")
+    _git(repo, "add", ".")
+    _git(repo, "commit", "-qm", "x")
+    snapshot, reason = mod.released_snapshot(repo)
+    assert snapshot is None and "origin/main" in reason
+
+
+def test_should_treat_a_worktree_as_a_git_clone(tmp_path):
+    (tmp_path / ".git").write_text("gitdir: elsewhere")
+    assert mod.is_git_clone(tmp_path)
+    assert not mod.is_git_clone(tmp_path / "missing")

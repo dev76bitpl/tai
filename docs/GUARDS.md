@@ -223,6 +223,8 @@ Bez żadnego z nich działa autodetekcja klona obok projektu, a potem publiczny 
 pokazuje w sekcji „Optional integrations”, skąd wziął ścieżkę (`from $AI_TEMPLATE_PATH` /
 `from config.local.json` / `from config.json`).
 
+**Skille z lokalnego klona idą zawsze ze stanu `origin/main`**, nie z katalogu roboczego: gałąź w toku i niezacommitowane zmiany w klonie nie trafiają do projektów. Projekty widzą nową wersję szablonu po `git pull` (albo `git fetch`) w klonie. Klon bez `origin/main` → synchronizacja odmawia z komunikatem.
+
 **Dwa ustawienia, które decydują, kiedy strażnik commita się odzywa — oba wynikają ze stosu projektu.**
 Nikt nie jest pytany o katalogi i nikt nie edytuje pliku ręcznie: stos ustala **wywiad o zakresie**
 (hasło `scope` w Claude Code, pytanie „Stack i środowisko?”), a po nim Claude uruchamia
