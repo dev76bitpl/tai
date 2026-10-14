@@ -132,6 +132,8 @@ Po `claude plugin install figma@claude-plugins-official` i uwierzytelnieniu:
 
 ## Zarządzanie skillami
 
+Aktualizacja zmienia wiele plików — rób ją na gałęzi roboczej, nie na `main`. Skill, którego aktualizację zablokował skan bezpieczeństwa, zostaje w obecnej wersji i działa.
+
 ```bash
 # Sprawdź aktualizacje (dry-run)
 python3 scripts/update-skills.py

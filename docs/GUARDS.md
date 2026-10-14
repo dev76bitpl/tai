@@ -267,7 +267,7 @@ przekazuje sterowanie do `scripts/project-setup.py`, który zostaje w projekcie:
 | Etykiety zgłoszeń | zakłada `owner` i `idea` | brak repo na GitHubie albo brak `gh`; etykiety są |
 | Kontrola środowiska | `python3 scripts/doctor.py`; czerwony raport = błąd kroku | — |
 | Brief projektu | uruchamia Claude Code z hasłem `scope` | brief, stos i ADR-001 już są |
-| Skille | wybór grup skilli, które zostają w projekcie (`scripts/select-skills.py`), potem odświeżenie pozostałych | brak skryptów skilli |
+| Skille | wybór grup skilli, które zostają w projekcie (`scripts/select-skills.py`); bez pobierania nowszych wersji z sieci | brak `scripts/select-skills.py` |
 | Szablon graficzny | uruchamia Claude Code z zadaniem: dwa kierunki wyglądu (jasny i ciemny) jako makiety w `mockups/propozycje/`, po wyborze zasady w `docs/UI_GUIDELINES.md` | makiety i sekcja „Kierunek wizualny projektu” już są; odpowiedź „nie” (projekt bez interfejsu) |
 
 **Wybór skilli.** Szablon ma komplet skilli dla wszystkich technologii; projekt zostawia sobie
@@ -287,7 +287,7 @@ Skille ogólne (`scope`, `adr`, `api`, `debug`, `deploy`, `git`, `retro`) zostaj
 | `marketing` | `copywriting`, `cro` | wordpress |
 | `review` | `review`, `security` | wszystkie |
 
-Stos `inny` albo nieustawiony proponuje wszystkie grupy. Wybór zapisuje się w `skills-manifest.json`
+Stos `inny` albo nieustawiony proponuje wszystkie grupy; zostawienie wszystkich, zanim stos jest ustawiony, nie jest zapisywane, więc po wywiadzie wraca propozycja pod stos. Wybór zapisuje się w `skills-manifest.json`
 (`skill_groups`, `excluded_skills`) — synchronizacja z szablonu pomija wyłączone skille, więc nie
 wracają przy następnej wiadomości. Zmiana zdania: `python3 scripts/select-skills.py` jeszcze raz;
 grupa dodana z powrotem wraca przy najbliższej synchronizacji

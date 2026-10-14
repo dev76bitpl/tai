@@ -161,6 +161,15 @@ def print_groups(manifest: dict, highlighted: list[str]) -> None:
         print(f"       {paint(names, DIM)}")
 
 
+def is_provisional(manifest: dict, keep: list[str]) -> bool:
+    """Keeping every group before the stack is known removes nothing and is not a real choice.
+
+    Saving it would turn the stack proposal off for good (the next run shows the recorded groups).
+    """
+    first_choice = not isinstance(manifest.get("skill_groups"), list)
+    return first_choice and project_stack() is None and set(keep) == set(GROUPS)
+
+
 def choose_interactively(manifest: dict) -> list[str] | None:
     """Ask which groups stay; None when the user declines to remove anything."""
     stack = project_stack()
@@ -229,6 +238,10 @@ def main(argv: list[str] | None = None) -> int:
         keep = choose_interactively(manifest)
         if keep is None:
             print(f"  {mark(SKIPPED)} bez zmian — nic nie usunięto")
+            return 0
+        if is_provisional(manifest, keep):
+            print(f"  {mark(SKIPPED)} wszystkie grupy zostają; wybór nie jest zapisany, więc po ustawieniu stosu"
+                  " wróci propozycja pod stos")
             return 0
     else:
         print_groups(manifest, kept_groups(manifest))

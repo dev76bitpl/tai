@@ -115,6 +115,9 @@ Numery scenariuszy są stałe (odwołują się do nich zgłoszenia i log sesji),
 - [ ] Po wyborze w `.claude/skills/` nie ma odrzuconych grup, a `skills-manifest.json` ma `skill_groups` i `excluded_skills`
 - [ ] Nowa sesja Claude Code w projekcie, jedna wiadomość → odrzucone skille nie wracają (synchronizacja z szablonu je pomija)
 - [ ] `python3 scripts/select-skills.py --list` pokazuje aktualny wybór; ponowne uruchomienie pozwala go zmienić
+- [ ] Krok „Skille” nie pyta o odświeżenie z sieci; po nim `git status` pokazuje tylko usunięte skille odrzuconych grup i manifest, nie ok. 130 plików
+- [ ] Bez ustawionego stosu (brief pominięty) Enter w wyborze → komunikat, że wybór nie jest zapisany; po wywiadzie `scope` ponowny przebieg pokazuje „propozycja dla stosu”
+- [ ] Podsumowanie startu w „Co dalej” podaje `git switch -c chore/project-start` przed commitem
 - [ ] Skille ogólne (`scope`, `adr`, `api`, `debug`, `deploy`, `git`, `retro`) zostają przy każdym wyborze
 
 ### Scenariusz 10f — szablon graficzny

@@ -271,28 +271,13 @@ def _script(root: Path, name: str) -> None:
     (root / "scripts" / name).write_text("# stub")
 
 
-def test_should_install_skills_when_user_agrees(mod, tmp_path):
-    _script(tmp_path, "update-skills.py")
-    fake = Fake(mod, answers=[""])
-    assert mod.step_skills()[0] == mod.DONE
-    assert fake.commands()[0].endswith("scripts/update-skills.py --apply")
-
-
-def test_should_not_refresh_skills_when_user_declines(mod, tmp_path):
-    _script(tmp_path, "update-skills.py")
-    fake = Fake(mod, answers=["n"])
-    mark, message = mod.step_skills()
-    assert mark == mod.DONE and "update-skills.py --apply" in message
-    assert fake.ran == []
-
-
-def test_should_let_the_user_choose_skill_groups_before_refreshing(mod, tmp_path):
+def test_should_let_the_user_choose_skill_groups_without_refreshing_from_the_network(mod, tmp_path):
     _script(tmp_path, "select-skills.py")
     _script(tmp_path, "update-skills.py")
-    fake = Fake(mod, answers=[""])
+    fake = Fake(mod)
     assert mod.step_skills()[0] == mod.DONE
     assert len(fake.interactive) == 1 and fake.interactive[0].endswith("scripts/select-skills.py")
-    assert fake.commands()[0].endswith("scripts/update-skills.py --apply")  # after the choice
+    assert fake.ran == []  # a refresh on main leaves ~100 files that cannot be committed there (#177)
 
 
 def test_should_fail_the_step_when_the_skill_chooser_fails(mod, tmp_path):
@@ -644,7 +629,7 @@ def test_should_walk_through_every_step_in_order_and_end_with_a_summary(mod, tmp
     for title, _, _, _ in mod.STEPS:
         assert title in summary
     assert "Start projektu zakończony" in summary
-    assert "pierwszym commitem" in summary
+    assert "gałęzi roboczej" in summary and "git switch -c" in summary
     assert "Co dalej" in summary
 
 

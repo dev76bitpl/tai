@@ -151,6 +151,19 @@ Historia (zrobione przed przejściem):
 
 ## Stan sesji
 
+- 2026-10-14: **Start projektu nie zostawia setek plików na `main`; podpowiedź skilli pod stos wraca po wywiadzie (#177, #190).**
+  Po ludzku: krok „Skille” proponował pobranie nowszych wersji skilli z sieci — na świeżym `main` zostawało
+  ok. 130 zmienionych plików, których nie dało się tam zacommitować. Teraz krok tylko wybiera grupy, a
+  aktualizacja to utrzymanie, na gałęzi roboczej. Druga rzecz: kto przeszedł krok skilli przed wywiadem,
+  tracił na stałe propozycję pod stos — wybór „wszystkie” bez stosu już się nie zapisuje. Obie decyzje
+  właściciela (rekomendacje sesji). Zgłoszenia od kursu.
+  Technicznie: `project-setup.py` `step_skills()` bez `update-skills.py --apply`; `what_is_left()` podaje
+  `git switch -c chore/project-start`, gdy brief, skille albo szablon graficzny coś zmieniły;
+  `select-skills.py` `is_provisional()` — pierwszy wybór, brak stosu, wszystkie grupy → bez zapisu
+  (`--all` i wybór zawężony zapisują się jak dotąd). README, `docs/SKILLS.md`, `docs/GUARDS.md`, ADR-005
+  decyzja 12, scenariusz 10e w `docs/GUARDS_TESTING.md`. Pakiet 870/870; próba właściciela na kopii:
+  start bez briefu → nic na `main`, wybór niezapisany; po `scope` wróciła propozycja dla stosu.
+
 - 2026-10-13: **Nowy projekt dostaje wzory i puste szkielety zamiast dokumentów roboczych szablonu (#124, #155).**
   Po ludzku: start projektu kasował wypełnione przykłady w pierwszej sekundzie, zanim ktokolwiek mógł
   się na nich wzorować, a zostawiał w projekcie ponad 600 linii logu sesji samego szablonu i ponad
