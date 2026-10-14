@@ -151,6 +151,23 @@ Historia (zrobione przed przejściem):
 
 ## Stan sesji
 
+- 2026-10-14: **Ustawiony stos decyduje o poleceniach strażników; projekt zakłada się tylko klonem (#193, #127).**
+  Po ludzku: po wywiadzie, w którym projekt wybrał np. Pythona, strażnicy lintu i testów dalej
+  ostrzegali o `npm run lint`, bo szablon przynosi własny `package.json` — zgłosił to kurs (lekcja M4).
+  Teraz ustawiony stos wygrywa z plikami. Drugie: tryb „skopiuj szablon do katalogu” zakładał projekt bez
+  `.gitignore` i bez strażników commita — klucz API mógł trafić do repo. Właściciel zdecydował tryb
+  usunąć; polecenie z katalogiem mówi teraz, jak zrobić to klonem.
+  Technicznie: `scripts/dev-guards/stack.py` `CONFIGURED_STACKS` + `configured_stack()`, `detect_stack()`
+  najpierw czyta `stack` z konfiguracji; doctor pisze `(stack: python)`. `new-project.py` bez trybu
+  `<dest>` (kod 2 + instrukcja klonu), z `new_project_data.py` znikają `COPY_*` i martwy szkielet
+  ROADMAP. GUARDS (tabela poleceń), GUARDS_TESTING 10h, ADR-005 decyzja 13, ADR-002 §6. Testy: 4 w
+  `test_stack_commands.py` (w tym zgodność z tabelą `set-stack.py`), 2 w `test_new_project.py`.
+  Dołożone po próbie właściciela (za jego zgodą): #141 — pierwsza wiadomość w każdym nowym projekcie
+  kończyła się błędem hooka (`session-context.py` używał `datetime` bez importu; test w
+  `.claude/hooks/tests/test_session_context_staleness.py`, czerwony na starym kodzie). „Co dalej” każe
+  zakładać gałąź i commitować tylko wtedy, gdy start zostawił zmiany (`git status --porcelain`), a nie
+  przy samym pominiętym briefie.
+
 - 2026-10-14: **Start projektu nie zostawia setek plików na `main`; podpowiedź skilli pod stos wraca po wywiadzie (#177, #190).**
   Po ludzku: krok „Skille” proponował pobranie nowszych wersji skilli z sieci — na świeżym `main` zostawało
   ok. 130 zmienionych plików, których nie dało się tam zacommitować. Teraz krok tylko wybiera grupy, a

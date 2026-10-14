@@ -98,7 +98,7 @@ nieistniejącego nadrzędnego wzorca.
 Własne ADR-y wzorca (ADR-002+) opisują wewnętrzną mechanikę wzorca — projekt nie ma w nich
 interesu. `new-project.py --init` resetuje cały `docs/adr/` (stan końcowy: pusty katalog
 z `.gitkeep`), analogicznie do `reset_versioning` (zrzuca CHANGELOG wzorca) i
-`fresh_git_history`. Tryb kopiowania już tworzy pusty `docs/adr/`, więc tam wycieku nie ma.
+`fresh_git_history`. (Tryb kopiowania do katalogu usunięty 2026-10-14, #127 — zostaje tylko `--init`.)
 
 **Dlaczego:** `docs/adr/` we wzorcu pełni dwie role — scaffold dla projektu **oraz** dom na
 własne decyzje wzorca. Bez resetu ADR-y wzorca wyciekają do każdego projektu. Reset hurtowy

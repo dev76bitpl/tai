@@ -338,7 +338,8 @@ def what_is_left(results: list[tuple[str, str, str]]) -> list[str]:
     todo: list[str] = []
     if FAILED in marks.values() or PENDING in marks.values():
         todo.append(f"dokończ kroki: {RESUME}  (zrobione zostaną pominięte)")
-    if DONE in (marks.get("Brief projektu"), marks.get("Skille"), marks.get("Szablon graficzny")):
+    code, changes = run(["git", "status", "--porcelain"])
+    if code == 0 and changes.strip():  # only when the start really left something to commit
         todo.append("zapisz wynik startu na gałęzi roboczej (na main commit jest zablokowany): "
                     "git switch -c chore/project-start, potem git add docs/ mockups/ "
                     ".claude/hooks/config.json skills-manifest.json .claude/skills i commit")

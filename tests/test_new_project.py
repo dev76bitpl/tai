@@ -659,3 +659,24 @@ class TestInstallGuards:
                     mod.install_guards(tmp_path, dry_run=False)
         run.assert_not_called()
         warn.assert_called_once()
+
+
+# ── removed copy-to-directory mode (#127) ────────────────────────────────────
+
+def test_should_refuse_copy_to_directory_and_explain_how_to_clone(tmp_path, monkeypatch, capsys):
+    # the mode left projects without .gitignore and commit guards — a key could be committed
+    target = tmp_path / "new-app"
+    monkeypatch.setattr(sys, "argv", ["new-project.py", str(target)])
+    with pytest.raises(SystemExit) as exit_info:
+        mod.main()
+    assert exit_info.value.code == 2
+    out = capsys.readouterr().out
+    assert "git clone" in out and "--init" in out
+    assert not target.exists()
+
+
+def test_should_require_init_without_arguments(monkeypatch):
+    monkeypatch.setattr(sys, "argv", ["new-project.py"])
+    with pytest.raises(SystemExit) as exit_info:
+        mod.main()
+    assert exit_info.value.code == 2

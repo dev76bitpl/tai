@@ -326,7 +326,8 @@ je dziedziczył). Strażnik dobiera polecenie tak:
 | Sytuacja | Polecenie | Gdy nie da się go uruchomić |
 |---|---|---|
 | `lint` / `test` wpisane w `config.json` | dokładnie to, co wpisane | **blokada commita** — projekt coś obiecał i tego nie ma |
-| brak wpisu | wykryte po plikach projektu: `package.json` → `npm run lint` / `npm test`, `composer.json` → `composer lint` / `composer test`, `pyproject.toml` / `requirements.txt` → `ruff` / `pytest`, `Gemfile` → `rubocop` / `rspec`, `go.mod` → `golangci-lint` / `go test` | commit przechodzi z ostrzeżeniem „checks NOTHING” widocznym przy **każdym** commicie |
+| brak wpisu, `stack` ustawiony (wywiad `scope` → `scripts/set-stack.py`) | domyślne dla stosu: `node` → `npm run lint` / `npm test`, `laravel` / `symfony` / `wordpress` / `prestashop` / `magento` → `composer lint` / `composer test`, `python` → `ruff` / `pytest`, `rails` → `rubocop` / `rspec`, `go` → `golangci-lint` / `go test`. Stos wygrywa z plikami — każdy projekt dostaje z szablonu `package.json`, więc samo wykrywanie nazwałoby projekt w Pythonie „node” | commit przechodzi z ostrzeżeniem „checks NOTHING” widocznym przy **każdym** commicie |
+| brak wpisu, stos nieustawiony albo `inny` | wykryte po plikach projektu: `package.json` → `npm run lint` / `npm test`, `composer.json` → `composer lint` / `composer test`, `pyproject.toml` / `requirements.txt` → `ruff` / `pytest`, `Gemfile` → `rubocop` / `rspec`, `go.mod` → `golangci-lint` / `go test` | commit przechodzi z ostrzeżeniem „checks NOTHING” widocznym przy **każdym** commicie |
 | brak wpisu i nieznany stos | — | jak wyżej: ostrzeżenie |
 
 „Nie da się uruchomić” to nie tylko brak narzędzia: `npm run lint` bez skryptu `lint`

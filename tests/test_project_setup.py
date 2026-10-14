@@ -617,7 +617,8 @@ def test_should_walk_through_every_step_in_order_and_end_with_a_summary(mod, tmp
     _script(tmp_path, "doctor.py")
     _complete_interview(tmp_path)()
     _complete_design(tmp_path)()
-    Fake(mod, answers=[""], results={**GITHUB, "gh label list": (0, "owner\nidea\n")})
+    Fake(mod, answers=[""], results={**GITHUB, "gh label list": (0, "owner\nidea\n"),
+                                     "git status --porcelain": (0, "?? docs/adr/ADR-001.md\n")})
     assert mod.main([]) == 0
     out = capsys.readouterr().out
     headers = [line for line in out.splitlines() if "Krok " in line and "/" in line]
@@ -790,3 +791,16 @@ def test_should_skip_repo_settings_with_a_reason_when_they_cannot_be_read(mod, r
     mark, message = mod.step_repo_settings()
     assert mark == mod.SKIPPED and reason in message
     assert fake.asked == [] and not any(" -X " in c for c in fake.commands())
+
+
+def test_should_not_ask_for_a_commit_when_the_start_changed_nothing(mod):
+    # brief skipped, skills kept as they were: nothing to commit, so no branch hint
+    Fake(mod, results={"git status --porcelain": (0, "")})
+    results = [("Brief projektu", mod.SKIPPED, ""), ("Skille", mod.DONE, "")]
+    assert not any("gałęzi roboczej" in entry for entry in mod.what_is_left(results))
+
+
+def test_should_ask_for_a_commit_on_a_branch_when_the_start_left_changes(mod):
+    Fake(mod, results={"git status --porcelain": (0, " M .claude/hooks/config.json\n")})
+    todo = mod.what_is_left([("Skille", mod.DONE, "")])
+    assert any("git switch -c chore/project-start" in entry for entry in todo)

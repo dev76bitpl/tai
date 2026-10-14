@@ -1,31 +1,12 @@
 """Data for scripts/new-project.py: what to copy, what to remove, document skeletons.
 
 Kept apart from the logic so new-project.py stays readable (file-size rule: data files have
-no limit, logic files do). Template-only, like new-project.py itself: removed by --init and
-not copied in copy-to-dir mode (TEMPLATE_ONLY_SCRIPTS).
+no limit, logic files do). Template-only, like new-project.py itself: removed by --init
+(TEMPLATE_ONLY_SCRIPTS).
 """
 
 # Scripts that exist only to start a project from the template.
 TEMPLATE_ONLY_SCRIPTS = ["new-project.py", "new_project_data.py", "new_project_git.py"]
-
-# ── What to copy (copy-to-dir mode) ─────────────────────────────────────────
-
-COPY_DIRS = [".claude"]
-
-COPY_FILES = ["CLAUDE.md", "skills-manifest.json"]
-
-COPY_DOCS = [
-    "AI_TEMPLATE_NOTES.md",
-    "CONVENTIONS.md",
-    "DELIVERY_CHECKLIST.md",
-    "GUARDS.md",
-    "GUARDS_TESTING.md",
-    "SETUP.md",
-    "SKILLS.md",
-    "TESTING.md",
-    "UI_GUIDELINES.md",
-    "USER_PROFILE.example",
-]
 
 SCAFFOLD_DOCS: dict[str, str] = {
     "TASKS.md": """\
@@ -41,21 +22,6 @@ Wzór wpisu: [docs/examples/TASKS.example.md](examples/TASKS.example.md).
 
 <!-- Najnowszy wpis na górze. Jeden akapit na domknięty krok: data, co się zmieniło po ludzku,
      potem technicznie (pliki, funkcje, pułapki). -->
-""",
-    "ROADMAP.md": """\
-# Roadmap
-
-<!-- Wygeneruj za pomocą `scope` lub wypełnij ręcznie -->
-
-## Faza 1 — [Nazwa]
-
-**Cel:**
-
-**Zakres:**
-
-**Done when:**
-
-**Zależności:** brak
 """,
 }
 
