@@ -34,6 +34,15 @@ README_SCAFFOLD = """\
 
 ---
 
+## Po sklonowaniu
+
+```bash
+python3 scripts/doctor.py
+```
+
+Raport pokazuje, czy strażnicy commita i hooki Claude Code działają na tym komputerze. Przy każdym
+braku podaje polecenie, które go naprawia — wykonaj je i uruchom raport jeszcze raz.
+
 ## Uruchomienie
 
 ```bash

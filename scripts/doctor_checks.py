@@ -34,8 +34,9 @@ def claude_hooks(root: Path, ok, fail, warn) -> bool:
     if not local.is_file():
         warn(
             ".claude/settings.local.json missing — no Claude Code hook runs on this machine",
-            "Run: cp .claude/settings.local.json.example .claude/settings.local.json"
-            "  then replace INTERPRETER (python3 / py) — see docs/GUARDS.md, section \"Interpreter\".",
+            "Run: sed 's/INTERPRETER/python3/g' .claude/settings.local.json.example"
+            " > .claude/settings.local.json  (Windows: py instead of python3 —"
+            " see docs/GUARDS.md, section \"Interpreter\")",
         )
         return True
 
@@ -94,7 +95,10 @@ def _load_hook_config(root: Path, warn) -> tuple[dict, str]:
         try:
             data = json.loads(path.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError):
-            warn(f".claude/hooks/{name} present but unparseable — ignored by the guards")
+            warn(
+                f".claude/hooks/{name} present but unparseable — ignored by the guards",
+                f"Fix the JSON syntax: python3 -m json.tool .claude/hooks/{name}",
+            )
             continue
         if isinstance(data, dict):
             merged.update(data)
