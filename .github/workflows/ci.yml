@@ -62,19 +62,19 @@ jobs:
   #         - { name: lint,      cmd: <lint command> }
   #         - { name: typecheck, cmd: <typecheck command> }
   #   steps:
-  #     - uses: actions/checkout@v4
+  #     - uses: actions/checkout@v6
   #     # - <setup toolchain + cache package manager + install deps>
   #     - run: ${{ matrix.task.cmd }}
   #
   # build:                             # own job — usually the longest leg, so it belongs
   #   runs-on: ubuntu-latest           # BESIDE the matrix, not appended to it
   #   steps:
-  #     - uses: actions/checkout@v4
+  #     - uses: actions/checkout@v6
   #     # - <setup toolchain + install deps>
   #     # Cache the BUILD tool's cache dir (.next/cache, target/, build/, .gradle/…):
   #     # `setup-*` caches only the package manager, so without it every build starts
   #     # from scratch. Gains show from the 2nd run on — the 1st populates the cache.
-  #     # - uses: actions/cache@v4
+  #     # - uses: actions/cache@v5
   #     #   with:
   #     #     path: <build cache dir>
   #     #     key: build-${{ runner.os }}-${{ hashFiles('<lockfile>') }}-${{ hashFiles('<sources>') }}
@@ -96,5 +96,5 @@ jobs:
   #   container:
   #     image: <sast tool image, e.g. semgrep/semgrep>
   #   steps:
-  #     - uses: actions/checkout@v4
+  #     - uses: actions/checkout@v6
   #     - run: <scan command, failing the job on findings>
