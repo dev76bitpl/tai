@@ -151,6 +151,15 @@ Historia (zrobione przed przejściem):
 
 ## Stan sesji
 
+- 2026-10-14: **Akcje GitHuba na Node 24 (#87).**
+  Po ludzku: GitHub od czerwca uruchamia stare akcje na Node 24 na siłę i przy każdym przebiegu
+  wypisuje ostrzeżenie; wydania i strażnicy działały, ale na czas pożyczony. Podbite do wersji, które
+  same deklarują Node 24 — także we wzorze `ci.yml`, który nowe projekty dostają z szablonu.
+  Technicznie: `release-please-action` v4 → v5, `checkout` v4 → v6, `setup-python` v5 → v6, `cache` v4 → v5
+  (`using: node24` sprawdzone w `action.yml` każdej wersji). Odczyt przed zmianą: przebiegi release-please
+  zielone, aktualizują PR #94; ostrzeżenie „Node.js 20 is deprecated” w `Release Please` i `Guards`.
+  Kopie `checkout@v4` w przykładach vendored skilla `php-modernization` nieruszone (cudzy skill).
+
 - 2026-10-14: **Ustawiony stos decyduje o poleceniach strażników; projekt zakłada się tylko klonem (#193, #127).**
   Po ludzku: po wywiadzie, w którym projekt wybrał np. Pythona, strażnicy lintu i testów dalej
   ostrzegali o `npm run lint`, bo szablon przynosi własny `package.json` — zgłosił to kurs (lekcja M4).
