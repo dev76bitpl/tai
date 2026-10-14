@@ -2,7 +2,7 @@
 """
 Bootstrap a new project from the AI template.
 
-Two modes:
+One mode:
 
   --init          Initialize THIS cloned repo as a new project in-place.
                   Removes template meta (tests/, README, this script),
@@ -12,14 +12,12 @@ Two modes:
                   Use --no-git to skip the git reset + guard install.
                   Run once after: git clone ai my-project && cd my-project
 
-  <dest>          Copy template to a separate new directory.
-                  Use when keeping the template repo intact.
+  A copy-to-directory mode existed and was removed (#127): it left projects without
+  .gitignore and commit guards. A path argument now only says how to clone instead.
 
 Usage:
     python3 scripts/new-project.py --init
     python3 scripts/new-project.py --init --dry-run
-    python3 scripts/new-project.py /path/to/new-project
-    python3 scripts/new-project.py /path/to/new-project --dry-run
 """
 import argparse
 import json
@@ -35,8 +33,7 @@ ROOT = Path(__file__).resolve().parent.parent
 # Sibling modules (data and git steps) — importable also when this file is loaded by path.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from new_project_data import (  # noqa: E402
-    COPY_DIRS, COPY_DOCS, COPY_FILES, INIT_SKELETONS, README_SCAFFOLD, SCAFFOLD_DOCS, TEMPLATE_META,
-    TEMPLATE_ONLY_SCRIPTS,
+    INIT_SKELETONS, README_SCAFFOLD, SCAFFOLD_DOCS, TEMPLATE_META, TEMPLATE_ONLY_SCRIPTS,
 )
 from new_project_git import fresh_git_history, install_guards, log  # noqa: E402
 from start_ui import BOLD, GREEN, RED, banner, mark, notice, paint, section, DONE, FAILED  # noqa: E402
@@ -55,38 +52,12 @@ def remove(path: Path, root: Path, dry_run: bool) -> None:
         path.unlink()
 
 
-def copy_dir(src: Path, dst: Path, dry_run: bool) -> None:
-    log("dir", str(src.relative_to(ROOT)) + "/", dry_run)
-    if dry_run:
-        return
-    dst.parent.mkdir(parents=True, exist_ok=True)
-    if dst.exists():
-        shutil.rmtree(dst)
-    shutil.copytree(src, dst, symlinks=True)
-
-
-def copy_file(src: Path, dst: Path, dry_run: bool) -> None:
-    log("file", str(src.relative_to(ROOT)), dry_run)
-    if dry_run:
-        return
-    dst.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(src, dst)
-
-
 def scaffold_file(dst: Path, dest: Path, content: str, dry_run: bool) -> None:
     log("scaffold", str(dst.relative_to(dest)), dry_run)
     if dry_run:
         return
     dst.parent.mkdir(parents=True, exist_ok=True)
     dst.write_text(content, encoding="utf-8")
-
-
-def mkdir(path: Path, dest: Path, dry_run: bool) -> None:
-    log("mkdir", str(path.relative_to(dest)) + "/", dry_run)
-    if dry_run:
-        return
-    path.mkdir(parents=True, exist_ok=True)
-    (path / ".gitkeep").touch()
 
 
 def _load_set_stack():
@@ -268,14 +239,12 @@ def main() -> None:
         epilog=(
             "In-place (after git clone):\n"
             "  python3 scripts/new-project.py --init\n"
-            "  python3 scripts/new-project.py --init --stack laravel\n\n"
-            "New directory:\n"
-            "  python3 scripts/new-project.py ~/Projekty/my-app"
+            "  python3 scripts/new-project.py --init --stack laravel"
         ),
     )
     parser.add_argument(
         "dest", nargs="?",
-        help="Destination directory (omit when using --init)",
+        help=argparse.SUPPRESS,  # the removed copy-to-directory mode; only explains how to clone
     )
     parser.add_argument(
         "--init", action="store_true",
@@ -297,82 +266,16 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    if not args.init and not args.dest:
-        parser.error("dest is required (or use --init for in-place initialization)")
+    if args.dest:
+        print(f"  {mark(FAILED)} {paint('Kopiowanie szablonu do katalogu nie jest już obsługiwane.', RED, BOLD)}")
+        print("    Nowy projekt zakłada się klonem — wtedy dostaje też .gitignore i strażników commita:")
+        print(f"    git clone <adres szablonu> {args.dest}   # adres: README szablonu, sekcja „Nowy projekt”")
+        print(f"    cd {args.dest} && python3 scripts/new-project.py --init")
+        sys.exit(2)
+    if not args.init:
+        parser.error("use --init in a fresh clone of the template")
 
-    stack = args.stack
-
-    if args.init:
-        init_in_place(ROOT, args.dry_run, do_git=not args.no_git, stack=stack)
-        return
-
-    dest = Path(args.dest).resolve()
-    dry_run = args.dry_run
-
-    # Guard: don't overwrite a non-empty directory
-    if dest.exists() and any(dest.iterdir()):
-        print(f"  {mark(FAILED)} {paint('Katalog docelowy istnieje i nie jest pusty:', RED, BOLD)} {dest}")
-        print("    Usuń go albo wybierz inną ścieżkę.")
-        sys.exit(1)
-
-    banner("📦 Nowy projekt z szablonu", dest.name,
-           "Próba na sucho — pokazuję, co bym zrobił, niczego nie zapisuję." if dry_run
-           else f"Kopiuję szablon do {dest}. Potem przejdziemy kroki startu.")
-
-    section("Katalogi — kopiuję")
-    for d in COPY_DIRS:
-        src = ROOT / d
-        if src.exists():
-            copy_dir(src, dest / d, dry_run)
-
-    section("Pliki główne — kopiuję")
-    for f in COPY_FILES:
-        src = ROOT / f
-        if src.exists():
-            copy_file(src, dest / f, dry_run)
-
-    section("Skrypty — kopiuję")
-    scripts_src = ROOT / "scripts"
-    scripts_dst = dest / "scripts"
-    if not dry_run:
-        scripts_dst.mkdir(parents=True, exist_ok=True)
-    for item in sorted(scripts_src.rglob("*")):
-        if not item.is_file():
-            continue
-        if "__pycache__" in item.parts or item.suffix == ".pyc":
-            continue
-        if item.name in TEMPLATE_ONLY_SCRIPTS:
-            continue  # template-only, not needed in new projects
-        rel = item.relative_to(scripts_src)
-        copy_file(item, scripts_dst / rel, dry_run)
-
-    section("Dokumenty wspólne — kopiuję")
-    docs_dst = dest / "docs"
-    if not dry_run:
-        docs_dst.mkdir(parents=True, exist_ok=True)
-    for doc in COPY_DOCS:
-        src = ROOT / "docs" / doc
-        if src.exists():
-            copy_file(src, docs_dst / doc, dry_run)
-    if (ROOT / "docs" / "examples").is_dir():
-        copy_dir(ROOT / "docs" / "examples", docs_dst / "examples", dry_run)
-
-    section("Dokumenty projektu — szkielety")
-    for name, content in SCAFFOLD_DOCS.items():
-        scaffold_file(docs_dst / name, dest, content, dry_run)
-
-    mkdir(docs_dst / "adr", dest, dry_run)
-
-    section("Hooki Claude Code — konfiguruję")
-    create_config_json(dest, ROOT, dry_run, stack)
-    create_settings_local(dest, ROOT, dry_run)
-
-    if dry_run:
-        print(f"\n  {paint('Próba na sucho zakończona — nic nie zostało zapisane.', BOLD)}\n")
-        return
-
-    print(f"\n  {mark(DONE)} {paint('Projekt utworzony:', GREEN, BOLD)} {dest}\n")
-    hand_over_to_setup(dest)
+    init_in_place(ROOT, args.dry_run, do_git=not args.no_git, stack=args.stack)
 
 
 if __name__ == "__main__":

@@ -6,9 +6,10 @@ hook invocation, staged-file resolution, and exit-code propagation — the
 guards just need stack detection + git helpers + config loading.
 
 Resolution order for lint/test commands:
-  1. .claude/hooks/config.json (project-level override, optional)
-  2. Autodetection based on repo marker files
-  3. Unknown stack → warn, do not block
+  1. "lint" / "test" in .claude/hooks/config.json (project-level override, optional)
+  2. "stack" in .claude/hooks/config.json (set by scripts/set-stack.py after the scope interview)
+  3. Autodetection based on repo marker files
+  4. Unknown stack → warn, do not block
 
 Config file is canonical (ADR-002): the same .claude/hooks/config.json read by
 .claude/hooks/stack.py, doctor.py and session-context.py. The old orphan
@@ -116,7 +117,34 @@ def load_config() -> dict:
     return config
 
 
+# Stack names written by scripts/set-stack.py → the toolchain whose commands the guards run.
+# "inny" (other) is missing on purpose: it falls back to autodetection.
+CONFIGURED_STACKS: dict[str, str] = {
+    "node": "node",
+    "laravel": "php",
+    "symfony": "php",
+    "wordpress": "php",
+    "prestashop": "php",
+    "magento": "php",
+    "python": "python",
+    "go": "go",
+    "rails": "ruby",
+}
+
+
+def configured_stack() -> str | None:
+    """Toolchain of the stack chosen in the scope interview, or None when none is set.
+
+    It beats marker files: every project starts from the template's own package.json, so
+    detection alone calls a Python or PHP project "node".
+    """
+    return CONFIGURED_STACKS.get(str(load_config().get("stack", "")))
+
+
 def detect_stack() -> str:
+    configured = configured_stack()
+    if configured:
+        return configured
     root = get_project_root()
     for name, cfg in STACKS.items():
         if any((root / m).is_file() for m in cfg["markers"]):
@@ -131,8 +159,8 @@ def _str_to_cmd(s: str) -> list[str]:
 def get_cmd(kind: str) -> tuple[list[str] | None, bool]:
     """(command, explicit) for kind "lint" or "test".
 
-    explicit = the project wrote it into .claude/hooks/config.json itself; otherwise it comes
-    from stack autodetection (the marker files that are really in the project).
+    explicit = the project wrote the command into .claude/hooks/config.json itself; otherwise it
+    comes from the configured stack, or from the marker files that are really in the project.
     """
     config = load_config()
     if kind in config:
@@ -206,7 +234,7 @@ def guard_command(kind: str, label: str, guard_id: str) -> list[str] | None:
             f"   Bypass (no audit):  SKIP={guard_id} git commit ..."
         )
     print(f"⚠️  [WARN] {label} guard checks NOTHING: {text} — {reason}\n"
-          f'   Autodetected for this stack. Set it up, or put your own command under "{kind}" in .claude/hooks/config.json')
+          f'   Default for the "{detect_stack()}" stack. Set it up, or put your own command under "{kind}" in .claude/hooks/config.json')
     return None
 
 
@@ -215,7 +243,12 @@ def doctor_lines() -> list[tuple[bool, str, str]]:
     lines = []
     for kind, label in (("lint", "Lint"), ("test", "Test")):
         cmd, explicit = get_cmd(kind)
-        source = "config.json" if explicit else f"autodetected: {detect_stack()}"
+        if explicit:
+            source = "config.json"
+        elif configured_stack():
+            source = f"stack: {load_config()['stack']}"
+        else:
+            source = f"autodetected: {detect_stack()}"
         if not cmd:
             lines.append((False, f"{label} guard checks nothing — unknown stack",
                           f'Add "{kind}" to .claude/hooks/config.json when the project has one.'))

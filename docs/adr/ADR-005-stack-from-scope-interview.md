@@ -104,6 +104,18 @@ istniał zawsze, jako szkielet).
     propozycja pod stos nie wróciłaby nigdy. Wybór konkretnych grup bez stosu i `--all` zapisują się
     jak dotąd. Odrzucone: pamiętanie stosu z chwili wyboru (nowe pole w manifeście dla jednego przypadku).
 
+13. **Ustawiony stos wybiera domyślne polecenia lintu i testów; projekt zakłada się tylko klonem**
+    (uzupełnienie z 2026-10-14, #193, #127). Kolejność: polecenie wpisane w `config.json` → stos
+    z wywiadu (`CONFIGURED_STACKS` w `scripts/dev-guards/stack.py`: platformy PHP → `php`, `rails` →
+    `ruby`) → pliki projektu. Dlaczego stos przed plikami: każdy projekt dostaje z szablonu własny
+    `package.json`, więc projekt w Pythonie był rozpoznawany jako „node” i strażnik ostrzegał
+    o `npm run lint`. Decyzja 11 zostaje: `set-stack.py` nadal nie wpisuje poleceń do `config.json`
+    — stos podsuwa tylko domyślne, które przepuszczają z ostrzeżeniem, gdy narzędzia nie ma. Test
+    pilnuje, że każdy stos z tabeli `set-stack.py` ma swój zestaw narzędzi. Tryb
+    `new-project.py <katalog>` usunięty (decyzja właściciela): projekt wychodził bez `.gitignore`
+    i bez strażników commita, więc klucz API z `.claude/settings.local.json` mógł trafić do commita.
+    Odrzucone: dokończenie trybu (druga droga startu do utrzymania, raz już się rozjechała).
+
 ## Odrzucone alternatywy
 
 | Opcja | Dlaczego odrzucona |

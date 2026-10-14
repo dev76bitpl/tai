@@ -281,7 +281,7 @@ def check_skills_staleness() -> str | None:
     if not vendored and not custom:
         return None
 
-    from datetime import date
+    from datetime import date, datetime
     today = date.today()
 
     # Check vendored skills (checked = last update check date)

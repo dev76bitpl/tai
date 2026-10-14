@@ -62,3 +62,40 @@ def test_should_tell_doctor_that_an_explicit_broken_command_blocks_commits(repo)
 def test_should_tell_doctor_about_unknown_stack(repo):
     lines = _inspect(repo)["doctor"]
     assert all("unknown stack" in message for _, message, _ in lines)
+
+
+def test_should_take_commands_from_the_configured_stack_over_the_template_package_json(repo):
+    # every project starts with the template's package.json — detection alone said "node" (#193)
+    stage(repo, "package.json", '{"scripts": {"doctor": "node x.mjs"}}\n')
+    write_config(repo, {"stack": "python"})
+    data = _inspect(repo)
+    assert data["lint"] == [["ruff", "check", "."], False]
+    assert data["test"] == [["pytest", "--tb=short", "-q"], False]
+    assert all("(stack: python)" in message for _, message, _ in data["doctor"])
+
+
+def test_should_map_a_platform_stack_to_its_toolchain(repo):
+    stage(repo, "package.json", "{}\n")
+    write_config(repo, {"stack": "laravel"})
+    assert _inspect(repo)["lint"] == [["composer", "lint"], False]
+
+
+def test_should_fall_back_to_detection_when_the_stack_is_other(repo):
+    stage(repo, "package.json", "{}\n")
+    write_config(repo, {"stack": "inny"})
+    assert _inspect(repo)["lint"] == [["npm", "run", "lint", "--silent"], False]
+
+
+def test_should_know_the_toolchain_of_every_stack_the_interview_can_set():
+    import importlib.util
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[3]
+    spec = importlib.util.spec_from_file_location("set_stack_for_guards", root / "scripts" / "set-stack.py")
+    set_stack = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(set_stack)
+    spec = importlib.util.spec_from_file_location("dev_guards_stack", root / "scripts" / "dev-guards" / "stack.py")
+    stack = importlib.util.module_from_spec(spec)  # "stack" alone may resolve to .claude/hooks/stack.py
+    spec.loader.exec_module(stack)
+    missing = set(set_stack.STACK_PRESETS) - set(stack.CONFIGURED_STACKS) - {set_stack.DEFAULT_STACK}
+    assert not missing, f"stacks without guard commands: {missing}"
+    assert set(stack.CONFIGURED_STACKS.values()) <= set(stack.STACKS)

@@ -99,6 +99,7 @@ Numery scenariuszy są stałe (odwołują się do nich zgłoszenia i log sesji),
 - [ ] Na gałęzi roboczej, z plikiem w `src/` w indeksie: `pre-commit run guard-lint` (bez `--verbose`) → „Passed” i pod spodem `[WARN] Lint guard checks NOTHING: npm run lint --silent — package.json has no "lint" script`
 - [ ] `npm run doctor` → w „Guard system” `⚠ Lint guard checks nothing: …` i `⚠ Test guard checks nothing: …`
 - [ ] Dodaj do `package.json` skrypt `lint`, który kończy się błędem → commit zablokowany „Lint failed”; skrypt przechodzący → `✅ Lint [node] OK`, a doctor pokazuje `✓ Lint guard runs: …`
+- [ ] `python3 scripts/set-stack.py python` → `npm run doctor` pokazuje `ruff check .` i `pytest …` z dopiskiem `(stack: python)`, a nie `npm run lint` (`autodetected: node`)
 - [ ] Wpisz w `.claude/hooks/config.json` `"lint": "nie-ma-takiego-polecenia"` → commit zablokowany „Lint command from .claude/hooks/config.json cannot run”, doctor: `⚠ Lint guard BLOCKS every commit: …`
 
 ### Scenariusz 10i — końce linii
@@ -117,7 +118,8 @@ Numery scenariuszy są stałe (odwołują się do nich zgłoszenia i log sesji),
 - [ ] `python3 scripts/select-skills.py --list` pokazuje aktualny wybór; ponowne uruchomienie pozwala go zmienić
 - [ ] Krok „Skille” nie pyta o odświeżenie z sieci; po nim `git status` pokazuje tylko usunięte skille odrzuconych grup i manifest, nie ok. 130 plików
 - [ ] Bez ustawionego stosu (brief pominięty) Enter w wyborze → komunikat, że wybór nie jest zapisany; po wywiadzie `scope` ponowny przebieg pokazuje „propozycja dla stosu”
-- [ ] Podsumowanie startu w „Co dalej” podaje `git switch -c chore/project-start` przed commitem
+- [ ] Podsumowanie startu w „Co dalej” podaje `git switch -c chore/project-start` przed commitem — tylko gdy start coś zmienił; pominięty brief i niezmienione skille → bez tej pozycji
+- [ ] Pierwsza wiadomość w Claude Code w nowym projekcie → bez `UserPromptSubmit hook error`
 - [ ] Skille ogólne (`scope`, `adr`, `api`, `debug`, `deploy`, `git`, `retro`) zostają przy każdym wyborze
 
 ### Scenariusz 10f — szablon graficzny
