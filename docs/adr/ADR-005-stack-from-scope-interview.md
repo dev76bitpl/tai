@@ -93,6 +93,17 @@ istniał zawsze, jako szkielet).
     Dlaczego nie blokada zawsze: świeży projekt nie ma jeszcze lintu ani testów i nie zrobiłby
     pierwszego commita. Dlaczego nie `set-stack.py`: polecenia są sprawą projektu, nie stosu.
 
+12. **Start projektu nie pobiera nowszych wersji skilli; wybór „wszystkie” bez stosu nie jest zapisywany**
+    (uzupełnienie z 2026-10-14, #177, #190). Krok „Skille” tylko wybiera grupy — skille z szablonu
+    działają od razu. Odświeżenie z sieci to utrzymanie, na gałęzi roboczej: na świeżym `main`
+    zostawiało ok. 130 zmienionych plików, których tam nie da się zacommitować, a skan bezpieczeństwa
+    potrafił jedną aktualizację zablokować bez wyjaśnienia, co dalej. „Co dalej” w podsumowaniu podaje
+    polecenie założenia gałęzi (`git switch -c chore/project-start`). Odrzucone: zakładanie gałęzi
+    przez kreator przed odświeżeniem (więcej kroków i zależność startu od sieci). Wybór wszystkich
+    grup, zanim stos jest ustawiony, niczego nie usuwa, więc nie trafia do manifestu — inaczej
+    propozycja pod stos nie wróciłaby nigdy. Wybór konkretnych grup bez stosu i `--all` zapisują się
+    jak dotąd. Odrzucone: pamiętanie stosu z chwili wyboru (nowe pole w manifeście dla jednego przypadku).
+
 ## Odrzucone alternatywy
 
 | Opcja | Dlaczego odrzucona |

@@ -28,7 +28,7 @@ python3 scripts/project-setup.py
 6. **Skille** — wybór grup, które zostają w projekcie (stos podpowiada, które); niewybrane znikają i nie wracają przy synchronizacji. Zmiana później: `python3 scripts/select-skills.py`
 7. **Szablon graficzny** — Claude Code przygotowuje dwa kierunki wyglądu (każdy jasny i ciemny) jako makiety w `mockups/propozycje/`; po wyborze zasady trafiają do `docs/UI_GUIDELINES.md`. Projekt bez interfejsu pomija krok
 
-Gdy krok się nie uda, skrypt proponuje uruchomienie Claude Code z opisem błędu, a po powrocie ponowienie kroku. Claude Code otwiera się jako etap: po wyjściu z niego (`/exit`) wracasz do kroków, skrypt sprawdza, czy brief, stos i ADR-001 powstały, i kończy podsumowaniem. Bez terminala (AI, CI) o nic nie pyta — drukuje listę kroków. Skille zostają gotowe do pracy. Testy strażników zostają — mieszkają obok nich (`.claude/hooks/tests/`, `scripts/dev-guards/tests/`), a `tests/` to testy narzędzi samego szablonu.
+Gdy krok się nie uda, skrypt proponuje uruchomienie Claude Code z opisem błędu, a po powrocie ponowienie kroku. Claude Code otwiera się jako etap: po wyjściu z niego (`/exit`) wracasz do kroków, skrypt sprawdza, czy brief, stos i ADR-001 powstały, i kończy podsumowaniem. Bez terminala (AI, CI) o nic nie pyta — drukuje listę kroków. Skille zostają gotowe do pracy w wersji z szablonu — start nie pobiera nowszych z sieci (to utrzymanie, sekcja „Zarządzanie skillami”). Wynik startu zapisujesz pierwszym commitem na gałęzi roboczej (`git switch -c chore/project-start`), bo na `main` commit jest zablokowany. Testy strażników zostają — mieszkają obok nich (`.claude/hooks/tests/`, `scripts/dev-guards/tests/`), a `tests/` to testy narzędzi samego szablonu.
 
 ---
 
@@ -78,6 +78,11 @@ Gdy krok się nie uda, skrypt proponuje uruchomienie Claude Code z opisem błęd
 ---
 
 ## Zarządzanie skillami
+
+Aktualizacja skilli to utrzymanie, nie część startu: zmienia dziesiątki plików, więc rób ją na
+gałęzi roboczej (np. `git switch -c chore/update-skills`), nigdy na `main`. Gdy skan bezpieczeństwa
+zablokuje aktualizację skilla („znaleziono podejrzane wzorce”), skill zostaje w obecnej wersji i dalej
+działa — przejrzyj zgłoszone linie w źródle i zdecyduj; zablokowanej aktualizacji nie wymuszaj.
 
 ```bash
 # Vendored skille — sprawdź i zaktualizuj z GitHub

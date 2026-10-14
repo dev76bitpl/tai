@@ -202,6 +202,37 @@ def test_should_show_current_choice_when_run_again(project, monkeypatch):
     assert mod.choose_interactively(manifest) == ["review"]
 
 
+def test_should_not_record_keeping_everything_before_the_stack_is_set(project, monkeypatch, capsys):
+    mod, root = project
+    monkeypatch.setattr(mod.sys.stdin, "isatty", lambda: True)
+    _answers(monkeypatch, "")  # Enter = all groups, nothing to remove
+    assert mod.main([]) == 0
+    assert "skill_groups" not in _manifest(root)
+    (root / ".claude" / "hooks").mkdir(parents=True)
+    (root / ".claude" / "hooks" / "config.json").write_text(json.dumps({"stack": "node"}), encoding="utf-8")
+    _answers(monkeypatch, "", "")
+    assert mod.choose_interactively(mod.load_manifest()) == ["typescript", "design", "ui", "review"]
+    assert "propozycja dla stosu" in capsys.readouterr().out  # the stack proposal came back (#190)
+
+
+def test_should_record_a_narrowed_choice_even_before_the_stack_is_set(project, monkeypatch):
+    mod, root = project
+    monkeypatch.setattr(mod.sys.stdin, "isatty", lambda: True)
+    _answers(monkeypatch, "8", "")  # review only, confirm removal
+    assert mod.main([]) == 0
+    assert _manifest(root)["skill_groups"] == ["review"]
+
+
+def test_should_record_keeping_everything_once_the_stack_is_set(project, monkeypatch):
+    mod, root = project
+    (root / ".claude" / "hooks").mkdir(parents=True)
+    (root / ".claude" / "hooks" / "config.json").write_text(json.dumps({"stack": "node"}), encoding="utf-8")
+    monkeypatch.setattr(mod.sys.stdin, "isatty", lambda: True)
+    _answers(monkeypatch, "w")
+    assert mod.main([]) == 0
+    assert _manifest(root)["skill_groups"] == list(mod.GROUPS)
+
+
 # ── command line ─────────────────────────────────────────────────────────────
 
 def _cli(root: Path, *args: str):

@@ -205,21 +205,18 @@ def step_labels() -> tuple[str, str]:
 
 
 def step_skills() -> tuple[str, str]:
-    """Choose which skill groups the project keeps, then refresh the kept ones."""
-    chooser = ROOT / "scripts" / "select-skills.py"
-    if chooser.is_file():
-        code = run_interactive([sys.executable, "scripts/select-skills.py"])
-        if code != 0:
-            raise StepFailed([sys.executable, "scripts/select-skills.py"], code, "wybór skilli nie powiódł się")
-        print()
-    if not (ROOT / "scripts" / "update-skills.py").is_file():
-        if chooser.is_file():
-            return DONE, "wybór zapisany"
-        return SKIPPED, "pominięte — brak skryptów skilli"
-    if not confirm("Odświeżyć pozostałe vendored skille do najnowszych wersji (pobiera z sieci)?"):
-        return DONE, "wybór zapisany; odświeżenie później: python3 scripts/update-skills.py --apply"
-    must([sys.executable, "scripts/update-skills.py", "--apply"], show=True)
-    return DONE, "skille wybrane i odświeżone"
+    """Choose which skill groups the project keeps.
+
+    No refresh from the network here: the template's skills work as they are, and a refresh on
+    main leaves ~100 changed files that cannot be committed there. Refreshing is maintenance.
+    """
+    if not (ROOT / "scripts" / "select-skills.py").is_file():
+        return SKIPPED, "pominięte — brak scripts/select-skills.py"
+    code = run_interactive([sys.executable, "scripts/select-skills.py"])
+    if code != 0:
+        raise StepFailed([sys.executable, "scripts/select-skills.py"], code, "wybór skilli nie powiódł się")
+    print()
+    return DONE, "skille w wersji z szablonu"
 
 
 def step_doctor() -> tuple[str, str]:
@@ -308,7 +305,7 @@ STEPS = [
      "Sprawdzenie, czy narzędzia i strażnicy naprawdę działają na tej maszynie.", step_doctor),
     ("Brief projektu", "claude   # napisz: scope — wywiad ustawi też strażników pod Twój stos",
      "Krótki wywiad z Claude: co budujemy, dla kogo i w jakim stosie.", step_brief),
-    ("Skille", "python3 scripts/select-skills.py   # potem: python3 scripts/update-skills.py --apply",
+    ("Skille", "python3 scripts/select-skills.py",
      "Wybór, które zestawy instrukcji dla Claude zostają w projekcie — reszta to szum.", step_skills),
     ("Szablon graficzny", "claude   # poproś: przygotuj szablon graficzny projektu (makiety w mockups/propozycje/)",
      "Dwa kierunki wyglądu do obejrzenia w przeglądarce i zasady, których trzymają się kolejne ekrany.", step_design),
@@ -341,9 +338,10 @@ def what_is_left(results: list[tuple[str, str, str]]) -> list[str]:
     todo: list[str] = []
     if FAILED in marks.values() or PENDING in marks.values():
         todo.append(f"dokończ kroki: {RESUME}  (zrobione zostaną pominięte)")
-    if marks.get("Brief projektu") == DONE:
-        todo.append("zapisz wynik startu pierwszym commitem na gałęzi roboczej: git add docs/ mockups/ "
-                    ".claude/hooks/config.json skills-manifest.json .claude/skills")
+    if DONE in (marks.get("Brief projektu"), marks.get("Skille"), marks.get("Szablon graficzny")):
+        todo.append("zapisz wynik startu na gałęzi roboczej (na main commit jest zablokowany): "
+                    "git switch -c chore/project-start, potem git add docs/ mockups/ "
+                    ".claude/hooks/config.json skills-manifest.json .claude/skills i commit")
     if marks.get("Repo na GitHubie") == SKIPPED:
         todo.append("podepnij repo, gdy będzie: git remote add origin <adres>")
     return todo
