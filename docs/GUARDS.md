@@ -82,6 +82,10 @@ npm run doctor
 pre-commit run --all-files
 ```
 
+Ktoś dołącza do projektu (nowa osoba, nowy komputer)? Pierwszy krok to `python3 scripts/doctor.py` —
+README projektu mówi o tym w sekcji „Po sklonowaniu”, a raport przy każdym braku podaje polecenie
+naprawcze ([ADR-006](adr/ADR-006-updating-projects-from-template.md)).
+
 **Bypass flagi** (tylko z dokumentowanym powodem w body commita):
 - `[skip-docs]` — pomiń sprawdzanie TASKS.md i testów
 - `[no-adr]` — zmiana architektoniczna bez ADR (świadoma decyzja)

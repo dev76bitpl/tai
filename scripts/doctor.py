@@ -98,13 +98,13 @@ def check_node() -> bool:
         return False
     code, out = run(["node", "--version"])
     if code != 0:
-        fail("node --version failed")
+        fail("node --version failed", "Reinstall Node.js 22+ — see the requirements table at the top of docs/SETUP.md.")
         return False
     version = out.lstrip("v").split(".")[0]
     try:
         major = int(version)
     except ValueError:
-        warn(f"node version unrecognized: {out}")
+        warn(f"node version unrecognized: {out}", "Check `node --version`; Node.js 22+ is required (docs/SETUP.md).")
         return True
     if major < 22:
         fail(f"node {out} — required: 22+", "Upgrade via nvm.")
@@ -150,7 +150,7 @@ def check_pre_commit() -> bool:
         return False
     code, out = run([*invocation, "--version"])
     if code != 0:
-        fail(f"{' '.join(invocation)} --version failed")
+        fail(f"{' '.join(invocation)} --version failed", "Reinstall via: python -m pip install --user --force-reinstall pre-commit")
         return False
     via = "standalone" if invocation == ["pre-commit"] else f"via {' '.join(invocation[:-1])}"
     ok(f"{out}  ({via})")
@@ -187,11 +187,11 @@ def check_hooks_installed() -> bool:
 def check_config_yaml() -> bool:
     config = REPO_ROOT / ".pre-commit-config.yaml"
     if not config.is_file():
-        fail(".pre-commit-config.yaml missing at repo root")
+        fail(".pre-commit-config.yaml missing at repo root", "Restore it from git: git checkout -- .pre-commit-config.yaml")
         return False
     invocation = _resolve_pre_commit()
     if invocation is None:
-        warn(".pre-commit-config.yaml not validated (pre-commit unavailable)")
+        warn(".pre-commit-config.yaml not validated (pre-commit unavailable)", "Install pre-commit first — see the pre-commit line above.")
         return False
     code, out = run([*invocation, "validate-config"])
     if code != 0:
@@ -233,7 +233,7 @@ def check_docker() -> None:
         return
     code, _ = run(["docker", "ps"])
     if code != 0:
-        warn("docker installed but daemon not running")
+        warn("docker installed but daemon not running", "Start Docker Desktop (or: sudo service docker start).")
         return
     ok("docker daemon running")
 

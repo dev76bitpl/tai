@@ -67,7 +67,7 @@ def test_should_warn_without_failing_when_settings_file_is_missing(doctor, capsy
     assert doctor.check_claude_hooks() is True
     out = capsys.readouterr().out
     assert "⚠" in out and "settings.local.json missing" in out
-    assert "cp .claude/settings.local.json.example .claude/settings.local.json" in out
+    assert "sed 's/INTERPRETER/python3/g' .claude/settings.local.json.example > .claude/settings.local.json" in out
 
 
 def test_should_fail_when_interpreter_placeholder_is_left(doctor, tmp_path, capsys):
@@ -320,3 +320,20 @@ def test_should_warn_when_there_is_no_repo_level_rule_for_line_endings(doctor, t
     doctor.check_line_endings()
     out = capsys.readouterr().out
     assert "⚠" in out and "core.autocrlf=input" in out and "* text=auto eol=lf" in out
+
+
+def test_should_give_a_fix_hint_with_every_failure_and_warning():
+    """Joining a project starts with doctor (ADR-006): every reported problem says what to run."""
+    import ast
+
+    bare = []
+    for path in (SCRIPT, ROOT / "scripts" / "doctor_checks.py"):
+        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
+            if (
+                isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Name)
+                and node.func.id in ("fail", "warn")
+                and len(node.args) + len(node.keywords) < 2
+            ):
+                bare.append(f"{path.name}:{node.lineno}")
+    assert not bare, f"fail()/warn() without a fix hint: {bare}"

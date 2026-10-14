@@ -85,6 +85,13 @@ Numery scenariuszy są stałe (odwołują się do nich zgłoszenia i log sesji),
 - [ ] Usuń z pliku wpis jednego strażnika, `npm run doctor` → ostrzeżenie z jego nazwą; przywróć wpis
 - [ ] Bez `pytest` na maszynie: ostrzeżenie z poleceniem instalacji, raport nadal kończy się sukcesem
 
+### Scenariusz 10k — dołączenie do projektu zaczyna się od doctora
+
+- [ ] Świeży projekt po `--init`: `README.md` ma sekcję „Po sklonowaniu” z poleceniem `python3 scripts/doctor.py`
+- [ ] Sklonuj projekt do nowego katalogu (bez `pre-commit install`), uruchom `python3 scripts/doctor.py` → każdy czerwony
+  albo żółty wiersz ma pod sobą przygaszone polecenie naprawcze
+- [ ] Wykonaj podane polecenia, uruchom raport ponownie → „All required checks passed”
+
 ### Scenariusz 10g — ustawienia repo na GitHubie
 
 - [ ] Świeżo założone repo, projekt z `.github/workflows/release-please.yml`: krok „Ustawienia repo” wymienia dwa braki z powodem i pyta raz; po „tak” w ustawieniach repo włączone jest automatyczne kasowanie gałęzi, a Actions mają zapis i zatwierdzanie PR

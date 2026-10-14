@@ -151,6 +151,16 @@ Historia (zrobione przed przejściem):
 
 ## Stan sesji
 
+- 2026-10-14: **Dołączenie do projektu zaczyna się od doctora; ADR-006 o aktualizacji z szablonu (#156, paczka 1).**
+  Po ludzku: kto sklonował projekt, nie wiedział, że strażnicy i hooki nie działają na jego komputerze. README
+  projektu ma teraz sekcję „Po sklonowaniu” z `python3 scripts/doctor.py`, a każdy wiersz raportu z problemem
+  podaje polecenie naprawcze (dołożone przy 7 komunikatach; brak `settings.local.json` naprawia jedno polecenie
+  `sed` zamiast „skopiuj i podmień”). Test AST w `tests/test_doctor.py` pilnuje podpowiedzi przy każdym
+  `fail()`/`warn()`. ADR-006 (accepted) opisuje całość #156: skrypt `update-from-template.py` z podglądem,
+  źródło `origin/main`, pliki zmienione lokalnie i `CLAUDE.md` nie nadpisywane, hook startu sesji tylko informuje,
+  a automatyczne sprawdzanie włącza przełącznik w `config.json` szablonu (decyzja właściciela). Paczka 2 osobno.
+  Scenariusz 10k w `docs/GUARDS_TESTING.md`. Próba właściciela na kopii: trzy punkty 10k OK.
+
 - 2026-10-14: **Synchronizacja skilli bierze szablon ze scalonego `main`, nie z katalogu roboczego (#179).**
   Po ludzku: projekt z lokalnym klonem szablonu dociągał skille w takim stanie, w jakim klon akurat był
   — z gałęzi w toku, razem z niezacommitowanymi zmianami. 13.10 robocza wersja skilla trafiła tak do innego

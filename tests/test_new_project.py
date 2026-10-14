@@ -176,6 +176,12 @@ class TestDocsOfANewProject:
     def test_should_refer_to_the_examples_from_the_rules(self):
         assert "docs/examples/" in (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
 
+    def test_should_point_readme_scaffold_to_doctor_after_cloning(self, started):
+        """Joining a project starts with doctor (ADR-006); the script it names must stay in the project."""
+        assert "python3 scripts/doctor.py" in mod.README_SCAFFOLD
+        assert (ROOT / "scripts" / "doctor.py").is_file()
+        assert "doctor.py" not in mod.TEMPLATE_ONLY_SCRIPTS
+
     def test_should_list_in_readme_scaffold_only_documents_the_project_has(self, started):
         for target in re.findall(r"\]\((docs/[^)]+)\)", mod.README_SCAFFOLD):
             assert (started.parent / target).exists(), target
