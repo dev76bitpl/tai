@@ -92,6 +92,16 @@ Numery scenariuszy są stałe (odwołują się do nich zgłoszenia i log sesji),
   albo żółty wiersz ma pod sobą przygaszone polecenie naprawcze
 - [ ] Wykonaj podane polecenia, uruchom raport ponownie → „All required checks passed”
 
+### Scenariusz 10l — aktualizacja z szablonu
+
+- [ ] Projekt ze starszego wydania szablonu, `$AI_TEMPLATE_PATH` na lokalny klon: `python3 scripts/update-from-template.py`
+  → lista „do aktualizacji”, nic w projekcie się nie zmienia (`git status` czysty)
+- [ ] Dopisz linię do jednego z plików strażników, uruchom ponownie → plik w grupie „zmieniony lokalnie”
+- [ ] `--apply` → pliki „do aktualizacji” podmienione, zmieniony lokalnie nietknięty; kolejny podgląd pokazuje tylko jego
+- [ ] Niezacommitowana zmiana w klonie szablonu nie pojawia się w podglądzie
+- [ ] Szablon z `"template_update_check": true` w `.claude/hooks/config.json` na `origin/main`: pierwsza wiadomość
+  nowej sesji Claude Code w projekcie → w terminalu linia „UserPromptSubmit says: 🔄 [t-ai] Szablon ma zmiany: …”; z `false` → nic
+
 ### Scenariusz 10g — ustawienia repo na GitHubie
 
 - [ ] Świeżo założone repo, projekt z `.github/workflows/release-please.yml`: krok „Ustawienia repo” wymienia dwa braki z powodem i pyta raz; po „tak” w ustawieniach repo włączone jest automatyczne kasowanie gałęzi, a Actions mają zapis i zatwierdzanie PR

@@ -292,7 +292,10 @@ def clone_template(url: str) -> Path:
 # on the template in that directory would otherwise send unfinished, unmerged files to every
 # project on the machine (#179). Only what the sync reads is exported.
 RELEASED_REF = "origin/main"
-SYNC_PATHS = ["skills-manifest.json", ".claude/skills", "scripts/update-skills.py", ".gitleaksignore"]
+# update-from-template.py rides along so projects older than ADR-006 get it; it changes nothing
+# without --apply, so the rule "guards are never replaced silently" still holds.
+SYNC_PATHS = ["skills-manifest.json", ".claude/skills", "scripts/update-skills.py", ".gitleaksignore",
+              "scripts/update-from-template.py"]
 
 
 def is_git_clone(root: Path) -> bool:
@@ -443,6 +446,18 @@ def sync_from_template(template_root: Path, apply: bool) -> None:
                 shutil.copy2(template_script, project_script)
         else:
             print(f"  ✅ update-skills.py        aktualny")
+
+    # ── update-from-template.py: added or refreshed, so projects older than ADR-006 get it ──
+    template_updater = template_root / "scripts" / "update-from-template.py"
+    project_updater = ROOT / "scripts" / "update-from-template.py"
+    if template_updater.exists():
+        if not project_updater.exists() or template_updater.read_bytes() != project_updater.read_bytes():
+            print(f"  ~ update-from-template.py {'NOWY' if not project_updater.exists() else 'zmieniony'}")
+            synced += 1
+            if apply:
+                shutil.copy2(template_updater, project_updater)
+        else:
+            print(f"  ✅ update-from-template.py aktualny")
 
     # ── .gitleaksignore ──────────────────────────────────────────────────────
     template_ignore = template_root / ".gitleaksignore"

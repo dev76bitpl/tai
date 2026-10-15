@@ -307,3 +307,19 @@ def test_should_treat_a_worktree_as_a_git_clone(tmp_path):
     (tmp_path / ".git").write_text("gitdir: elsewhere")
     assert mod.is_git_clone(tmp_path)
     assert not mod.is_git_clone(tmp_path / "missing")
+
+
+# ── update-from-template.py rides along with the skill sync (ADR-006) ──
+
+@pytest.mark.parametrize("apply", [False, True])
+def test_should_bring_update_from_template_script_to_older_projects(tmp_path, monkeypatch, apply):
+    template = tmp_path / "template"
+    (template / "scripts").mkdir(parents=True)
+    (template / "skills-manifest.json").write_text('{"skills": {}, "custom_skills": {}}', encoding="utf-8")
+    (template / "scripts" / "update-from-template.py").write_text("# released\n", encoding="utf-8")
+    project = tmp_path / "project"
+    (project / "scripts").mkdir(parents=True)
+    monkeypatch.setattr(mod, "ROOT", project)
+    monkeypatch.setattr(mod, "MANIFEST_PATH", project / "skills-manifest.json")
+    mod.sync_from_template(template, apply=apply)
+    assert (project / "scripts" / "update-from-template.py").exists() is apply

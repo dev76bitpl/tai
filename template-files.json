@@ -1,0 +1,31 @@
+{
+  "_comment": "Files a project takes from the template (ADR-006, decision 4). Read by scripts/update-from-template.py from the template's released main, so a new entry reaches projects that run an older copy of the script. '*' never crosses '/'. Skills are synced by update-skills.py, not here.",
+  "copy": [
+    ".claude/hooks/*.py",
+    ".claude/hooks/tests/*.py",
+    ".claude/hooks/config.json.example",
+    ".claude/settings.json",
+    ".claude/settings.local.json.example",
+    "scripts/*.py",
+    "scripts/*.mjs",
+    "scripts/dev-guards/*.py",
+    "scripts/dev-guards/tests/*.py",
+    ".pre-commit-config.yaml",
+    ".gitlint",
+    ".gitattributes",
+    ".editorconfig",
+    ".github/pull_request_template.md",
+    ".github/workflows/guards.yml",
+    ".github/workflows/pr-language.yml",
+    "docs/GUARDS.md",
+    "docs/GUARDS_TESTING.md",
+    "docs/examples/*"
+  ],
+  "exclude": [
+    "scripts/new-project.py",
+    "scripts/new_project_*.py"
+  ],
+  "compare_sections": [
+    "CLAUDE.md"
+  ]
+}
