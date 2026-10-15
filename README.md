@@ -124,8 +124,24 @@ python3 scripts/update-from-template.py --apply   # kopiuje pliki „do aktualiz
 ```
 
 Źródłem jest wydany `main` szablonu, a listę plików szablon trzyma w `template-files.json`. Plik zmieniony
-w projekcie nie jest nadpisywany, a `CLAUDE.md` jest tylko porównywany po sekcjach. Skrypt dociera do
-starszych projektów razem z synchronizacją skilli. Gdy szablon ma w swoim `.claude/hooks/config.json`
+w projekcie nie jest nadpisywany, a `CLAUDE.md` jest tylko porównywany po sekcjach. Podgląd ostrzega też, gdy
+polecenie lintu albo testów wpisane w `.claude/hooks/config.json` nie da się uruchomić — po aktualizacji
+strażnicy zablokowaliby nim każdy commit (typowo odziedziczone `composer lint` / `composer test`).
+
+**Projekt bez `scripts/update-from-template.py`** (założony przed ADR-006) dostaje go w trzech krokach, na gałęzi
+roboczej. Samo `update-skills.py` bez `--sync` sprawdza tylko skille z GitHuba i skryptów szablonu nie rusza:
+
+```bash
+python3 scripts/update-skills.py --sync           # 1. podgląd — stara wersja nadpisuje skille zmienione w projekcie
+python3 scripts/update-skills.py --sync --apply   # 2. podmienia sam update-skills.py
+python3 scripts/update-skills.py --sync --apply   # 3. nowa wersja dokłada update-from-template.py
+python3 scripts/update-from-template.py           # potem podgląd i --apply jak wyżej
+```
+
+Skill zmieniony w projekcie (treść, której nie było w żadnej wersji szablonu) synchronizacja zostawia w spokoju
+i wypisuje jako „zmieniony lokalnie — porównaj ręcznie”. Dotyczy to dopiero nowej wersji `update-skills.py`
+— stara, uruchomiona w kroku 2, kasuje i kopiuje od nowa każdy zmieniony skill, dlatego podgląd w kroku 1
+jest obowiązkowy. Gdy szablon ma w swoim `.claude/hooks/config.json`
 `"template_update_check": true`, hook startu sesji w każdym projekcie z lokalnym klonem szablonu dociąga
 `main` najwyżej raz na dobę i mówi jednym zdaniem, co czeka. Szczegóły: [ADR-006](docs/adr/ADR-006-updating-projects-from-template.md).
 

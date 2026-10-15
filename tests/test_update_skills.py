@@ -323,3 +323,76 @@ def test_should_bring_update_from_template_script_to_older_projects(tmp_path, mo
     monkeypatch.setattr(mod, "MANIFEST_PATH", project / "skills-manifest.json")
     mod.sync_from_template(template, apply=apply)
     assert (project / "scripts" / "update-from-template.py").exists() is apply
+
+
+# ── a skill the project changed itself is never overwritten (#201) ──
+
+def _skill_template(tmp_path: Path) -> Path:
+    """A template repo whose skill "adr" had v1, then v2 on main."""
+    repo = tmp_path / "template"
+    (repo / ".claude" / "skills" / "adr").mkdir(parents=True)
+    (repo / "skills-manifest.json").write_text(_json.dumps({"custom_skills": {"adr": {}}, "skills": {}}),
+                                               encoding="utf-8")
+    skill = repo / ".claude" / "skills" / "adr" / "SKILL.md"
+    skill.write_text("v1\n", encoding="utf-8")
+    _git(repo, "init", "-q")
+    _git(repo, "add", ".")
+    _git(repo, "commit", "-qm", "v1")
+    skill.write_text("v2\n", encoding="utf-8")
+    _git(repo, "commit", "-qam", "v2")
+    return repo
+
+
+def _skill_project(tmp_path: Path, monkeypatch, files: dict) -> Path:
+    project = tmp_path / "project"
+    for rel, text in files.items():
+        (project / ".claude" / "skills" / "adr" / rel).parent.mkdir(parents=True, exist_ok=True)
+        (project / ".claude" / "skills" / "adr" / rel).write_text(text, encoding="utf-8")
+    monkeypatch.setattr(mod, "ROOT", project)
+    monkeypatch.setattr(mod, "MANIFEST_PATH", project / "skills-manifest.json")
+    return project
+
+
+@pytest.mark.parametrize("files,state", [
+    ({"SKILL.md": "v2\n"}, "current"),
+    ({"SKILL.md": "v1\n"}, "outdated"),                       # an older release: safe to replace
+    ({"SKILL.md": "edited in the project\n"}, "local"),
+    ({"SKILL.md": "v1\n", "notes.md": "ours\n"}, "local"),    # a file the template never had
+])
+def test_should_classify_a_skill_against_the_template_history(tmp_path, monkeypatch, files, state):
+    template = _skill_template(tmp_path)
+    project = _skill_project(tmp_path, monkeypatch, files)
+    history = mod.skill_history(template, "HEAD")
+    src, dst = template / ".claude" / "skills" / "adr", project / ".claude" / "skills" / "adr"
+    assert mod.skill_state("adr", src, dst, history) == state
+
+
+def test_should_treat_every_difference_as_outdated_without_history(tmp_path, monkeypatch):
+    template = _skill_template(tmp_path)
+    project = _skill_project(tmp_path, monkeypatch, {"SKILL.md": "edited in the project\n"})
+    src, dst = template / ".claude" / "skills" / "adr", project / ".claude" / "skills" / "adr"
+    assert mod.skill_state("adr", src, dst, None) == "outdated"
+    assert mod.skill_state("adr", src, project / "missing", None) == "new"
+
+
+def test_should_leave_a_locally_changed_skill_alone_and_list_it(tmp_path, monkeypatch, capsys):
+    template = _skill_template(tmp_path)
+    project = _skill_project(tmp_path, monkeypatch, {"SKILL.md": "edited in the project\n"})
+    mod.sync_from_template(template, apply=True, history=mod.skill_history(template, "HEAD"))
+    assert (project / ".claude" / "skills" / "adr" / "SKILL.md").read_text(encoding="utf-8") == "edited in the project\n"
+    assert f"{mod.LOCAL_SKILLS_LINE} adr" in capsys.readouterr().out
+
+
+def test_should_replace_a_skill_left_at_an_older_release(tmp_path, monkeypatch, capsys):
+    template = _skill_template(tmp_path)
+    project = _skill_project(tmp_path, monkeypatch, {"SKILL.md": "v1\n"})
+    mod.sync_from_template(template, apply=True, history=mod.skill_history(template, "HEAD"))
+    assert (project / ".claude" / "skills" / "adr" / "SKILL.md").read_text(encoding="utf-8") == "v2\n"
+    assert mod.LOCAL_SKILLS_LINE not in capsys.readouterr().out
+
+
+def test_should_give_the_same_blob_id_as_git(tmp_path):
+    file = tmp_path / "f.md"
+    file.write_bytes("zażółć\r\n".encode("utf-8"))
+    out = _subprocess.run(["git", "hash-object", "--no-filters", str(file)], capture_output=True, text=True)
+    assert mod.git_blob(file) == out.stdout.strip()

@@ -101,6 +101,11 @@ Numery scenariuszy są stałe (odwołują się do nich zgłoszenia i log sesji),
 - [ ] Niezacommitowana zmiana w klonie szablonu nie pojawia się w podglądzie
 - [ ] Szablon z `"template_update_check": true` w `.claude/hooks/config.json` na `origin/main`: pierwsza wiadomość
   nowej sesji Claude Code w projekcie → w terminalu linia „UserPromptSubmit says: 🔄 [t-ai] Szablon ma zmiany: …”; z `false` → nic
+- [ ] W `.claude/hooks/config.json` projektu wpisz `"lint": "composer lint"` (projekt bez `composer.json`) → podgląd kończy się
+  ostrzeżeniem „Po aktualizacji strażnicy commita zablokują KAŻDY commit” z tym poleceniem; po usunięciu wpisu ostrzeżenia nie ma
+- [ ] Dopisz linię do `SKILL.md` dowolnego skilla własnego w projekcie: `python3 scripts/update-skills.py --sync --apply` → skill
+  „zmieniony lokalnie — porównaj ręcznie”, plik nietknięty, w podsumowaniu „Pominięte (zmienione lokalnie): …”; wiadomość
+  w Claude Code → model dostaje „Skille zmienione w projekcie, inne niż w szablonie”, a nie „Pobrano zmiany”
 
 ### Scenariusz 10g — ustawienia repo na GitHubie
 

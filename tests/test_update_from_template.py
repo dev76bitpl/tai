@@ -209,3 +209,53 @@ def test_should_fetch_the_template_at_most_once_a_day(template, project, monkeyp
 def test_should_stay_quiet_without_a_local_template_clone(project):
     assert mod.session_notice(project, "git@github.com:org/tai.git", "2026-10-14") is None
     assert mod.session_notice(project, "", "2026-10-14") is None
+
+
+# ── the preview names lint/test commands the released guards will block on (#201) ──
+
+STACK_STUB = '''
+import shutil
+from pathlib import Path
+import json
+REPO_ROOT = Path(".")
+CONFIG_PATH = REPO_ROOT / "config.json"
+LOCAL_CONFIG_PATH = CONFIG_PATH
+def get_project_root():
+    return REPO_ROOT
+def get_cmd(kind):
+    config = json.loads(CONFIG_PATH.read_text()) if CONFIG_PATH.is_file() else {}
+    return (config[kind].split(), True) if kind in config else (["npm", "test"], False)
+def why_unavailable(cmd):
+    return "" if shutil.which(cmd[0]) else f"`{cmd[0]}` is not installed"
+'''
+
+
+def _config(project: Path, data: dict) -> None:
+    path = project / ".claude" / "hooks" / "config.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data), encoding="utf-8")
+
+
+def test_should_name_a_configured_command_that_will_block_every_commit(template, project):
+    _commit(template, {mod.GUARD_STACK: STACK_STUB}, "guards")
+    _git(template, "update-ref", "refs/remotes/origin/main", "HEAD")
+    _config(project, {"lint": "no-such-tool-201 lint", "test": "git --version"})
+    found = mod.blocking_guard_commands(template, "origin/main", project)
+    assert found == ["„lint”: no-such-tool-201 lint — `no-such-tool-201` is not installed"]
+
+
+def test_should_say_nothing_about_guards_when_the_release_has_no_guard_helpers(template, project):
+    _config(project, {"lint": "no-such-tool-201 lint"})
+    assert mod.blocking_guard_commands(template, "origin/main", project) == []
+
+
+def test_should_check_the_real_released_guards_against_an_inherited_composer_lint(tmp_path):
+    """The real stack.py from this repo, as the preview loads it: composer lint without composer.json."""
+    project = tmp_path / "project"
+    _config(project, {"lint": "composer lint", "test": "git --version"})
+    repo = tmp_path / "template"
+    repo.mkdir()
+    _git(repo, "init", "-q", "-b", "main")
+    _commit(repo, {mod.GUARD_STACK: (ROOT / mod.GUARD_STACK).read_text(encoding="utf-8")}, "guards")
+    found = mod.blocking_guard_commands(repo, "HEAD", project)
+    assert len(found) == 1 and found[0].startswith("„lint”: composer lint — ")

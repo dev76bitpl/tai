@@ -13,6 +13,7 @@ porównywany po sekcjach.
 """
 import argparse
 import fnmatch
+import importlib.util
 import json
 import re
 import shutil
@@ -287,6 +288,51 @@ def print_report(report: Report, applied: "list[str] | None") -> None:
         print(f"\nSkopiowano {len(applied)} plik(ów). Przejrzyj zmiany (git diff) i zapisz je na gałęzi roboczej.")
 
 
+GUARD_STACK = "scripts/dev-guards/stack.py"
+
+
+def blocking_guard_commands(repo: Path, ref: str, project: Path) -> list[str]:
+    """Lint/test commands in the project's config.json that the RELEASED guards will refuse to run.
+
+    Since #185 such a command blocks every commit, so a project that inherited `composer lint`
+    from an old template learns it here, before --apply, not from its first failed commit.
+    The released stack.py decides — the project's own copy may predate the rule.
+    """
+    shown = git(repo, "show", f"{ref}:{GUARD_STACK}")
+    if shown.returncode != 0:
+        return []
+    with tempfile.TemporaryDirectory() as tmp:
+        source = Path(tmp) / "released_stack.py"
+        source.write_bytes(shown.stdout)
+        try:
+            spec = importlib.util.spec_from_file_location("released_stack", source)
+            stack = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(stack)
+            stack.REPO_ROOT = project
+            stack.CONFIG_PATH = project / ".claude" / "hooks" / "config.json"
+            stack.LOCAL_CONFIG_PATH = stack.CONFIG_PATH.with_name("config.local.json")
+            stack.get_project_root = lambda: project
+            found = []
+            for kind in ("lint", "test"):
+                cmd, explicit = stack.get_cmd(kind)
+                reason = stack.why_unavailable(cmd) if explicit and cmd else ""
+                if reason:
+                    found.append(f"„{kind}”: {' '.join(cmd)} — {reason}")
+            return found
+        except Exception:
+            return []  # an older release without these helpers: nothing to say
+
+
+def print_guard_warnings(found: list[str]) -> None:
+    if not found:
+        return
+    print("\n⚠️  Po aktualizacji strażnicy commita zablokują KAŻDY commit — tych poleceń"
+          " z .claude/hooks/config.json (albo config.local.json) nie da się uruchomić:")
+    for line in found:
+        print(f"   {line}")
+    print("   Popraw wpis albo go usuń (zostanie polecenie dla stosu): docs/GUARDS.md, „Konfiguracja strażników”.")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Aktualizacja projektu z szablonu (ADR-006)")
     parser.add_argument("--apply", action="store_true", help="skopiuj pliki do aktualizacji i nowe")
@@ -304,6 +350,7 @@ def main() -> int:
             return 1
         applied = apply(repo, ref, ROOT, report) if args.apply else None
         print_report(report, applied)
+        print_guard_warnings(blocking_guard_commands(repo, ref, ROOT))
     finally:
         if tmp:
             shutil.rmtree(tmp, ignore_errors=True)

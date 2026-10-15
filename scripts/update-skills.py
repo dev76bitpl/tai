@@ -12,6 +12,7 @@ Domyślnie działa w trybie dry-run — żadne zmiany nie są wprowadzane bez --
 """
 import argparse
 import difflib
+import hashlib
 import json
 import re
 import shutil
@@ -278,7 +279,8 @@ def clone_template(url: str) -> Path:
     tmp = Path(tempfile.mkdtemp(prefix="ai-template-"))
     print(f"  📥 Klonuję template z {url}...")
     result = subprocess.run(
-        ["git", "clone", "--depth=1", "--quiet", url, str(tmp)],
+        # Blobless, not shallow: the history tells a skill changed in the project from an old release.
+        ["git", "clone", "--filter=blob:none", "--quiet", url, str(tmp)],
         capture_output=True, text=True,
     )
     if result.returncode != 0:
@@ -329,6 +331,48 @@ def released_snapshot(root: Path) -> "tuple[Path | None, str]":
     return tmp, ""
 
 
+SKILLS_DIR = ".claude/skills"
+LOCAL_SKILLS_LINE = "Pominięte (zmienione lokalnie):"
+
+
+def git_blob(file: Path) -> str:
+    """The blob id git gives this file's bytes (`git hash-object --no-filters`), without a process."""
+    data = file.read_bytes()
+    return hashlib.sha1(b"blob %d\0" % len(data) + data).hexdigest()
+
+
+def skill_history(repo: Path, ref: str) -> "dict[str, set[str]] | None":
+    """path -> every blob id a skill file ever had up to ref; None when the history cannot be read."""
+    out = subprocess.run(["git", "-C", str(repo), "log", "--format=", "--raw", "--no-abbrev", "--no-renames",
+                          ref, "--", SKILLS_DIR], capture_output=True)
+    if out.returncode != 0:
+        return None
+    seen: dict[str, set[str]] = {}
+    for line in out.stdout.decode("utf-8", "replace").splitlines():
+        if line.startswith(":") and "\t" in line:
+            meta, path = line.split("\t", 1)
+            seen.setdefault(path, set()).update(b for b in meta.split()[2:4] if set(b) != {"0"})
+    return seen
+
+
+def skill_state(name: str, src: Path, dst: Path, history: "dict[str, set[str]] | None") -> str:
+    """new / current / outdated / local — "local": the project changed a file the template never had
+    in that shape (the same rule as update-from-template.py). Without history every difference
+    counts as outdated, as before."""
+    if not dst.exists():
+        return "new"
+    released = {f.relative_to(src).as_posix(): git_blob(f) for f in src.rglob("*") if f.is_file()}
+    mine = {f.relative_to(dst).as_posix(): git_blob(f) for f in dst.rglob("*") if f.is_file()}
+    if released == mine:
+        return "current"
+    if history is None:
+        return "outdated"
+    for rel, blob in mine.items():
+        if blob != released.get(rel) and blob not in history.get(f"{SKILLS_DIR}/{name}/{rel}", set()):
+            return "local"
+    return "outdated"
+
+
 def find_template_ref() -> "Path | str | None":
     """Returns local Path or git URL, resolved by stack.resolve_template_source().
 
@@ -349,11 +393,12 @@ def find_template_ref() -> "Path | str | None":
     return value if is_git_url(value) else Path(value)
 
 
-def sync_from_template(template_root: Path, apply: bool) -> None:
+def sync_from_template(template_root: Path, apply: bool, history: "dict[str, set[str]] | None" = None) -> None:
     """
     Synchronize custom skills and manifest from the AI template.
 
-    Copies custom skills missing or outdated in the project.
+    Copies custom skills missing or outdated in the project. A skill the project changed itself
+    is left alone and listed (needs `history`, see skill_state()).
     Updates skills-manifest.json with any new vendored skill entries.
     Optionally copies the latest update-skills.py script itself.
     """
@@ -382,7 +427,7 @@ def sync_from_template(template_root: Path, apply: bool) -> None:
     print(f"    Projekt:  {ROOT}\n")
 
     synced = 0
-    skipped = 0
+    local_skills: list[str] = []
 
     # ── Custom skills ─────────────────────────────────────────────────────────
     print("── Custom skills ───────────────────────────────────────")
@@ -395,13 +440,17 @@ def sync_from_template(template_root: Path, apply: bool) -> None:
         if not src.exists():
             continue
 
-        src_files = collect_files(src)
-        dst_files = collect_files(dst) if dst.exists() else {}
-
-        if src_files == dst_files:
+        state = skill_state(skill_name, src, dst, history)
+        if state == "current":
             print(f"  ✅ {skill_name:<25} aktualny")
             continue
+        if state == "local":
+            print(f"  ! {skill_name:<25} zmieniony lokalnie — porównaj ręcznie, synchronizacja go nie rusza")
+            local_skills.append(skill_name)
+            continue
 
+        src_files = collect_files(src)
+        dst_files = collect_files(dst) if dst.exists() else {}
         if not dst_files:
             print(f"  + {skill_name:<25} NOWY")
         else:
@@ -481,6 +530,9 @@ def sync_from_template(template_root: Path, apply: bool) -> None:
     print(f"📊 Podsumowanie:")
     print(f"   Custom skills do synchronizacji: {synced}")
     print(f"   Nowe wpisy vendored w manifeście: {new_vendored}")
+    if local_skills:
+        # The session-start hook reads this line (session-context.py) — keep its wording.
+        print(f"   {LOCAL_SKILLS_LINE} {', '.join(local_skills)}")
     if not apply and (synced > 0 or new_vendored > 0):
         print(f"\n   Uruchom z --apply żeby zastosować.")
         if new_vendored > 0:
@@ -512,15 +564,18 @@ def main() -> None:
             sys.exit(1)
 
         tmp_clone: Path | None = None
+        history: "dict[str, set[str]] | None" = None
         if isinstance(template_ref, str):
             tmp_clone = clone_template(template_ref)
             template_root = tmp_clone
+            history = skill_history(tmp_clone, "HEAD")
         else:
             template_root = template_ref
             if not template_root.exists():
                 print(f"❌ Template nie istnieje: {template_root}")
                 sys.exit(1)
             if is_git_clone(template_root):
+                history = skill_history(template_root, RELEASED_REF)
                 tmp_clone, reason = released_snapshot(template_root)
                 if not tmp_clone:
                     print(f"❌ {reason}")
@@ -529,7 +584,7 @@ def main() -> None:
                 template_root = tmp_clone
 
         try:
-            sync_from_template(template_root, apply=args.apply)
+            sync_from_template(template_root, apply=args.apply, history=history)
         finally:
             if tmp_clone:
                 shutil.rmtree(tmp_clone, ignore_errors=True)

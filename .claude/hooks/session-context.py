@@ -220,6 +220,22 @@ def _load_updater(path: Path):
         return None
 
 
+# update-skills.py prints this line for skills it left alone because the project changed them.
+LOCAL_SKILLS_LINE = "Pominięte (zmienione lokalnie):"
+
+
+def _skipped_local(stdout: str) -> list[str]:
+    for line in stdout.splitlines():
+        if LOCAL_SKILLS_LINE in line:
+            return [n.strip() for n in line.split(LOCAL_SKILLS_LINE, 1)[1].split(",") if n.strip()]
+    return []
+
+
+def _local_notice(names: list[str]) -> str:
+    return (f"⚠️  [t-ai] Skille zmienione w projekcie, inne niż w szablonie: {', '.join(names)}"
+            f" — nie nadpisane, porównaj ręcznie (python3 scripts/update-skills.py --sync)")
+
+
 def check_template_skills_sync(config: dict) -> str | None:
     """Detects desync with t-ai template and auto-syncs if needed."""
     template_path = resolve_template_path(config)
@@ -241,7 +257,9 @@ def check_template_skills_sync(config: dict) -> str | None:
         )
         if result.returncode == 0:
             _save_sync_hash(remote_hash)
-            return f"📦 [t-ai] Pobrano zmiany z template (remote)"
+            skipped = _skipped_local(result.stdout)
+            lines = ["📦 [t-ai] Pobrano zmiany z template (remote)"]
+            return "\n".join(lines + [_local_notice(skipped)] if skipped else lines)
         err = result.stderr.strip()[:200]
         return f"⚠️  [t-ai] Auto-sync nie powiódł się: {err}"
 
@@ -271,12 +289,17 @@ def check_template_skills_sync(config: dict) -> str | None:
         capture_output=True, text=True, encoding="utf-8",
     )
     if result.returncode == 0:
+        skipped = _skipped_local(result.stdout)
+        taken = [n for n in missing + outdated if n not in skipped]
         details = []
-        if missing or outdated:
-            details.append(f"custom: {', '.join(missing + outdated)}")
+        if taken:
+            details.append(f"custom: {', '.join(taken)}")
         if missing_v:
             details.append(f"vendored: {', '.join(missing_v)}")
-        return f"📦 [t-ai] Pobrano zmiany z template → {' | '.join(details)}"
+        lines = [f"📦 [t-ai] Pobrano zmiany z template → {' | '.join(details)}"] if details else []
+        if skipped:
+            lines.append(_local_notice(skipped))
+        return "\n".join(lines) or None
     err = result.stderr.strip()[:200]
     return f"⚠️  [t-ai] Auto-sync nie powiódł się: {err}\n  Uruchom: python3 scripts/update-skills.py --sync --apply"
 

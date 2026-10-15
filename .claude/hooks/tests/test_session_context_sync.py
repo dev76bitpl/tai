@@ -132,7 +132,7 @@ def test_should_sync_when_the_released_template_differs(hook, tmp_path, monkeypa
     (project / ".claude" / "skills" / "adr" / "SKILL.md").write_text("old", encoding="utf-8")
 
     class Done:
-        returncode, stderr = 0, ""
+        returncode, stdout, stderr = 0, "", ""
 
     monkeypatch.setattr(module, "resolve_template_path", lambda config: str(clone))
     ran = _record_sync(module, monkeypatch, Done())
@@ -152,3 +152,34 @@ def test_should_show_template_notice_on_screen_and_keep_it_in_context(hook):
 def test_should_keep_plain_context_when_nothing_must_be_shown(hook):
     module, _, _ = hook
     assert module.render("[SESSION START]\n\ntasks", None) == "[SESSION START]\n\ntasks"
+
+
+# ── a skill the sync left alone because the project changed it is not "downloaded" (#201) ──
+
+class _Done:
+    def __init__(self, stdout: str):
+        self.returncode, self.stdout, self.stderr = 0, stdout, ""
+
+
+def test_should_read_skipped_skills_from_the_sync_output(hook):
+    module, _, _ = hook
+    out = f"...\n   {module.LOCAL_SKILLS_LINE} adr, git\n"
+    assert module._skipped_local(out) == ["adr", "git"]
+    assert module._skipped_local("nothing here") == []
+
+
+def test_should_report_a_locally_changed_skill_instead_of_a_download(hook, monkeypatch):
+    module, project, template = hook
+    _template(template)
+    (project / "scripts").mkdir()
+    (project / "scripts" / "update-skills.py").write_text("# not run: subprocess is replaced", encoding="utf-8")
+    for name in ("adr", "prestashop"):
+        (project / ".claude" / "skills" / name).mkdir(parents=True)
+        (project / ".claude" / "skills" / name / "SKILL.md").write_text("# ours", encoding="utf-8")
+    _project(project, {"custom_skills": {"adr": {}, "prestashop": {}}, "skills": {"security": {}, "wp-plugin-development": {}}})
+    monkeypatch.setattr(module, "resolve_template_path", lambda config: str(template))
+    monkeypatch.setattr(module.subprocess, "run",
+                        lambda *a, **k: _Done(f"   {module.LOCAL_SKILLS_LINE} adr, prestashop\n"))
+    message = module.check_template_skills_sync({})
+    assert "Pobrano" not in message
+    assert "adr, prestashop" in message and "porównaj ręcznie" in message
