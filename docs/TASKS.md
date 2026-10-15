@@ -151,6 +151,10 @@ Historia (zrobione przed przejściem):
 
 ## Stan sesji
 
+- 2026-10-15: **Przełącznik `template_update_check` w szablonie wyłączony (#156).** Po ludzku: decyzja właściciela
+  po scaleniu #199 — projekty nie pokazują na starcie sesji linii „Szablon ma zmiany…”; aktualizację uruchamia się
+  ręcznie (`python3 scripts/update-from-template.py`). Włączenie: `true` w `.claude/hooks/config.json` szablonu.
+
 - 2026-10-15: **Aktualizacja projektu z szablonu jednym skryptem z podglądem (#156, paczka 2, ADR-006).**
   Po ludzku: poprawki strażników i hooków docierały do projektów tylko wtedy, gdy ktoś pamiętał, żeby je
   przenieść. Teraz `python3 scripts/update-from-template.py` pokazuje, które pliki szablonu są w projekcie
