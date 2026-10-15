@@ -151,6 +151,17 @@ Historia (zrobione przed przejściem):
 
 ## Stan sesji
 
+- 2026-10-15: **Aktualizacja starszego projektu: poprawna instrukcja, skille zmienione lokalnie nietknięte (#201).**
+  Po ludzku: zgłoszenie kursu (cdue-ai-dev-course#23). Instrukcja mówiła, że wystarczy `update-skills.py` — nie
+  wystarczy; trzeba dwa razy `--sync --apply`, potem `update-from-template.py`. Synchronizacja skilli (także ta
+  automatyczna na starcie sesji) kasowała poprawki zrobione w projekcie — teraz je pomija i zgłasza do porównania
+  (decyzja właściciela). Podgląd aktualizacji ostrzega o poleceniu lintu/testów, które po aktualizacji zablokuje
+  każdy commit. Technicznie: `update-skills.py` `skill_history()` / `skill_state()` (blob id po `hashlib`, ta sama
+  reguła co `update-from-template.py`), linia `LOCAL_SKILLS_LINE` czytana przez `session-context.py`; klon z adresu
+  `--filter=blob:none` zamiast `--depth=1`; `update-from-template.py` `blocking_guard_commands()` ładuje WYDANY
+  `scripts/dev-guards/stack.py`. README, GUARDS, ADR-006 (sprostowanie), scenariusz 10l. Pakiet 920/920; próba
+  sesji na kopii z prawdziwym klonem tai (oba scenariusze + hook). Dług: `update-skills.py` 640 linii.
+
 - 2026-10-15: **Przełącznik `template_update_check` w szablonie wyłączony (#156).** Po ludzku: decyzja właściciela
   po scaleniu #199 — projekty nie pokazują na starcie sesji linii „Szablon ma zmiany…”; aktualizację uruchamia się
   ręcznie (`python3 scripts/update-from-template.py`). Włączenie: `true` w `.claude/hooks/config.json` szablonu.

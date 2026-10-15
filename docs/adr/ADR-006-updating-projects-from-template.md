@@ -90,6 +90,19 @@ nie dociera do projektów, które powstały wcześniej, i nikt o tym nie wie.
   podmieniany bez pytania — wolno, bo sam niczego nie zmienia bez `--apply` (decyzja właściciela
   z 2026-10-14). Skrypt nie ogłasza się sam w starym projekcie: hook sprzed ADR-006 o nim nie wie,
   więc pierwsze `--apply` uruchamia człowiek (README, sekcja „Istniejący projekt”).
+  Sprostowanie (2026-10-15, #201, próba kursu): w starym projekcie to wymaga **dwóch** przebiegów
+  `update-skills.py --sync --apply` — pierwszy podmienia sam skrypt synchronizacji (stary nie zna
+  `update-from-template.py`), dopiero drugi dokłada aktualizację. Samo `update-skills.py` bez `--sync` nie robi
+  nic ze skryptami szablonu. Kolejność kroków: README, „Poprawki z szablonu”.
+- Synchronizacja skilli stosuje tę samą regułę co aktualizacja plików (#201, decyzja właściciela 2026-10-15):
+  skill z plikiem, którego treści nie było w żadnej wersji szablonu, jest „zmieniony lokalnie” — nie jest
+  nadpisywany ani przy ręcznym `--sync --apply`, ani przy automatycznej synchronizacji na starcie sesji; hook
+  zgłasza go do porównania zamiast „Pobrano”. Do rozpoznania potrzebna jest historia szablonu: lokalny klon ją
+  ma, klon z adresu jest pobierany bez zawartości plików (`--filter=blob:none`), ale z historią. Szablon bez
+  historii (zwykły katalog) — jak dotąd, każda różnica to „do aktualizacji”. Stary `update-skills.py` w projekcie
+  tej reguły nie zna, więc pierwszy przebieg wciąż może nadpisać — stąd obowiązkowy podgląd.
+- Podgląd `update-from-template.py` sprawdza polecenia lintu i testów z `config.json` projektu **wydanymi**
+  strażnikami (nie kopią w projekcie, która może być sprzed #185) i ostrzega, gdy któreś zablokuje każdy commit.
 - Lista plików szablonu to `template-files.json` w korzeniu szablonu, czytany z wydanego `main`
   (test pilnuje, że każdy wzorzec trafia w istniejący plik i że skrypty startu na nią nie trafiają).
 - Hook startu sesji działa tylko z lokalnym klonem szablonu: przełącznika nie da się odczytać

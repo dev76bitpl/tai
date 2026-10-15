@@ -442,6 +442,12 @@ potem przegląd `git diff` i commit. Stany plików:
 | nowy w szablonie | dodaje |
 | zmieniony lokalnie — treść nie pasuje do żadnej wersji szablonu | nic; porównaj ręcznie |
 
+Podgląd ostrzega też o poleceniu lintu albo testów z `.claude/hooks/config.json`, którego nie da się uruchomić
+— po aktualizacji strażnicy zablokują nim każdy commit (sekcja „Konfiguracja strażników”). Projekt sprzed ADR-006
+nie ma jeszcze tego skryptu: dwa razy `python3 scripts/update-skills.py --sync --apply` (pierwszy podmienia
+skrypt synchronizacji, drugi dokłada aktualizację), z podglądem `--sync` przed pierwszym — stara synchronizacja
+nadpisuje skille zmienione w projekcie. Nowa zostawia je w spokoju i wypisuje jako „zmieniony lokalnie”.
+
 `CLAUDE.md` jest tylko porównywany: skrypt wymienia sekcje nowe i inne niż w szablonie. Gdy szablon włączy
 sprawdzanie (`"template_update_check": true` w swoim `.claude/hooks/config.json`), hook startu sesji mówi
 o zmianach sam — pod warunkiem, że projekt ma lokalny klon szablonu (`$AI_TEMPLATE_PATH`). Dlaczego tak:
