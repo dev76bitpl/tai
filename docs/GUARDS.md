@@ -430,6 +430,23 @@ i głos na własne, jeśli Twój lektor czyta lokalny język dobrze.
 
 ---
 
+## Aktualizacja z szablonu
+
+Strażnicy, hooki i skrypty startu przychodzą z szablonu. Poprawki wciąga
+`python3 scripts/update-from-template.py` (podgląd), a kopiuje dopiero `--apply` — na gałęzi roboczej,
+potem przegląd `git diff` i commit. Stany plików:
+
+| Stan | Co robi `--apply` |
+|------|-------------------|
+| do aktualizacji — w projekcie leży starsza wydana wersja | podmienia |
+| nowy w szablonie | dodaje |
+| zmieniony lokalnie — treść nie pasuje do żadnej wersji szablonu | nic; porównaj ręcznie |
+
+`CLAUDE.md` jest tylko porównywany: skrypt wymienia sekcje nowe i inne niż w szablonie. Gdy szablon włączy
+sprawdzanie (`"template_update_check": true` w swoim `.claude/hooks/config.json`), hook startu sesji mówi
+o zmianach sam — pod warunkiem, że projekt ma lokalny klon szablonu (`$AI_TEMPLATE_PATH`). Dlaczego tak:
+[ADR-006](adr/ADR-006-updating-projects-from-template.md).
+
 ## Znane pułapki
 
 | Problem | Przyczyna | Rozwiązanie |

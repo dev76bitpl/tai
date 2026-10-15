@@ -116,6 +116,19 @@ cp /sciezka/do/tai/scripts/update-skills.py scripts/update-skills.py
 python3 scripts/update-skills.py --full-sync
 ```
 
+### Poprawki z szablonu: strażnicy, hooki, skrypty
+
+```bash
+python3 scripts/update-from-template.py           # podgląd: co jest do aktualizacji, co nowe, co zmienione lokalnie
+python3 scripts/update-from-template.py --apply   # kopiuje pliki „do aktualizacji” i „nowe”
+```
+
+Źródłem jest wydany `main` szablonu, a listę plików szablon trzyma w `template-files.json`. Plik zmieniony
+w projekcie nie jest nadpisywany, a `CLAUDE.md` jest tylko porównywany po sekcjach. Skrypt dociera do
+starszych projektów razem z synchronizacją skilli. Gdy szablon ma w swoim `.claude/hooks/config.json`
+`"template_update_check": true`, hook startu sesji w każdym projekcie z lokalnym klonem szablonu dociąga
+`main` najwyżej raz na dobę i mówi jednym zdaniem, co czeka. Szczegóły: [ADR-006](docs/adr/ADR-006-updating-projects-from-template.md).
+
 ### Skąd brana jest ścieżka do template
 
 Pierwsze trafienie wygrywa:
@@ -133,7 +146,7 @@ Pierwsze trafienie wygrywa:
 export AI_TEMPLATE_PATH="$HOME/Projekty/76bit/tai"
 ```
 
-Ścieżka lokalna daje auto-weryfikację hooków i diff `*.md`; URL wystarcza do
+Ścieżka lokalna daje podpowiedź o zmianach w szablonie na starcie sesji i diff `*.md`; URL wystarcza do
 auto-syncu skilli. **Skille z lokalnego klona idą zawsze ze stanu `origin/main`**, nie z katalogu roboczego: gałąź w toku i niezacommitowane zmiany w klonie nie trafiają do projektów. Projekty widzą nową wersję szablonu po `git pull` (albo `git fetch`) w klonie. Klon bez `origin/main` → synchronizacja odmawia z komunikatem. Ścieżka z konkretnej maszyny **nie powinna** trafiać do
 commitowanego `config.json` — to warstwy 1 i 2.
 

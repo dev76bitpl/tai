@@ -151,6 +151,21 @@ Historia (zrobione przed przejściem):
 
 ## Stan sesji
 
+- 2026-10-15: **Aktualizacja projektu z szablonu jednym skryptem z podglądem (#156, paczka 2, ADR-006).**
+  Po ludzku: poprawki strażników i hooków docierały do projektów tylko wtedy, gdy ktoś pamiętał, żeby je
+  przenieść. Teraz `python3 scripts/update-from-template.py` pokazuje, które pliki szablonu są w projekcie
+  starsze, które nowe, a które zmienione lokalnie; `--apply` kopiuje tylko dwie pierwsze grupy, pliku
+  zmienionego w projekcie nie rusza, a `CLAUDE.md` tylko porównuje po sekcjach. Gdy w szablonie włączony jest
+  przełącznik `template_update_check`, pierwsza wiadomość sesji pokazuje w terminalu jedną linię „Szablon ma
+  zmiany…” (projekt z lokalnym klonem szablonu, `git fetch` najwyżej raz na dobę).
+  Technicznie: lista plików w `template-files.json` (czytana z `origin/main` szablonu, więc nowy wpis działa
+  i w starszej kopii skryptu); stan pliku po blob hash w historii `git log --raw`; adres URL → klon
+  `--filter=blob:none`. `session-context.py` ładuje `session_notice()` ze skryptu projektu i oddaje linię jako
+  `systemMessage` (zwykłe wyjście `UserPromptSubmit` widzi tylko model — wyszło w teście właściciela).
+  Skrypt jedzie do projektów przez `update-skills.py` (`SYNC_PATHS`); stary projekt dostaje go dopiero przy
+  drugiej synchronizacji skilli, bo pierwsza podmienia sam `update-skills.py`. Dług: `session-context.py`
+  (439 linii) i `update-skills.py` (585) ponad limitem 400. Scenariusz 10l; próba właściciela na kopii OK.
+
 - 2026-10-14: **Dołączenie do projektu zaczyna się od doctora; ADR-006 o aktualizacji z szablonu (#156, paczka 1).**
   Po ludzku: kto sklonował projekt, nie wiedział, że strażnicy i hooki nie działają na jego komputerze. README
   projektu ma teraz sekcję „Po sklonowaniu” z `python3 scripts/doctor.py`, a każdy wiersz raportu z problemem

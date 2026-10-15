@@ -85,8 +85,16 @@ nie dociera do projektów, które powstały wcześniej, i nikt o tym nie wie.
   podpowiedź, a nie po przypadkowym odkryciu.
 - Każdy nowy plik szablonu, który ma jechać do projektów, trzeba dopisać do listy
   z decyzji 4 — inaczej aktualizacja go nie zobaczy (test pilnuje tylko istnienia).
-- Projekty sprzed tego ADR nie mają `update-from-template.py`; pierwsze skopiowanie jest ręczne
-  albo przez `update-skills.py --sync`, jeśli skrypt trafi do `SYNC_PATHS` (do rozstrzygnięcia
-  w implementacji).
-- Rozpoznanie „zmieniony lokalnie” wymaga historii wydań szablonu w klonie; projekt bez klona
-  (tylko adres zdalny) dostaje porównanie z ostatnim wydaniem i ostrzeżenie zamiast wykrycia.
+- Projekty sprzed tego ADR dostają `update-from-template.py` razem z synchronizacją skilli
+  (`update-skills.py --sync`, który hook startu sesji uruchamia sam). To jedyny plik szablonu
+  podmieniany bez pytania — wolno, bo sam niczego nie zmienia bez `--apply` (decyzja właściciela
+  z 2026-10-14). Skrypt nie ogłasza się sam w starym projekcie: hook sprzed ADR-006 o nim nie wie,
+  więc pierwsze `--apply` uruchamia człowiek (README, sekcja „Istniejący projekt”).
+- Lista plików szablonu to `template-files.json` w korzeniu szablonu, czytany z wydanego `main`
+  (test pilnuje, że każdy wzorzec trafia w istniejący plik i że skrypty startu na nią nie trafiają).
+- Hook startu sesji działa tylko z lokalnym klonem szablonu: przełącznika nie da się odczytać
+  z samego adresu bez klonowania przy każdej sesji. Projekt znający szablon tylko z adresu
+  uruchamia skrypt ręcznie — skrypt klonuje wtedy szablon bez treści plików (`--filter=blob:none`),
+  więc rozpoznaje „zmieniony lokalnie” tak samo jak przy klonie.
+- Data ostatniego pobrania leży w katalogu Gita klonu szablonu (`ai-template-last-fetch`), więc
+  jeden klon pobiera raz na dobę niezależnie od liczby projektów.

@@ -138,3 +138,17 @@ def test_should_sync_when_the_released_template_differs(hook, tmp_path, monkeypa
     ran = _record_sync(module, monkeypatch, Done())
     assert "adr" in module.check_template_skills_sync({})
     assert len(ran) == 1
+
+
+# ── the template notice must reach the screen, not only the model (ADR-006, decision 7) ──
+
+def test_should_show_template_notice_on_screen_and_keep_it_in_context(hook):
+    module, _, _ = hook
+    out = json.loads(module.render("[SESSION START]\n\nnotice", "notice"))
+    assert out["systemMessage"] == "notice"
+    assert out["hookSpecificOutput"] == {"hookEventName": "UserPromptSubmit", "additionalContext": "[SESSION START]\n\nnotice"}
+
+
+def test_should_keep_plain_context_when_nothing_must_be_shown(hook):
+    module, _, _ = hook
+    assert module.render("[SESSION START]\n\ntasks", None) == "[SESSION START]\n\ntasks"

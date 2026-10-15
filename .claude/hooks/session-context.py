@@ -3,7 +3,7 @@
 UserPromptSubmit hook: kontekst na start sesji.
 Na pierwszej wiadomości sesji:
 - czyta docs/TASKS.md z repozytoriów skonfigurowanych w config.json (klucz "repos")
-- porównuje .claude/hooks/*.py z ai_template_path — ostrzega o desyncu
+- mówi, czy szablon ma zmiany dla projektu (ADR-006; scripts/update-from-template.py)
 Kolejne wiadomości tej samej sesji: hook nie odpala (marker w /tmp).
 
 config.json (wymagane pola):
@@ -125,30 +125,22 @@ def read_tasks(config: dict) -> list[tuple[str, str]]:
     return result
 
 
-def check_template_sync(config: dict) -> list[str]:
-    """Zwraca listę plików .py które różnią się między hooks/ a template."""
-    template_path = resolve_template_path(config)
-    if not template_path or _is_git_url(template_path):
-        return []
-
-    template_hooks = Path(template_path) / ".claude" / "hooks"
-    if not template_hooks.is_dir():
-        return []
-
-    diffs = []
-    for project_file in sorted(HOOKS_DIR.glob("*.py")):
-        template_file = template_hooks / project_file.name
-        if not template_file.exists():
-            diffs.append(f"  + {project_file.name}  (brak w template)")
-            continue
-        if project_file.read_text(encoding="utf-8") != template_file.read_text(encoding="utf-8"):
-            diffs.append(f"  ~ {project_file.name}  (różni się od template)")
-
-    for template_file in sorted(template_hooks.glob("*.py")):
-        if not (HOOKS_DIR / template_file.name).exists():
-            diffs.append(f"  - {template_file.name}  (tylko w template, brak w projekcie)")
-
-    return diffs
+def check_template_updates(config: dict) -> str | None:
+    """ADR-006: one line when the template has changes for this project. The logic lives in the
+    project's scripts/update-from-template.py; a project without it stays quiet."""
+    if config.get("is_template") is True:
+        return None
+    script = MONOREPO_ROOT / "scripts" / "update-from-template.py"
+    if not script.is_file():
+        return None
+    try:
+        spec = importlib.util.spec_from_file_location("update_from_template_for_hook", script)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        from datetime import date
+        return module.session_notice(MONOREPO_ROOT, resolve_template_path(config), date.today().isoformat())
+    except Exception:
+        return None
 
 
 SYNC_HASH_FILE = HOOKS_DIR / ".sync-hash"
@@ -387,6 +379,17 @@ def check_template_path_configured(config: dict) -> str | None:
     )
 
 
+def render(context: str, visible: str | None) -> str:
+    """Plain stdout of UserPromptSubmit reaches only the model. A line the owner must see on
+    screen (the template notice, ADR-006) goes out as JSON with systemMessage as well."""
+    if not visible:
+        return context
+    return json.dumps({
+        "systemMessage": visible,
+        "hookSpecificOutput": {"hookEventName": "UserPromptSubmit", "additionalContext": context},
+    }, ensure_ascii=False)
+
+
 def main():
     session_id = get_session_id()
     if not session_id:
@@ -400,12 +403,12 @@ def main():
 
     config = load_config()
     tasks = read_tasks(config)
-    sync_diffs = check_template_sync(config)
+    template_updates = check_template_updates(config)
     skills_sync_warning = check_template_skills_sync(config)
     skills_warning = check_skills_staleness()
     template_path_warning = check_template_path_configured(config)
 
-    if not tasks and not sync_diffs and not skills_sync_warning and not skills_warning and not template_path_warning:
+    if not tasks and not template_updates and not skills_sync_warning and not skills_warning and not template_path_warning:
         sys.exit(0)
 
     output = "[SESSION START]\n\n"
@@ -413,11 +416,8 @@ def main():
     if template_path_warning:
         output += template_path_warning + "\n\n---\n\n"
 
-    if sync_diffs:
-        output += "⚠️  [DESYNC] .claude/hooks/ różni się od AI template repo:\n"
-        output += "\n".join(sync_diffs)
-        output += f"\n  Template: {config.get('ai_template_path', '')}\n"
-        output += "  Zsynchronizuj zmiany z template przed commitowaniem.\n\n---\n\n"
+    if template_updates:
+        output += template_updates + "\n\n---\n\n"
 
     if skills_sync_warning:
         output += skills_sync_warning + "\n\n---\n\n"
@@ -431,7 +431,7 @@ def main():
         output += "\n\n---\n\n".join(sections)
         output += "\n\n---\n\nWYŚWIETL użytkownikowi powyższą listę otwartych zadań dosłownie, zanim odpiszesz na jego wiadomość."
 
-    print(output)
+    print(render(output, template_updates))
     sys.exit(0)
 
 
