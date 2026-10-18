@@ -7,6 +7,8 @@ w GitHub Issues (`gh issue list`), nie tutaj. Fazy definiuje [docs/ROADMAP.md](R
 
 ## Stan sesji
 
+- 2026-10-18 **template_update_check = true** — przywrócenie powiadomienia o aktualizacjach
+  szablonu na starcie sesji w projektach. Flaga była wyłączona od PR #200 (15.10).
 - 2026-10-18 **#206 CLAUDE.md slim** — przeniesienie szczegółów (incydenty, uzasadnienia,
   procedury, przykłady) z CLAUDE.md do nowego `docs/RULES_REFERENCE.md`. Wynik: 71k → 30k znaków
   (limit 40k), 38 reguł bez zmian, 20 odnośników do reference. README zaktualizowany.
