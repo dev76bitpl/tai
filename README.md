@@ -65,7 +65,7 @@ Gdy krok się nie uda, skrypt proponuje uruchomienie Claude Code z opisem błęd
 
 **Guard system** — pre-commit blokuje złe commity: format, brak testów, brak ADR, brak `[user-tested]`.
 
-**Scaffoldy docs** — `TASKS.md`, `ROADMAP.md`, `SETUP.md`, `TESTING.md`, `PROJECT_SCOPE.md` jako puste szkielety, a obok wypełnione wzory w `docs/examples/`. `docs/GUARDS.md` opisuje strażników i narzędzia AI, które projekt dostaje gotowe.
+**Scaffoldy docs** — `TASKS.md`, `ROADMAP.md`, `SETUP.md`, `TESTING.md`, `PROJECT_SCOPE.md` jako puste szkielety, a obok wypełnione wzory w `docs/examples/`. `docs/GUARDS.md` opisuje strażników i narzędzia AI, które projekt dostaje gotowe. `docs/RULES_REFERENCE.md` — rozwinięcia reguł z `CLAUDE.md` (incydenty, uzasadnienia, procedury).
 
 ---
 

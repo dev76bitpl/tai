@@ -39,26 +39,20 @@ AI działa jako sparingpartner techniczny, a nie doradca.
 ### 1a. AI nie działa samo — przed każdym ruchem pytanie „robić?" (obowiązkowe)
 
 AI może przygotować ruch i go zaproponować, ale **wykonuje go dopiero po „tak" usera**. Pytanie jest
-krótkie, zamknięte (tak/nie albo wybór z kilku opcji) i pada **przed** ruchem, nie w podsumowaniu po
-fakcie. Kosztuje usera pół sekundy.
+krótkie, zamknięte (tak/nie albo wybór z kilku opcji) i pada **przed** ruchem, nie w podsumowaniu po fakcie.
 
 - **Bez pytania wolno tylko czytać stan** — pliki, logi, listy, status. (Na produkcji odczyt też wymaga zgody: 14a.)
-- **Pytania wymaga wszystko, co coś uruchamia, zapisuje, kopiuje, kasuje, wysyła albo zostaje po sesji** — także wtedy, gdy da się to cofnąć
-- **AI nie wybiera za usera**: co jest ważne, co idzie pierwsze, gdzie położyć wynik. AI podaje opcje i swoją rekomendację, decyduje user
+- **Pytania wymaga wszystko, co coś uruchamia, zapisuje, kopiuje, kasuje, wysyła albo zostaje po sesji**
+- **AI nie wybiera za usera**: co jest ważne, co idzie pierwsze, gdzie położyć wynik
 - **W pytaniu AI podaje**: co zrobi, na czym, dokąd trafi wynik i czy da się to cofnąć
-- **Pośpiech nie jest zgodą.** „Okno się zamyka" to założenie AI, dopóki user go nie potwierdzi — pytanie trwa krócej niż zwłoka, której AI się obawia
+- **Pośpiech nie jest zgodą.** Pytanie trwa krócej niż zwłoka, której AI się obawia
 - **Zgoda dotyczy tego, o co padło pytanie**, nie otwiera następnych kroków
-- **Diagnozę zaczynaj od pytania o to, czego nie widać z narzędzi** — jak coś jest podłączone, co user zmienił ręcznie. Jedno pytanie bywa krótsze niż godzina dedukcji
+- **Diagnozę zaczynaj od pytania o to, czego nie widać z narzędzi**
 
 Polecenie usera („zrób X") jest zgodą na X w opisanym zakresie. Wybory, których polecenie nie
 rozstrzyga, wracają do usera jako pytanie, a nie jako domysł AI.
 
-Zasada powstała po realnym zdarzeniu (2026-10-09): zewnętrzny dysk z jedynym egzemplarzem danych
-przestał startować, a gdy w końcu ruszył, AI samo uruchomiło kopię ratunkową — samo uznało, co jest
-ważne (zgadując po nazwach katalogów, źle), samo wybrało dysk systemowy jako cel, choć danych było
-kilka razy więcej niż miejsca, i zameldowało po fakcie. User kazał kopię zatrzymać i cofnąć. Przyczyną
-awarii okazały się trzy dyski zasilane z jednego przełącznika USB — AI miało tę hipotezę zapisaną, ale
-nie zapytało, jak dysk jest podłączony. Nic nie zginęło poza zaufaniem, że AI pyta.
+→ Incydent i kontekst: docs/RULES_REFERENCE.md § 1a
 
 ---
 
@@ -73,34 +67,27 @@ nie zapytało, jak dysk jest podłączony. Nic nie zginęło poza zaufaniem, że
 
 - kwoty w opisach PR pisz kodem waluty (`600 PLN`), nie symbolem lokalnym
 - nazwy własne i etykiety UI w języku lokalnym → **tylko** w \`backtickach\` albo "podwójnym cudzysłowie"; te spany guard pomija
-- **skanuj treść przed wysłaniem, nie po odbiciu przez CI** — koszt przebiegu CI jest wyższy niż koszt sprawdzenia jednym poleceniem
+- **skanuj treść przed wysłaniem, nie po odbiciu przez CI**
 
 ---
 
 ### 2a. Rejestr wyjaśnień — tłumacz na ludzki
 
-To AI rozdaje karty w kodzie — user kontroluje i decyduje, ale nie pisze go na co dzień. Dlatego przy omawianiu zadań, bugów i decyzji AI tłumaczy **w kategoriach efektu dla użytkownika i biznesu**, nie implementacji.
+AI tłumaczy **w kategoriach efektu dla użytkownika i biznesu**, nie implementacji.
 
 - domyślnie: co to robi / co user zobaczy / czym to grozi — nie jak jest napisane
-- nazwy plików, funkcji, sygnatury, fragmenty kodu → tylko gdy są niezbędne do podjęcia decyzji, nie jako domyślny język opisu
-- gdy trzeba wejść w kod (np. wybór techniczny), AI najpierw mówi po ludzku o co chodzi, dopiero potem pokazuje szczegół
-- żargon (enum, guard, FK, mutation, override...) → rozwinąć przy pierwszym użyciu albo zastąpić opisem
-- zasada testu: jeśli właściciel firmy nie zrozumiałby o czym mowa — opis jest zbyt techniczny
+- nazwy plików, funkcji → tylko gdy niezbędne do podjęcia decyzji
+- żargon → rozwinąć przy pierwszym użyciu albo zastąpić opisem
+- zasada testu: jeśli właściciel firmy nie zrozumiałby — opis jest zbyt techniczny
 
-**Instrukcja obsługi aplikacji prowadzi tym, co user widzi na ekranie — nigdy nazwami z kodu.**
-User patrzy na interfejs, AI czyta repo, i tylko AI może pomylić jedno z drugim. Etykieta wyczytana
-z komponentu bywa inna niż ta wyświetlana (nagłówek sekcji podany jako nazwa zakładki, klucz
-tłumaczenia zamiast przetłumaczonego tekstu, nazwa wariantu zamiast napisu na przycisku), a user nie
-ma jak tego zweryfikować — więc zgaduje, co AI miało na myśli, i traci zaufanie do reszty instrukcji.
+**Instrukcja obsługi prowadzi tym, co user widzi na ekranie — nigdy nazwami z kodu.**
 
-- prowadź **adresem / ścieżką, którą user widzi** (URL, ekran, komenda) — to jedyny wspólny punkt
-  odniesienia, którego obie strony nie mogą zrozumieć inaczej
-- opisuj **co ma być widać** („dwie tabele jedna pod drugą, górna z dniami tygodnia"), nie jak
-  element nazywa się w kodzie
-- gdy user mówi, że nie widzi tego co AI opisuje — **poproś o zrzut ekranu zamiast dopowiadać
-  kolejną nazwę**; jeden zrzut kończy spór, trzy zgadywanki go pogłębiają
-- oczekiwany wynik nazywaj wprost, łącznie z „nic się nie zmieniło" — brak zmiany bywa **poprawnym
-  wynikiem testu regresji**, ale bez uprzedzenia user czyta go jako awarię wdrożenia
+- prowadź **adresem / ścieżką, którą user widzi** (URL, ekran, komenda)
+- opisuj **co ma być widać**, nie jak element nazywa się w kodzie
+- gdy user nie widzi tego co AI opisuje — **poproś o zrzut ekranu**
+- oczekiwany wynik nazywaj wprost, łącznie z „nic się nie zmieniło"
+
+→ Rozwinięcie: docs/RULES_REFERENCE.md § 2a
 
 ---
 
@@ -108,7 +95,7 @@ ma jak tego zweryfikować — więc zgaduje, co AI miało na myśli, i traci zau
 
 **Branch strategy**: każda funkcjonalność / fix idzie na osobnym branchu, merge do main przez PR. Nigdy bezpośrednio na main.
 
-Przed stworzeniem nowego brancha: `git pull origin main` — zawsze, bez wyjątków. Branch z przestarzałego main = merge conflicts przy PR.
+Przed stworzeniem nowego brancha: `git pull origin main` — zawsze, bez wyjątków.
 
 Format nazwy brancha: `feat/nazwa`, `fix/nazwa`, `docs/nazwa`.
 
@@ -128,65 +115,30 @@ type(scope): short description
 [user-tested] [skip-sync]   ← flagi ZAWSZE w body, nigdy w subject
 ```
 
-Dla małych zmian (literówka, rename) – sam subject, bez body.
-Dla dużych – body obowiązkowe.
+Dla małych zmian – sam subject, bez body. Dla dużych – body obowiązkowe.
 
-**Flagi (`[user-tested]`, `[skip-sync]`, `[skip-test-check]`) muszą być w body, nie w subject.** Subject musi być czystym conventional commit — release-please parsuje tylko subject, a nawiasy kwadratowe po opisie łamią parser i blokują automatyczny bump wersji.
+**Flagi muszą być w body, nie w subject.** Release-please parsuje tylko subject, a nawiasy kwadratowe łamią parser.
 
 **Protokół przed każdym commitem (obowiązkowy, bez wyjątków):**
 
 1. `git status` → ustal co jest staged
-2. Skomponuj wiadomość commita ZANIM uruchomisz `git commit`:
-   - subject ≤ 72 znaki (gitlint twardy limit)
-   - linie body ≤ 100 znaków
-   - flagi bypass (`[skip-docs]`, `[user-tested]`, `[skip-test-check]`, `[no-adr]`) w body
-3. Dry-run guardów z tą wiadomością — jeden command, wszystkie guardy commit-msg naraz:
-   ```
-   # Windows (PowerShell) — [IO.File] unika BOM który łamie gitlint:
-   [IO.File]::WriteAllText("$env:TEMP\COMMIT_EDITMSG", $msg)
-   python3 -m pre_commit run --hook-stage commit-msg --commit-msg-filename "$env:TEMP\COMMIT_EDITMSG"
-
-   # Linux/macOS:
-   echo "subject\n\nbody flags" > /tmp/COMMIT_EDITMSG
-   COMMIT_EDITMSG=/tmp/COMMIT_EDITMSG pre-commit run --hook-stage commit-msg --commit-msg-filename /tmp/COMMIT_EDITMSG
-   ```
-   **Nie używaj ręcznej listy guardów** — lista w `.pre-commit-config.yaml` jest source of truth; ręczna lista w CLAUDE.md będzie zawsze niepełna.
+2. Skomponuj wiadomość commita ZANIM uruchomisz `git commit` (subject ≤72 zn, body ≤100 zn/linia, flagi w body)
+3. Dry-run guardów z tą wiadomością — jeden command, wszystkie guardy commit-msg naraz (komendy → docs/RULES_REFERENCE.md § 3)
 4. Jeśli wszystkie `exit: 0` → jeden `git commit`, bez iteracji
 
-**Zakaz**: `git commit` bez wcześniejszego dry-runu guardów. Każda nieudana próba commita to błąd procesu AI, nie pecha.
+**Zakaz**: `git commit` bez wcześniejszego dry-runu guardów.
 
-Po commicie zamykającym branch AI proponuje PR — nie czeka aż user zapyta. PR zawiera:
-- tytuł = subject commita (lub krótsze podsumowanie jeśli było kilka commitów)
-- body: summary (bullet points co zmieniono) + test plan (checklist co sprawdzić)
+Po commicie zamykającym branch AI proponuje PR (tytuł + summary + test plan). Po utworzeniu PR AI sugeruje merge i **nie przechodzi do kolejnego zadania** dopóki user nie potwierdzi merge'a. Merge należy wyłącznie do usera.
 
-Po utworzeniu PR AI sugeruje merge i **nie przechodzi do kolejnego zadania** dopóki user nie potwierdzi merge'a. Merge należy wyłącznie do usera — AI nigdy nie merguje samodzielnie.
+**Ekonomia PR/CI.** AI **batchuje** commity i proponuje **jeden PR per temat/sesja**. Push/PR proponuje gdy domknięta jest cała paczka albo user mówi wprost „wypychamy".
 
-**Ekonomia PR / CI — nie marnuj minut runnera.** GitHub Actions ma skończony budżet minut (zwłaszcza plan Free + repo prywatne), a każdy push i PR odpala pełne CI. Commit lokalny jest darmowy — kosztuje dopiero push + PR + CI. Dlatego AI **batchuje**: kumuluje commity na branchu i proponuje **jeden PR per temat/sesja**, nie per plik ani per drobna zmiana. AI nie proponuje push/PR dla pojedynczej drobnej zmiany — zbiera do sensownej paczki; push/PR proponuje gdy domknięta jest cała paczka albo user mówi wprost „wypychamy". Commitować lokalnie po każdym domkniętym kroku (reguła wyżej) wolno i trzeba — ograniczenie dotyczy wyłącznie push + PR, nie lokalnych commitów.
+**Sprzątanie po merge'u (obowiązkowe).** Po merge: `git checkout main` → `git pull origin main` → usunięcie brancha lokalnie (`-d`) i zdalnie. Kolejne zadanie startuje z czystego maina.
 
-**Sprzątanie po merge'u (obowiązkowe).** Gdy user potwierdzi merge PR, AI od razu — bez czekania na pytanie — proponuje i wykonuje sprzątanie brancha: `git checkout main` → `git pull origin main` → usunięcie zmergowanego brancha lokalnie (`git branch -d`, nigdy `-D`) i zdalnie. Nie zostawiamy stale branchy ani dalszej pracy na branchu który jest już w main — kolejne zadanie startuje z czystego, dociągniętego maina (reguła: `git pull origin main` przed nowym branchem). Trigger to **zmergowany PR**, nie „koniec sesji" w ogóle: branch z niezmergowaną pracą zostaje nietknięty, a `git branch -d` i tak odmówi skasowania czegoś, co nie weszło do main.
-
-**Wyjątek squash-merge.** Repo squashujące PR-y tworzy w main **jeden nowy commit**, więc `git branch -d` odmówi **nawet w pełni zmergowanego** brancha („not fully merged") — commity brancha nie są w historii main dosłownie. W tym trybie `-d` nie zadziała jako sprzątanie. AI wtedy zbiera dowód merge: PR = `MERGED` (`gh pr view <n> --json state`), remote brancha zniknął (auto-delete) i dociągnięty main zawiera zmianę — **pokazuje ten dowód i proponuje `git branch -D`, ale samego force-delete nie wykonuje bez zgody usera** (to nieodwracalna komenda, więc zostaje bramkowana potwierdzeniem, inaczej niż bezpieczne `-d`). Bez kompletu dowodu merge — nie kasujemy w ogóle (`-d` i STOP).
+→ Wyjątek squash-merge, komendy dry-run: docs/RULES_REFERENCE.md § 3
 
 ---
 
 ### 3c. Równoległe sesje — każda we własnym worktree (obowiązkowe)
-
-Kilka sesji AI pracujących w **tym samym katalogu** dzieli jeden indeks Gita i jeden HEAD. To nie jest
-niewygoda — to cicha utrata pracy:
-
-- **`git status` nie odróżnia cudzej pracy od własnej.** Sesja, która zastaje „brudny" katalog,
-  domyślnie uzna te zmiany za swoje i może je w dobrej wierze zestashować, wycofać albo wciągnąć
-  do commita. To ryzyko **poprzedza** wszystkie poniższe — występuje w pierwszej minucie sesji,
-  zanim ktokolwiek cokolwiek zrobi z gitem
-- **zwykły commit sąsiada** sprząta pliki z Twojego `git status` między dwiema Twoimi komendami —
-  bez `checkout` i bez `add -A`
-- **jeden katalog = jeden HEAD.** `git checkout` w jednej sesji zabiera z katalogu
-  **zacommitowaną** pracę drugiej — jej pliki siedzą na branchu, którego już tam nie ma.
-  Wygląda to jak utrata pracy i kosztuje pół godziny diagnozy, mimo że nic nie zginęło.
-  To najczęstszy objaw, nie `add -A`
-- `git add -A` w jednej sesji **wciąga niezacommitowane pliki drugiej** do commita o zupełnie innym
-  temacie — i nikt tego nie zauważa, bo commit przechodzi guardy i wygląda poprawnie
-- `git stash`, `git reset` i `git restore` działają na cudzą pracę
 
 **Zasada: jedna sesja = jeden worktree.**
 
@@ -196,131 +148,40 @@ git worktree list                              # co jest gdzie
 git worktree remove ../<repo>-<temat>          # po zmergowaniu
 ```
 
-Worktree daje własny katalog roboczy, własny HEAD i własny indeks przy współdzielonej historii —
-sesje przestają sobie wchodzić w drogę, a `git branch -d` nadal widzi wszystko.
+**Worktree nie wystarczy — środowisko dev ma jednego właściciela.** Sesja podnosi środowisko → zapisuje to w `temp/DEV-ENV-OWNER.md`; druga **nie restartuje cudzego kontenera**. Druga sesja pracuje bez środowiska dev.
 
-**Worktree nie wystarczy — środowisko deweloperskie ma jednego właściciela.** Worktree rozdziela
-kod, ale kontener, port i baza są wspólne dla maszyny. Sesja, która podnosi środowisko, zapisuje
-to w `temp/DEV-ENV-OWNER.md` (nazwa sesji, port, godzina); druga **nie restartuje cudzego
-kontenera**. Bez tej zasady restart jednej sesji wygląda u drugiej jak „stary bundle" i kosztuje ją
-pół godziny kasowania cache'u.
+**Kanał między sesjami: `temp/note-for-<sesja>.md`.** Przed użyciem sprawdź, że `temp/` jest w `.gitignore`.
 
-**Druga sesja pracuje bez środowiska dev** — pisze kod, testy i dokumentację, a podgląd w przeglądarce
-robi wtedy, gdy właściciel je zwolni. Podnoszenie drugiego środowiska „na innym porcie" **nie
-działa**: `PORT=3001 docker compose up -d` w tym samym projekcie compose nie tworzy drugiego
-kontenera, tylko przestawia istniejący — czyli zabiera port pierwszej sesji. Prawdziwie osobne
-środowisko wymaga osobnej nazwy projektu (`-p`), a to oznacza **osobny wolumen bazy**: pustą bazę do
-zaseedowania i rozjazd treści między sesjami. Przy pracy na treści CMS to gorsze niż problem, który
-rozwiązujemy.
+**Po wykryciu współdzielenia katalogu AI:**
 
-**Kanał między sesjami: `temp/note-for-<sesja>.md`.** Sesje nie mają innego sposobu, żeby się
-dogadać — `SendMessage` adresuje wyłącznie podagentów uruchomionych przez tę samą sesję, nie
-niezależne sesje użytkownika.
-
-> ⚠️ **Zanim użyjesz kanału, sprawdź, że `temp/` jest ignorowany:** `git check-ignore -v temp/x.md`.
-> Jeśli nie jest — **najpierw dopisz `temp/` do `.gitignore`**. Nieignorowana notatka ląduje
-> w `git status` sąsiada jako nieśledzony plik, czyli robi dokładnie to, przed czym ta reguła
-> ostrzega: podrzuca mu cudzą zmianę, którą w dobrej wierze wciągnie do commita albo sprzątnie.
-> Sprawdzone 17.08.2026: z dziewięciu repozytoriów **pięć nie miało tego wpisu**, łącznie z tym.
-
-**Jak AI rozpoznaje, że dzieli drzewo z kimś innym** (sygnały, nie domysły):
-
-- `git branch --show-current` pokazuje branch, którego ta sesja nie tworzyła
-- narzędzie zgłasza „file has been modified since read" dla pliku, którego sesja nie ruszała
-- w `git status` są zmiany, których sesja nie wprowadziła
-- procesy: `Get-CimInstance Win32_Process | ? { $_.Name -match 'claude' }` (ile sesji żyje) oraz
-  `ls -t ~/.claude/projects/<projekt>/*.jsonl | head` (który transkrypt ruszał się przed chwilą).
-  Uwaga: znaczniki czasu w transkryptach są w UTC, a `mtime` plików w czasie lokalnym — łatwo
-  pomylić się o różnicę stref
-
-**Po wykryciu któregokolwiek sygnału AI:**
-
-1. mówi o tym wprost, zamiast pracować dalej i liczyć na szczęście
+1. mówi o tym wprost
 2. **nie używa `git add -A` ani `git add .`** — dodaje wyłącznie własne pliki po nazwie
 3. nie przełącza brancha ani nie robi `stash`/`reset`/`restore` bez zgody usera
 4. proponuje przeniesienie jednej z sesji do własnego worktree
-5. przed commitem sprawdza `git diff --cached --name-only` i potwierdza, że **każdy** plik należy do
-   jego zadania
-6. **nigdy nie sprząta automatycznie** — żadnego `stash`, `checkout .`, `reset` ani `restore` na
-   zmianach, których ta sesja nie napisała. Brudny katalog na starcie to **sygnał do sprawdzenia
-   sąsiada**, nie do posprzątania. `stash` jest odwracalny, `checkout .` nie — a jedno i drugie
-   wygląda tak samo w momencie wpisywania
+5. przed commitem sprawdza `git diff --cached --name-only` — **każdy** plik musi należeć do jego zadania
+6. **nigdy nie sprząta automatycznie** cudzych zmian
 
-**Commit to też zmiana katalogu — nie w trakcie testu usera.** Instancja dev działa z tego samego
-katalogu co repo, a hooki commitu (np. pre-commit) na chwilę **chowają i przywracają** niezacommitowane
-pliki. Serwer z przeładowaniem na gorąco widzi to jako edycję: przebudowuje się w połowie testu, raz
-na starym kodzie, raz na nowym, i odświeża otwarte karty. User widzi „zawieszone logowanie” albo
-losowy błąd, którego w kodzie nie ma — a diagnoza schodzi na zły tor.
+**Nie commituj w trakcie testu usera.** Gdy user testuje na instancji z tego katalogu, AI **najpierw czeka na wynik, potem commituje**. Dotyczy też `git stash`, `checkout` i `rebase`.
 
-- gdy user testuje na instancji z tego katalogu, AI **najpierw czeka na jego wynik, potem commituje** —
-  także `git stash`, `checkout` i `rebase`, bo robią to samo
-- jeśli commit musi pójść w trakcie testu → powiedz o tym userowi i poproś o powtórzenie testu po commicie
-- zgłoszenie błędu w trakcie commitu AI → najpierw sprawdź log serwera pod kątem przebudowy
-  („Compiled”) w tej samej minucie, zanim zaczniesz szukać buga w kodzie
-
-Ta zasada wyszła z realnego incydentu: druga sesja przełączyła branch w trakcie pracy pierwszej, a
-`git add -A` o kilka minut minęło się z pojawieniem się cudzych plików. Nic nie zginęło wyłącznie
-dzięki kolejności zdarzeń — nie dzięki jakiemukolwiek zabezpieczeniu.
+→ Dlaczego, sygnały, docker, incydent: docs/RULES_REFERENCE.md § 3c
 
 ---
 
 ### 3d. Środowisko uruchomieniowe — AI nigdy nie zajmuje portu usera (obowiązkowe)
 
-User pracuje na domyślnej instancji serwera deweloperskiego: **domyślny port** i **domyślny katalog
-budowania**. To jest jego przestrzeń robocza i AI jej nie dotyka.
-
-**AI uruchamia własną, odizolowaną instancję** — osobny port **i** osobny katalog budowania/cache.
-W projekcie powinna istnieć na to dedykowana komenda (np. `dev:ai`), tak żeby uruchomienie jej nie
-wymagało pamiętania parametrów.
-
-To nie jest kwestia wygody, tylko poprawności: **dwie instancje tego samego serwera dzielące jeden
-katalog budowania nadpisują sobie artefakty** (manifesty tras, cache kompilacji). Objaw bywa mylący —
-np. **404 na stronie, która istnieje**, przy poprawnym kodzie, danych i uprawnieniach — i kieruje
-diagnozę na zupełnie inny tor. Rozdzielenie katalogów usuwa przyczynę, nie objaw.
+**AI uruchamia własną, odizolowaną instancję** — osobny port **i** osobny katalog budowania/cache. W projekcie powinna istnieć dedykowana komenda (np. `dev:ai`).
 
 **Twarde zasady:**
 
-- AI **nie ubija** procesów uruchomionych przez usera (`kill -9`, `Stop-Process -Force`) — ani „na chwilę"
-- AI **nie startuje** niczego na domyślnym porcie; swoje rzeczy testuje na własnym
-- Twarde ubicie serwera deweloperskiego psuje katalog budowania — jeśli już do tego dojdzie,
-  **wyczyść ten katalog** przed ponownym startem, inaczej zostają fałszywe błędy (404, brakujące moduły)
-- Gdy AI naprawdę potrzebuje zatrzymać instancję usera (np. regeneracja klienta bazy blokowana przez
-  plik binarny trzymany przez działający proces — częste na Windows) → **pyta i czeka na zgodę**,
-  a po wykonaniu **przywraca ją** w tym samym stanie
-- Ta sama logika co przy worktree (3c): równoległa praca wymaga rozdzielonych zasobów, nie dobrej woli
+- AI **nie ubija** procesów usera — ani „na chwilę"
+- AI **nie startuje** niczego na domyślnym porcie
+- Twarde ubicie psuje katalog budowania → **wyczyść** przed ponownym startem
+- Zatrzymanie instancji usera → **pyta i czeka na zgodę**, po wykonaniu **przywraca** stan
+- **Gaszenie własnej instancji** wyłącznie po porcie (`fuser -k <port>/tcp`) albo PID. **Nigdy po nazwie/wzorcu** — hook `guard-process-kill.py` to blokuje
+- Plik ze środowiskiem instancji AI nadpisuje **każdą zmienną przypiętą do domyślnego portu**, nie tylko sam port
+- **Przy diagnozie zmieniaj jedną rzecz na raz**
 
-Zasada powstała po realnym incydencie: AI kilkukrotnie ubiło serwer usera i przejęło jego port, a
-współdzielony katalog budowania wygenerował serię 404, które kosztowały pół sesji diagnozy „buga",
-którego nie było.
-
-**Gaszenie własnej instancji — tylko po tym, co ją jednoznacznie identyfikuje.** AI zatrzymuje swój serwer
-wyłącznie **po jego porcie** (np. `fuser -k <port-ai>/tcp`) albo **po numerze procesu** zapisanym przy starcie.
-**Nigdy po nazwie ani wzorcu** (`pkill -f "<komenda serwera>"`, `killall node`, `taskkill /IM node.exe`,
-`Stop-Process -Name node`) — wzorzec nie odróżnia instancji AI od instancji usera i zabija obie. Sama reguła „nie
-ubijaj serwera usera" nie wystarcza — była łamana wielokrotnie, zwykle przy sprzątaniu własnej instancji „na
-szybko" — dlatego pilnuje jej **hook bez flagi pominięcia** `.claude/hooks/guard-process-kill.py` (PreToolUse na
-`Bash|PowerShell`): blokuje kill po nazwie, kill po porcie usera (`dev_user_ports` w `.claude/hooks/config.json`,
-domyślnie `[3000]`) i kill z nierozwiązanym celem (podstawienie, `xargs`); przepuszcza kill po numerze PID, po pliku
-`.pid` i po porcie innym niż usera. Treść w heredocach i cudzysłowach (commit message, edycja dokumentacji) hook
-ignoruje — liczy się samo polecenie. Gdy serwer usera naprawdę musi stanąć — komendę odpala user (akapit wyżej).
-
-**Osobny port to nie tylko `PORT`.** Konfiguracja projektu zwykle trzyma **adres bazowy aplikacji**
-przypięty do portu domyślnego — biblioteki auth, adresy powrotne (callback/redirect), webhooki,
-adresy w mailach. Instancja AI startuje na własnym porcie, ale te zmienne nadal wskazują port usera,
-więc adresy, które aplikacja **generuje**, prowadzą do cudzego serwera. Dlatego plik ze środowiskiem
-instancji AI nadpisuje **każdą zmienną przypiętą do domyślnego portu**, nie tylko sam port.
-
-**Czego to nie tłumaczy — i skąd ta korekta.** Kuszące jest przypisać adresowi bazowemu każdy objaw
-sieciowy, w szczególności **404 na trasie, która istnieje**. Ten objaw ma zwykle inną przyczynę:
-rozjechany katalog budowania (akapit wyżej), leczony jego skasowaniem i restartem. W realnym
-przypadku 404 na całej obsłudze logowania został przypisany zmiennej z adresem — bo **naprawiono
-dwie rzeczy naraz**, nadpisanie zmiennej i wyczyszczenie katalogu, i nie rozdzielono, która pomogła.
-Ten sam objaw wrócił tego samego dnia na instancji usera, gdzie adres bazowy był poprawny.
-
-Stąd zasada ogólniejsza niż sam port: **przy diagnozie zmieniaj jedną rzecz na raz**, a jeśli się nie
-da — **nie zapisuj przyczyny w regułach, dopóki jej nie rozdzielisz**. Błędna przyczyna w regułach
-jest gorsza niż jej brak: kolejna sesja ufa opisowi, przestawia zmienną i szuka dalej, zamiast
-sięgnąć po naprawę, która zajmuje dziesięć sekund.
+→ Uzasadnienia, hook, incydent, pułapka 404: docs/RULES_REFERENCE.md § 3d
 
 ---
 
@@ -330,99 +191,50 @@ Po każdym domkniętym kroku AI proponuje aktualizację dokumentacji — nie cze
 
 Co aktualizować:
 
-- **issue zadania** – odhaczyć domknięty krok na liście kroków (całość zamyka `Closes #N` w PR); praca, która wyszła w sesji → nowe issue, nie wpis w pliku
-- **docs/TASKS.md** – log sesji: wpis w "Stan sesji" o tym, co się wydarzyło i dlaczego; każde wyjście poza główny temat sesji odnotować z dopiskiem dlaczego — żeby zawsze było wiadomo co było celem a co dygresją
-- **docs/SETUP.md** – jeśli pojawiły się nowe komendy, pułapki lub zmieniło się "done when"
-- **docs/ROADMAP.md** – jeśli faza została ukończona lub zmienił się zakres
-- **docs/CONVENTIONS.md** – jeśli powstała nowa konwencja kodu
-- **docs/UI_GUIDELINES.md** – jeśli zmienił się wzorzec UI, dodano nowy komponent lub stan
-- **docs/adr/** – jeśli pojawiła się decyzja architektoniczna
-- **docs/TESTING.md** – jeśli pojawił się nowy krytyczny flow wymagający testu manualnego
-- **docs/DELIVERY_CHECKLIST.md** – jeśli zmienia się standard domykania funkcjonalności
-- **dziennik wdrożeń** – jeśli w projekcie działa cykliczny agent doradczy (raport, audyt, przegląd), każda wdrożona zmiana z jego obszaru dostaje wiersz w pliku w repo; wiersz powstaje w tym samym commicie co zmiana
+- **issue zadania** – odhaczyć domknięty krok; praca spoza scope → nowe issue
+- **docs/TASKS.md** – log sesji: co się wydarzyło i dlaczego
+- **docs/SETUP.md** – nowe komendy, pułapki, "done when"
+- **docs/ROADMAP.md** – ukończona faza, zmiana zakresu
+- **docs/CONVENTIONS.md** – nowa konwencja kodu
+- **docs/UI_GUIDELINES.md** – nowy wzorzec UI, komponent, stan
+- **docs/adr/** – nowa decyzja architektoniczna
+- **docs/TESTING.md** – nowy krytyczny flow
+- **docs/DELIVERY_CHECKLIST.md** – zmiana standardu domykania
+- **dziennik wdrożeń** – zmiana z obszaru cyklicznego agenta doradczego; pola: data wdrożenia, czego dotyczy, co się zmieniło, na czyją rekomendację, tylko wdrożone na produkcji
 
 Kolejność: kod + dokumentacja razem w jednym commicie na końcu kroku.
 
-**Dziennik wdrożeń — gdy w projekcie działa cykliczny agent doradczy:**
-
-Agent, który co tydzień pisze raport albo przegląd, zwykle nie ma pamięci między uruchomieniami:
-czyta repozytorium i tyle. Bez zapisu, co z jego rekomendacji zostało wdrożone, każdy cykl zaczyna
-od zera — nie rozlicza efektu poprzedniej rady, tylko wymyśla następną. Po kilku tygodniach zostaje
-lista pobożnych życzeń zamiast doradztwa.
-
-Lekarstwo jest tanie: jeden plik w repo, jeden wiersz na wdrożoną zmianę.
-
-- **data wdrożenia** (nie data merge'a) — bo skutek zmiany widać z opóźnieniem i bez daty agent
-  przypisze go do złego okresu albo ogłosi porażkę, zanim cokolwiek zdążyło zadziałać
-- **czego dotyczy** i **co się zmieniło** — językiem użytkownika, nie nazwami plików
-- **na czyją rekomendację** — z którego raportu, albo „własna inicjatywa"
-- **tylko wdrożone na produkcji** — dziennik obietnic nie rozlicza niczego
-
-Instrukcja agenta (skill, prompt) musi kazać mu **przeczytać dziennik przed pisaniem** i nazwać
-wprost rekomendację, której w nim nie ma, zamiast po cichu zastąpić ją nową.
-
-Zasada jest ogólniejsza niż jeden raport: **każdy odbiorca bez pamięci potrzebuje kanału w repo**
-— cudzy agent, sesja w chmurze, nowy człowiek w projekcie. Kanałem nie może być czat ani system
-zadań, do którego ten odbiorca nie ma dostępu.
-
-**Gdzie żyje otwarta praca.** W projekcie na GitHubie otwarta praca to **issues**: zadanie = issue, kroki jako lista `- [ ]`, stan zamyka `Closes #N` w PR. `docs/TASKS.md` jest wtedy wyłącznie **logiem sesji** (co się wydarzyło i dlaczego), a `docs/ROADMAP.md` definiuje fazy i nie trzyma stanu. Dwie listy tej samej pracy rozjeżdżają się przy pierwszej zmianie, dlatego w pliku nie prowadzimy otwartych checkboxów. Projekt bez GitHuba zostaje przy `docs/TASKS.md` jako liście zadań (ADR-004) — wtedy wszystko, co te reguły mówią o issue, dotyczy wpisu w tym pliku.
+**Gdzie żyje otwarta praca.** W projekcie na GitHubie otwarta praca to **issues**. `docs/TASKS.md` jest wyłącznie **logiem sesji**. Projekt bez GitHuba → `docs/TASKS.md` jako lista zadań (ADR-004).
 
 **Język dokumentacji — zasada dwóch warstw:**
 
-Każde zadanie (issue, a w projekcie bez GitHuba wpis w `docs/TASKS.md`) i każda faza w `docs/ROADMAP.md` musi mieć dwie warstwy opisu:
+1. **Warstwa ludzka** — potocznie, co user zobaczy / czym grozi brak. **Zwięzła** (reguła 7).
+2. **Warstwa techniczna** — pliki, funkcje, `file:line`, root-cause. **Kompletna maszynowo** (oszczędza tokeny przy re-discovery).
 
-1. **Warstwa ludzka** — potocznie, bez żargonu, co user zobaczy / czym grozi brak. **Zwięzła** — reguła 7 obowiązuje tę warstwę.
-2. **Warstwa techniczna** — konkretne pliki, funkcje, `file:line`, root-cause, pułapki. **Kompletna maszynowo, bez limitu zwięzłości** — user ją pomija, a pełny detal oszczędza tokeny przy następnym dotknięciu zadania (zero re-discovery grepem). Cap na zwięzłość (reguła 7) dotyczy warstwy ludzkiej, nie technicznej.
+Po każdym kroku AI proponuje też **checklistę testów manualnych** (happy path + edge case'y).
 
-Przykład:
+**Weryfikacja mechaniczna przed edycją dokumentacji** (obowiązkowe):
 
-```
-**Krok 2 — filtry w liście zamówień:**
+- Nowy plik w `docs/` → nazwa wg konwencji, wpis do README.md, link z domu
+- Przed zmianą **README.md** → `ls docs/` i zestawienie z tabelą
+- Przed zmianą **docs/ROADMAP.md** → porównaj statusy faz ze stanem issues
+- Przed zmianą **docs/TASKS.md** → dopisz do "Stan sesji" co ukończono
 
-> Po ludzku: dziś żeby znaleźć zamówienie trzeba przewijać całą listę.
-> Po tej zmianie można filtrować po statusie i dacie — wyniki od razu się zawężają.
-
-- [ ] Dodaj parametry query do endpointu...
-- [ ] Update widoku listy...
-```
-
-Zasada: jeśli user po tygodniu nie rozumie co miał na myśli — opis jest zły. Pisz tak żeby rozumiał właściciel firmy, nie programista.
-
-Po każdym domkniętym kroku AI proponuje też checklistę testów manualnych — nie czeka aż user zapyta. Format: krótka lista punktów "co sprawdzić" dla danego flow (happy path + główne edge case'y). Jeśli flow jest krytyczny i lista jest dłuższa — proponuje dopisanie do docs/TESTING.md.
-
-**Weryfikacja mechaniczna przed edycją dokumentacji** (obowiązkowe, nie z pamięci):
-
-- Tworząc **nowy plik w `docs/`** — w tym samym kroku, proaktywnie (user nie ma o tym przypominać): (1) nazwa wg konwencji repo — główne docs UPPERCASE; (2) wpis do tabeli docs w **README.md**; (3) link z naturalnego domu (np. ADR, którego dotyczy); (4) nazwa i nagłówek = treść (gdy zawartość się rozrasta, zaktualizuj nazwę). Brak któregokolwiek = niedomknięty artefakt.
-- Przed zmianą **README.md**: uruchom `ls docs/` i `ls docs/adr/`, zestawiaj każdy plik z tabelą w README — brakujące pliki dopisz.
-- Przed zmianą **docs/ROADMAP.md**: porównaj statusy faz ze stanem issues (w projekcie bez GitHuba: z docs/TASKS.md) — `✅ done` / `🚧 in progress` / `🔜 next` muszą być spójne. Odhaczyć `[x]` zadania które są zrobione.
-- Przed zmianą **docs/TASKS.md**: sprawdź "Stan sesji" — dopisz co ukończono i dlaczego; otwartej pracy tu nie dopisuj, ona idzie do issue.
+→ Dziennik wdrożeń uzasadnienie, przykład warstw: docs/RULES_REFERENCE.md § 4
 
 ---
 
 ### 4a. Dokumentacja użytkownika nadąża za kodem — z automatu (obowiązkowe)
 
-Pomoc dla użytkownika (in-app help, instrukcja, FAQ) opisuje ekrany. Zmiana ekranu bez zmiany opisu to
-dokumentacja, która kłamie — i nikt tego nie zauważa, dopóki użytkownik nie kliknie w coś, czego opis nie
-przewiduje. AI jest jedynym autorem kodu, więc **musi dostać sygnał w chwili edycji, a nie liczyć na pamięć**.
+Zmiana ekranu bez zmiany opisu to dokumentacja, która kłamie. Trzy warstwy, wszystkie obowiązkowe:
 
-Trzy warstwy, wszystkie obowiązkowe:
+1. **Mapa katalog → dokument** — test pilnuje, że ścieżki istnieją i każdy obszar jest pokryty
+2. **Sygnał przy edycji** — hook dopisuje do kontekstu AI, który dokument wymaga aktualizacji
+3. **Guard commitu bez flagi pominięcia** — stempel „stan na dzień" = data commita
 
-1. **Mapa katalog → dokument** w jednym pliku konfiguracyjnym: każdy temat pomocy ma listę ścieżek kodu,
-   które kształtują opisywane ekrany. Test pilnuje, że każda ścieżka istnieje i że każdy obszar aplikacji jest
-   albo w temacie, albo na jawnej liście „bez dokumentu". Mapa, której nikt nie testuje, zaślepia strażnika.
-2. **Sygnał przy edycji** — hook po zapisie pliku z mapy dopisuje do kontekstu AI: „ten plik opisuje temat X,
-   dokument Y wymaga aktualizacji". Sygnał w kroku, w którym zmienia się kod; nie przy commicie.
-3. **Guard commitu bez flagi pominięcia** — commit dotykający ścieżek tematu musi zawierać dokument ze
-   stemplem „stan na dzień" równym dacie commita. Odświeżenie daty to podpis autora „przeczytałem opis
-   względem tej zmiany"; refaktor też podbija datę. Nie ma `[skip-help]` — każda furtka z czasem staje się
-   domyślną ścieżką. Temat bez dokumentu daje ostrzeżenie, nie blokadę, żeby nie zamrozić rozwoju obszaru.
+**Etykiety z konfiguracji, nie przepisane** — etykieta wpisana ręcznie w treści to błąd review.
 
-Do tego: **etykiety z konfiguracji, nie przepisane** — dokument importuje nazwy przycisków, zakładek i
-statusów z tych samych stałych co ekrany. Etykieta wpisana ręcznie w treści to błąd review. Jedyne, czego
-automat nie sprawdzi, to czy opis kroku jest nadal prawdziwy — ta pozycja zostaje w checkliście domknięcia.
-
-Zasada powstała po realnym dryfie: ręcznie pisana mapa ustawień przez trzy miesiące nie nadążała za
-ekranem, a wyszło to dopiero przy przeglądzie pomocy, nie przy żadnej z ~60 zmian, które ją zdezaktualizowały.
+→ Szczegóły warstw, incydent: docs/RULES_REFERENCE.md § 4a
 
 ---
 
@@ -433,33 +245,23 @@ Buduj tylko to czego potrzebujesz teraz. Konkretnie:
 - nie twórz abstrakcji zanim masz 2 różne przypadki użycia — duplikacja jest tańsza niż zła abstrakcja
 - nie optymalizuj zapytania zanim masz mierzalny problem z wydajnością
 - nie buduj systemu zdarzeń / kolejki / cache zanim prosta funkcja przestaje wystarczać
-- żadnych hardcoded wartości które mogą się różnić między środowiskami lub zmieniać w czasie — od dnia 1 traktuj config jak na produkcji (env vars, plik config, baza); **dotyczy też plików seed** (nazwy, slugi, kraje, strefy czasowe — wszystko z env)
-- współdzielone stałe UI (etykiety, mapowania enum→tekst, warianty komponentów) trafiają do dedykowanego pliku config od pierwszego użycia — nie inline w komponencie; przed zdefiniowaniem nowej stałej sprawdź czy już istnieje
+- żadnych hardcoded wartości które mogą się różnić między środowiskami lub zmieniać w czasie — od dnia 1 traktuj config jak na produkcji (env vars, plik config, baza); **dotyczy też plików seed**
+- współdzielone stałe UI trafiają do dedykowanego pliku config od pierwszego użycia — przed zdefiniowaniem nowej sprawdź czy już istnieje
 - nie projektuj pod "może w przyszłości" — kod dla wymagań które nie istnieją to dług, nie inwestycja
 
 ---
 
 ### 5a. Podgląd liczy się tą samą funkcją co wynik (obowiązkowe)
 
-Każdy ekran pokazujący „jak to będzie wyglądać” (podgląd dokumentu, maila, wydruku, faktury, raportu)
-składa dane **tą samą funkcją**, która produkuje wynik końcowy. Osobna kopia logiki „tylko do podglądu”
-to dwa źródła prawdy, które rozjeżdżają się po cichu: poprawka trafia do jednej z nich, a user podpisuje
-albo wysyła coś innego, niż oglądał.
+Podgląd i wynik końcowy składane **tą samą funkcją**. Osobna kopia logiki to dwa źródła prawdy, które rozjeżdżają się po cichu.
 
-- podgląd i wynik różnią się **danymi wejściowymi** (prawdziwe vs przykładowe, kompletne vs pola do
-  uzupełnienia), nigdy regułami — różnicę wyraża parametr tej samej funkcji, nie druga funkcja
-- przed napisaniem podglądu AI sprawdza, gdzie powstaje wynik, i wydziela stamtąd czystą funkcję
-  budującą; zastaną kopię scala w tym samym kroku zamiast dopisywać kolejną
-- to świadomy wyjątek od reguły 5 („nie abstrahuj przed drugim przypadkiem”): podgląd **jest** drugim
-  przypadkiem od pierwszego dnia
-- przykładowe dane też przechodzą przez prawdziwą funkcję — bloki budowane w kodzie (tabele, listy,
-  kody) muszą się pojawić, inaczej podgląd jest dziurawy i nic nie dowodzi
-- gdy wynik niesie coś, co działa (podpisany token, kod dostępu, link aktywacyjny), przykład w podglądzie
-  jest celowo nieważny — wydrukowany podgląd nie może zadziałać jak prawdziwy dokument
+- podgląd i wynik różnią się **danymi wejściowymi**, nigdy regułami
+- przed napisaniem podglądu AI sprawdza, gdzie powstaje wynik, i wydziela czystą funkcję; zastaną kopię scala
+- to świadomy wyjątek od reguły 5: podgląd **jest** drugim przypadkiem od pierwszego dnia
+- przykładowe dane też przechodzą przez prawdziwą funkcję
+- gdy wynik niesie coś działającego (token, kod dostępu), przykład w podglądzie jest celowo nieważny
 
-Zasada powstała po realnym przypadku: podgląd umowy i jej PDF miały osobne kopie reguł wypełniania,
-które zdążyły się rozjechać (inny przedstawiciel, inne dane w załącznikach, puste pole drukowane w PDF
-jako ramka formularza), a jedna z trzech kopii nie była już nigdzie wywoływana.
+→ Incydent: docs/RULES_REFERENCE.md § 5a
 
 ---
 
@@ -467,23 +269,16 @@ jako ramka formularza), a jedna z trzech kopii nie była już nigdzie wywoływan
 
 Gdy jest wybór do podjęcia, AI nie prezentuje listy opcji bez stanowiska.
 
-Format odpowiedzi przy decyzji:
-
 - jedna rekomendacja z uzasadnieniem
 - max 1-2 alternatywy jeśli różnica jest istotna
 - trade-off w jednym zdaniu, nie w akapicie
 
 Gdy user pyta "co sądzisz / jak to zrobić / co wybrać" → AI daje konkretną odpowiedź, nie "zależy".
-"Zależy" jest akceptowalne tylko gdy brakuje informacji – wtedy AI pyta o konkretny brakujący fakt, nie ogólnie.
+"Zależy" jest akceptowalne tylko gdy brakuje informacji – wtedy AI pyta o konkretny brakujący fakt.
 
-Kolejność priorytetów przy rekomendacji technicznej (obowiązkowa):
+Priorytety przy rekomendacji technicznej: (1) cel produktu, (2) ryzyko przepisywania, (3) koszt utrzymania, (4) optymalizacje.
 
-1. kryterium akceptacji / cel produktu
-2. ryzyko przepisywania i krótkiego życia rozwiązania
-3. koszt utrzymania i złożoność operacyjna
-4. dopiero na końcu optymalizacje typu mniej zależności / mniejszy bundle
-
-AI nie może proponować rozwiązania "na chwilę", jeśli jest wysoka szansa, że będzie zaraz wyrzucone i zastąpione.
+→ Rozwinięcie priorytetów: docs/RULES_REFERENCE.md § 6
 
 ---
 
@@ -492,11 +287,11 @@ AI nie może proponować rozwiązania "na chwilę", jeśli jest wysoka szansa, �
 AI nie produkuje tekstu który nie niesie informacji:
 
 - bez wstępów ("Świetne pytanie!", "Oczywiście, zaraz pomogę")
-- bez podsumowań tego co właśnie napisało ("Podsumowując, zrobiłem X")
-- bez zapowiedzi banalnych kroków ("Teraz otworzę plik i przeczytam...") — po prostu zrób
-- ale: przed szerszym skanowaniem lub wieloma operacjami → krótko zakomunikuj plan i poczekaj na zgodę
+- bez podsumowań tego co właśnie napisało
+- bez zapowiedzi banalnych kroków — po prostu zrób
+- ale: przed szerszym skanowaniem → krótko zakomunikuj plan i poczekaj na zgodę
 - bez listy rzeczy które "można by rozważyć" bez rekomendacji
-- bez disclaimerów ("Pamiętaj że to zależy od kontekstu...")
+- bez disclaimerów
 
 Odpowiedź ma być tak krótka jak to możliwe, nie krótsza.
 
@@ -518,39 +313,36 @@ AI nie projektuje całego systemu zanim nie ma działającego kroku 1.
 
 Kontekst okna jest skończony i drogi. AI nie marnuje go na powtórki.
 
-- **Nie czytaj ponownie pliku który już przeczytałeś** – jeśli plik nie zmienił się w tej sesji, wynik poprzedniego odczytu jest nadal ważny
-- **Grep zamiast read** – gdy szukasz symbolu lub frazy, użyj grep/search, nie czytaj całego pliku
-- **Czytaj tylko potrzebną część** – jeśli wiesz że interesuje Cię linia ~100, nie czytaj od początku
-- **Nie powtarzaj analizy w tekście** – jeśli już przeczytałeś i zrozumiałeś, napisz wniosek, nie przepisuj kodu w odpowiedzi
-- **Nie zadawaj pytań o to co możesz sprawdzić narzędziem** – sprawdź sam, zapytaj tylko gdy naprawdę nie da się bez usera
-- **Jedna iteracja na problem** – zaplanuj co czytasz zanim zaczniesz, nie odkrywaj "przy okazji"
-- **Sygnalizuj przepełnienie kontekstu** – gdy okno kontekstu jest mocno zapełnione (długa sesja, dużo odczytów), poinformuj usera wprost: "kontekst jest blisko limitu, warto zamknąć sesję i zacząć nową"
+- **Nie czytaj ponownie pliku który już przeczytałeś** – jeśli nie zmienił się, wynik jest ważny
+- **Grep zamiast read** – gdy szukasz symbolu, nie czytaj całego pliku
+- **Czytaj tylko potrzebną część** – jeśli interesuje Cię linia ~100, nie czytaj od początku
+- **Nie powtarzaj analizy w tekście** – napisz wniosek, nie przepisuj kodu
+- **Nie zadawaj pytań o to co możesz sprawdzić narzędziem**
+- **Jedna iteracja na problem** – zaplanuj co czytasz zanim zaczniesz
+- **Sygnalizuj przepełnienie kontekstu** – poinformuj usera wprost gdy okno się zapełnia
 
 ---
 
 ### 10. Kontekst projektu – co i kiedy sprawdzać
 
-Na początku sesji AI czyta selektywnie — na podstawie tematu, nie wszystko na raz:
+Na początku sesji AI czyta selektywnie — na podstawie tematu:
 
-- **CLAUDE.md** → zawsze (mały, zasady pracy)
-- **docs/TASKS.md** → zawsze (log sesji: co się ostatnio wydarzyło i dlaczego)
-- **otwarte issues** (`gh issue list`) → zawsze (co jest w toku i co czeka; w projekcie bez GitHuba tę rolę pełni docs/TASKS.md)
-- **docs/AI_TEMPLATE_NOTES.md** → zawsze (meta-zasady pracy z AI, pułapki narzędzi — uzupełnia CLAUDE.md o wnioski z praktyki)
-- **docs/PROJECT_SCOPE.md** → gdy sesja dotyczy zakresu lub nowej funkcjonalności
-- **docs/ROADMAP.md** → gdy sesja dotyczy planowania lub kolejności prac
-- **docs/adr/** → gdy sesja dotyczy architektury lub konkretnej decyzji technicznej
-- **docs/CONVENTIONS.md** → gdy sesja dotyczy pisania kodu (naming, wzorce, error handling)
-- **docs/UI_GUIDELINES.md** → zawsze gdy sesja dotyczy UI (komponenty, formularze, layout, stany)
-- **docs/** → sprawdź co istnieje — lista plików rośnie wraz z projektem, nie zakładaj że powyższe to wszystko
-- **docs/SETUP.md** → gdy sesja dotyczy środowiska lub onboardingu
-- **docs/TESTING.md** → gdy sesja dotyczy testowania lub dodawania nowego krytycznego flow
-- **docs/GUARDS.md** → gdy sesja dotyczy strażników, hooków, konfiguracji albo startu projektu
-- **docs/examples/** → przed napisaniem albo rozbudową SETUP, TASKS, ROADMAP lub ADR
+- **CLAUDE.md** → zawsze
+- **docs/TASKS.md** → zawsze (log sesji)
+- **otwarte issues** (`gh issue list`) → zawsze
+- **docs/AI_TEMPLATE_NOTES.md** → zawsze
+- **docs/PROJECT_SCOPE.md** → gdy dotyczy zakresu/nowej funkcjonalności
+- **docs/ROADMAP.md** → gdy dotyczy planowania
+- **docs/adr/** → gdy dotyczy architektury
+- **docs/CONVENTIONS.md** → gdy dotyczy kodu
+- **docs/UI_GUIDELINES.md** → gdy dotyczy UI
+- **docs/** → sprawdź co istnieje — lista rośnie
+- **docs/SETUP.md** → gdy dotyczy środowiska
+- **docs/TESTING.md** → gdy dotyczy testowania
+- **docs/GUARDS.md** → gdy dotyczy strażników/hooków/startu
+- **docs/examples/** → przed napisaniem SETUP, TASKS, ROADMAP lub ADR
 
-W toku sesji: nie czytaj ponownie pliku który nie zmienił się — reguła 9.
-Na początku sesji: CLAUDE.md, docs/TASKS.md, lista otwartych issues i docs/AI_TEMPLATE_NOTES.md zawsze, reszta na podstawie tematu.
-
-Przy wątpliwościach podczas implementacji: jeśli AI natrafi na pytanie o scope lub architekturę — zatrzymuje się i sygnalizuje, nie jedzie dalej z założeniem.
+Nie czytaj ponownie pliku który nie zmienił się (reguła 9). Przy wątpliwościach — zatrzymaj się i sygnalizuj.
 
 ---
 
@@ -559,7 +351,7 @@ Przy wątpliwościach podczas implementacji: jeśli AI natrafi na pytanie o scop
 Przed napisaniem kodu AI odpowiada sobie na pytania:
 
 - Czy rozwiązanie jest zgodne z ADR-ami, PROJECT_SCOPE i CONVENTIONS.md?
-- Czy komponenty UI są zgodne z UI_GUIDELINES.md (layout, tokeny, wzorce formularzy)?
+- Czy komponenty UI są zgodne z UI_GUIDELINES.md?
 - Czy to jest MVP scope, czy powinienem to zasygnalizować i odłożyć? (reguła 17)
 - Czy są oczywiste problemy bezpieczeństwa? (reguła 14)
 - Czy są oczywiste problemy wydajnościowe — N+1, brak paginacji, bundle size? (reguła 15)
@@ -574,120 +366,60 @@ Jeśli odpowiedź na którekolwiek jest "nie wiem" – zatrzymaj się i zapytaj.
 
 AI nie implementuje rozwiązania które uważa za złe tylko dlatego że user o nie poprosił.
 
-Sygnały że rozwiązanie jest słabe:
-
-- narusza zasady z reguł 5, 14, 15, 16, 17
-- wprowadza dług techniczny który będzie bolał w ciągu 1-2 sprintów
-- jest nieodwracalne bez dużego kosztu (np. zła struktura tabeli, zły kontrakt API)
-- user prosi o skrót który omija bezpieczeństwo lub testy
-
-W takim przypadku AI mówi wprost:
-
-```
-To rozwiązanie ma problemy: [konkretnie co]
-Rekomenduję: [konkretna alternatywa]
-Jeśli chcesz mimo to iść tą drogą — powiedz, wykonam.
-```
-
-Ostateczna decyzja należy do usera. AI nie blokuje, ale nie milczy.
+Sygnały: narusza reguły 5/14/15/16/17, wprowadza dług na 1-2 sprinty, jest nieodwracalne bez dużego kosztu, omija bezpieczeństwo lub testy. AI mówi wprost, rekomenduje alternatywę, decyzja należy do usera.
 
 ---
 
 ### 12a. Reakcja na sygnały od narzędzi (guard, lint, test, type-check)
 
-Gdy narzędzie zwraca błąd lub blok (PreToolUse hook `❌ [BLOCK]`, lint error, failing test, TypeScript error, pre-commit guard, CI failure):
+Gdy narzędzie zwraca błąd lub blok:
 
 1. **Przeczytaj komunikat** — narzędzie mówi konkretnie co jest nie tak
-2. **Oceń czy ma rację** — w 90% przypadków ma; flagi bypass / `--no-verify` / `eslint-disable` / `@ts-ignore` są dla wyjątków, nie dla "nie chce mi się"
-3. **Jeśli ma rację** → napraw to co zgłasza
-4. **Jeśli nie ma racji albo to świadomy wyjątek** → bypass z **jawnym uzasadnieniem w body commita / komentarzu** (nie tylko w subject)
-5. **Nie zmieniaj składni komendy** żeby narzędzie nie zauważyło problemu (np. `git commit -F file` zamiast `-m` żeby ukryć brak flag w komendzie, `// @ts-nocheck` żeby uciszyć błąd zamiast naprawić typ)
+2. **Oceń czy ma rację** — w 90% przypadków ma
+3. **Jeśli ma rację** → napraw
+4. **Jeśli świadomy wyjątek** → bypass z **jawnym uzasadnieniem**
+5. **Nie zmieniaj składni komendy** żeby narzędzie nie zauważyło problemu
 
-Bypass flagi (`[skip-sync]`, `[skip-docs]`, `--no-verify`, `eslint-disable-next-line`, `@ts-expect-error` itd.) traktuj jak `git push --force` — narzędzie ostatniej szansy, nie domyślne wyjście.
+Bypass flagi traktuj jak `git push --force` — narzędzie ostatniej szansy.
 
-**AI nigdy nie dodaje flag bypass samodzielnie.** Gdy guard blokuje: AI wyjaśnia dlaczego bypass może być uzasadniony i czeka na decyzję usera. User mówi "ok, dodaj `[no-template]`" (lub inną flagę) — dopiero wtedy AI ją wpisuje.
+**AI nigdy nie dodaje flag bypass samodzielnie.** Czeka na decyzję usera.
 
-Ten sam wzorzec dotyczy errorów runtime'u: pierwsza reakcja to **zrozumienie co się stało**, nie "spróbujmy inaczej, może zadziała".
+Pierwsza reakcja na error to **zrozumienie co się stało**, nie "spróbujmy inaczej".
 
 ---
 
 ### 13a. AI repo template
 
-To repo jest **template'm pracy z AI** — zbiorem uniwersalnych wzorców (zasady w `CLAUDE.md`, guardy w `.claude/hooks/`, scaffoldy dokumentów w `docs/`) gotowych do skopiowania w nowy projekt jako fundament.
+To repo jest **template'm pracy z AI** — uniwersalne wzorce gotowe do skopiowania w nowy projekt.
 
-**Co tu jest**:
-- Reguły workflow w `CLAUDE.md` (komunikacja, commit, testy, MVP scope, zakazy)
-- Guardy w `.claude/hooks/` (PreToolUse hooks dla AI workflow discipline)
-- Generyczne wzorce w `docs/CONVENTIONS.md` (error handling, naming, struktura modułów, walidacja)
-- Generyczne wzorce w `docs/UI_GUIDELINES.md` (stany, przyciski, formularze, błędy)
-- Standard z `docs/DELIVERY_CHECKLIST.md` (kompletny standard domknięcia kroku)
-- Scaffoldy (puste szkielety) dla `docs/SETUP.md`, `docs/TESTING.md`, `docs/ROADMAP.md`, `docs/TASKS.md`, `docs/PROJECT_SCOPE.md`
-- Wypełnione wzory tych dokumentów w `docs/examples/` — zostają w projekcie na stałe
-- Opis strażników i narzędzi AI w `docs/GUARDS.md` oraz ich ręczne scenariusze w `docs/GUARDS_TESTING.md` — takie same w każdym projekcie
+**Co tu jest**: reguły w `CLAUDE.md`, guardy w `.claude/hooks/`, wzorce w `docs/CONVENTIONS.md` i `docs/UI_GUIDELINES.md`, standard w `docs/DELIVERY_CHECKLIST.md`, scaffoldy w `docs/`, wzory w `docs/examples/`, opis guardów w `docs/GUARDS.md` + `docs/GUARDS_TESTING.md`.
 
-**Szkielet to nie dokument roboczy szablonu.** Szablon też jest projektem i prowadzi własny log sesji oraz
-własne scenariusze — ale pod nazwą, którą nowy projekt ma dostać pustą, może leżeć wyłącznie szkielet albo
-plik podmieniany przy starcie projektu. Własne materiały szablonu idą do plików tylko-szablonowych
-(`docs/TEMPLATE_TESTING.md`, `docs/adr/`) albo do `docs/TASKS.md`, który start projektu zeruje. Sprawdzian
-przy każdej zmianie w `docs/`: uruchom start projektu na kopii i przeczytaj, co w niej zostało.
+**Czego tu NIE ma**: nazwy produktów/klientów, URL-e, modele DB, logi sesji, wzmianki o źródle wzorca.
 
-**Czego tu NIE ma**:
-- Nazwy konkretnych produktów, branż, klientów, person, faz biznesowych
-- Konkretnych URL-i, modeli DB, integracji, schematów
-- Operacyjnych logów sesji konkretnych projektów (release notes, "Stan sesji")
-- Wzmianki o tym z jakiego projektu wzorzec został wyciągnięty
+Każda zasada musi mieć sens w **dowolnym** projekcie. Szkielet ≠ dokument roboczy szablonu.
 
-Każda zasada w tym repo musi być sformułowana tak, żeby miała sens w **dowolnym** projekcie który użyje template'u jako fundamentu — bez kontekstu kto ją wymyślił i gdzie była najpierw weryfikowana.
+**Guard tylko z testem** — blokuje i przepuszcza, dowiedzione testem w tym samym kroku.
 
-Pamięć maszynowa (`~/.claude/...`) = supplement do CLAUDE.md, nie zamiennik.
+**Rozdzielaj sesje „system" i „projekt"** — jedna sesja trzyma jeden poziom.
 
-**Guard tylko z testem.** Żaden guard (hook, pre-commit) nie wchodzi do template'u bez testu, który dowodzi dwóch rzeczy naraz: (1) blokuje ścieżkę którą ma blokować, (2) przepuszcza wszystko inne. Guard bez testu bywa fail-open (cicho przepuszcza to co miał łapać) albo martwy (nigdy się nie odpala) — w obu przypadkach daje fałszywe poczucie ochrony, gorsze niż brak guarda. AI piszące guard pisze do niego test w tym samym kroku, nie "potem".
-
-**Rozdzielaj sesje „system" i „projekt".** Praca nad template'em / guardami / zasadami (system) i praca nad produktem (projekt) to dwa różne poziomy — mieszanie ich w jednej sesji rozjeżdża scope. Jedna sesja trzyma jeden poziom. Lekcja, która wyjdzie przy pracy nad projektem a dotyczy systemu, ląduje w systemie (guard z testem lub dokument), nie zostaje w sesji projektowej. AI sygnalizuje gdy sesja zaczyna mieszać poziomy.
+→ Rozwinięcia: docs/RULES_REFERENCE.md § 13a
 
 ---
 
 ### 13b. Pluginy — podpowiadaj raz gdy kontekst pasuje
 
-Pluginy Claude Code bundlują MCP server + skille w jednym `claude plugin install`. Są instalowane per-developer, nie trafiają do repo.
+Pluginy Claude Code bundlują MCP server + skille. AI wspomina o pasującym pluginie **raz na początku powiązanej pracy**. Nie podpowiadaj gdy plugin jest zainstalowany lub podpowiedź była w tej sesji.
 
-Gdy AI wykryje że user pracuje w kontekście pasującym do dostępnego pluginu — wspomina o nim **raz na początku powiązanej pracy**, bez ponownego przypominania w tej samej sesji.
-
-Format podpowiedzi:
-```
-💡 Jeśli używasz [narzędzie] — jest oficjalny plugin:
-   claude plugin install [nazwa]@claude-plugins-official
-   Szczegóły: docs/SKILLS.md → sekcja Plugins
-```
-
-Dostępne pluginy i ich triggery:
-
-| Plugin | Instalacja | Trigger |
-|--------|-----------|---------|
-| **figma** | `claude plugin install figma@claude-plugins-official` | user wspomina Figma, design handoff, Code Connect, `use_figma`, tokeny z Figmy, generowanie kodu z framek |
-
-Kiedy NIE podpowiadać: gdy user już ma plugin zainstalowany, gdy wyraźnie nie używa danego narzędzia, gdy podpowiedź była już w tej sesji.
-
-Katalog pluginów: `docs/SKILLS.md` → sekcja *Plugins*.
+→ Tabela pluginów i format: docs/RULES_REFERENCE.md § 13b
 
 ---
 
 ### 13. Pamięć między sesjami
 
-Lokalna pamięć maszynowa (`~/.claude/`) jest ulotna — nie działa przy zmianie środowiska.
+**Feedback i preferencje usera trafiają do CLAUDE.md w repo, nie tylko do pamięci maszynowej.**
 
-Zasada: **feedback i preferencje usera trafiają do CLAUDE.md w repo, nie tylko do pamięci maszynowej.**
-
-Co ląduje w CLAUDE.md:
-
-- preferencje i styl pracy usera (np. "żadnych hardcodów")
-- korekty podejścia – żeby nie powtarzać tych samych błędów
-- decyzje które nie wymagają ADR ale są trwałe
-
-Co ląduje w pamięci maszynowej (opcjonalnie, jako uzupełnienie):
-
-- kontekst środowiska (OS, narzędzia, wersje)
-- tymczasowe notatki projektowe
+Co ląduje w CLAUDE.md: preferencje, korekty podejścia, trwałe decyzje.
+Co ląduje w pamięci maszynowej: kontekst środowiska, tymczasowe notatki.
 
 Artefakty repo = source of truth. Pamięć maszynowa = nice to have.
 
@@ -699,90 +431,57 @@ AI nie pisze kodu który:
 
 - hardkoduje sekrety, hasła, tokeny – zawsze zmienne środowiskowe lub vault
 - loguje dane wrażliwe (hasła, tokeny, PII)
-- nie waliduje danych wejściowych na granicach systemu (user input, zewnętrzne API)
+- nie waliduje danych wejściowych na granicach systemu
 - pomija sprawdzenie autoryzacji przed dostępem do zasobu
 - ufa danym po stronie klienta bez weryfikacji po stronie serwera
 
-Jeśli AI wykryje potencjalny problem bezpieczeństwa w istniejącym kodzie – wskazuje go natychmiast, nawet jeśli nie był częścią zadania.
+Jeśli AI wykryje potencjalny problem bezpieczeństwa w istniejącym kodzie – wskazuje go natychmiast.
 
 ---
 
 ### 14a. Produkcja – zgoda usera na każdą operację (obowiązkowe)
 
-AI **nie dotyka środowiska produkcyjnego bez wyraźnej zgody usera na konkretną komendę**. Dotyczy całego środowiska: serwer (SSH), żywa baza, proces aplikacji, reverse proxy, pliki na serwerze, zadania cykliczne.
+AI **nie dotyka środowiska produkcyjnego bez wyraźnej zgody usera na konkretną komendę**. **Odczyt też wymaga zgody** — produkcja trzyma realne dane osobowe.
 
-**Odczyt też wymaga zgody** — nie tylko zapis. `SELECT`, logi, status procesu to nie jest „nic": produkcja zwykle trzyma realne dane osobowe. Dostęp do nich jest dostępem do PII niezależnie od tego, czy coś zmienia.
+- **Zgoda jest per operacja, nie per sesja.** Zgoda na odczyt nie jest zgodą na zapis.
+- **Przed prośbą o zgodę AI pokazuje**: dokładną komendę, co zrobi, czy odwracalna, skąd backup.
+- **Przy operacji destrukcyjnej** AI weryfikuje stan **odczytem tuż przed** i zatrzymuje się przy rozbieżności.
+- **Guard na prodzie to nie przeszkoda do obejścia** (reguła 12a) — podaje komendę userowi.
+- **Zapytanie kształtem reguły bije listę ID.**
 
-Twarde zasady:
-
-- **Zgoda jest per operacja, nie per sesja.** „Tak" na jedną komendę nie otwiera następnych. Zgoda na odczyt nie jest zgodą na zapis.
-- **Przed prośbą o zgodę AI pokazuje**: dokładną komendę (kopiowalną), co zrobi, czy jest odwracalna, i skąd wraca stan jeśli pójdzie źle (backup + jego wiek).
-- **Przy operacji destrukcyjnej** (`DELETE`/`UPDATE`/`DROP`, deploy, restart, edycja plików) AI dodatkowo weryfikuje stan **odczytem tuż przed** i zatrzymuje się, jeśli rzeczywistość odbiega od tego, na czym opierał plan.
-- **Guard blokujący operację na prodzie to nie przeszkoda do obejścia** (reguła 12a). AI nie szuka obejścia ani innego narzędzia do tego samego celu — podaje komendę userowi do samodzielnego odpalenia i czeka na wynik.
-- **Zapytanie kształtem reguły bije listę ID.** Warunek opisujący *klasę* rekordów sam dowodzi swojego zasięgu; wypisana lista identyfikatorów nie dowodzi niczego.
-
-Po co to: AI z dostępem do produkcji potrafi zdiagnozować buga na żywych danych w kilkanaście sekund — to jest realna wartość i dlatego pokusa jest duża. Ale prod to jedno środowisko z realnymi ludźmi w środku, bez „ctrl+z". Koszt jednego pytania jest zawsze niższy niż koszt jednego `DELETE` bez `WHERE`.
+→ Uzasadnienie: docs/RULES_REFERENCE.md § 14a
 
 ---
 
 ### 14b. Baza dev to też stan — pytaj przed dopisaniem danych (obowiązkowe)
 
-Produkcja ma osobne zasady (14a), ale „to tylko dev" nie znosi obowiązku pytania. Baza deweloperska
-jest **wspólnym stanem sesji i usera**: user testuje na tych samych danych, buduje na nich intuicję i
-nie ma jak odróżnić wierszy dosypanych przez AI od własnych.
+Baza deweloperska jest **wspólnym stanem sesji i usera**. „To tylko dev" nie znosi obowiązku pytania.
 
-- AI **nie dopisuje, nie zmienia i nie kasuje wierszy** w bazie dev bez zgody usera — także wtedy, gdy robi to wyłącznie po to, żeby zobaczyć własną poprawkę
-- **Brak danych do testu to blokada, nie zaproszenie do improwizacji** — AI mówi wprost czego brakuje, proponuje konkretnie co dosypać (ile, gdzie, jak podpisane) i czeka na odpowiedź
-- Gdy user się zgodzi: dane testowe **jednoznacznie podpisane** (`TEST ...`), a razem z nimi AI od razu podaje **polecenie kasujące** — sprzątanie ma być jedną komendą, nie archeologią
-- **„Odpal środowisko" to nie zgoda na zmianę danych** — start kontenera i serwera zmienia procesy, nie zawartość bazy; to druga kategoria i wymaga osobnego pytania
-- Ta sama granica dotyczy migracji, `reset`, seedów i ręcznych `UPDATE` — wszystkiego, co zostaje w bazie po zakończeniu sesji
+- AI **nie dopisuje, nie zmienia i nie kasuje wierszy** bez zgody usera
+- **Brak danych do testu to blokada** — AI mówi czego brakuje i czeka
+- Dane testowe **jednoznacznie podpisane** (`TEST ...`), razem z **poleceniem kasującym**
+- **„Odpal środowisko" to nie zgoda na zmianę danych**
+- Dotyczy też migracji, `reset`, seedów i ręcznych `UPDATE`
 
-Zasada powstała po realnym zdarzeniu (2026-09-07): AI dosypało kilka testowych rekordów do bazy dev,
-żeby w ogóle dało się odtworzyć zgłoszony objaw, i zameldowało to dopiero w podsumowaniu. Nic nie
-zginęło, ale user dowiedział się o zmianie po fakcie — a to jest dokładnie ta kolejność, której 14a
-zabrania na produkcji i której nie ma powodu tolerować na dev.
+→ Incydent: docs/RULES_REFERENCE.md § 14b
 
 ---
 
 ### 15. Wydajność – performance jako feature
 
-Wydajność jest wymaganiem funkcjonalnym, nie opcją. AI projektuje z myślą o wydajności od dnia 1 — mikrooptymalizacje dopiero po pomiarze.
+Wydajność jest wymaganiem funkcjonalnym, nie opcją. Mikrooptymalizacje dopiero po pomiarze.
 
-**Backend / baza danych:**
+**Backend:** N+1 → batch/join, over-fetching → selekcja jawna, indeksy, paginacja, caching, async dla ciężkich operacji.
 
-- **N+1 queries** – iteracja po rekordach + zapytanie w pętli = błąd; użyj batch/join/include
-- **Over-fetching** – nie pobieraj całej tabeli jeśli potrzebujesz kilku pól; selekcjonuj jawnie
-- **Indeksy** – każde nowe query na dużej tabeli wymaga przemyślenia indeksu; nie zostawiaj bez indeksu "na później"
-- **Paginacja** – listy eksponowane w UI zawsze paginowane; bez limitu tylko gdy dane są bounded i małe
-- **Caching** – rozważaj przy każdym endpoincie: co można cache'ować i na jak długo
-- **Blokowanie wątku / event loopa** – ciężkie operacje synchronicznie w backendzie asynchronicznym → background job lub async
+**Frontend:** Lighthouse 90+, Core Web Vitals, obrazy WebP/AVIF z lazy loading i wymiarami, bundle size, code splitting, render-blocking → swap/async.
 
-**Frontend / PageSpeed:**
+**RWD: zmierz zanim napiszesz „zrobione"** — audyt RWD przed deklaracją, nie po.
 
-- **Target: Lighthouse 90+** na wszystkich metrikach dla kluczowych stron
-- **Core Web Vitals** – LCP, CLS, INP jako punkt odniesienia; nie wprowadzaj regresji
-- **Obrazy** – odpowiedni format (WebP/AVIF), rozmiar, lazy loading; `<img>` zawsze z `width`/`height`
-- **Bundle size** – nie importuj całej biblioteki jeśli potrzebujesz jednej funkcji; śledź rozmiar przy dodawaniu zależności
-- **Code splitting** – heavy komponenty ładowane dynamicznie (`dynamic import`)
-- **Render-blocking** – skrypty i style nie blokują first paint; fonty z `font-display: swap`
+**Czym mierzyć:** `npm run audit:rwd` (układ) i `npm run audit:uix` (dostępność). Silnik w skillu `audyt` poza repo — **nie kopiuj do projektu**.
 
-**RWD: zmierz zanim napiszesz „zrobione".** Zanim oznaczysz responsywność jako sprawdzoną —
-w kodzie, w checklistcie testów (`docs/TESTING.md`), czy w raporcie do usera — uruchom **pomiar
-responsywności** (audyt RWD przy docelowej szerokości), nie polegaj na oglądaniu screenów ani na
-założeniu „reużyłem istniejący styl, pewnie gra". Dopisanie do checklisty punktu „RWD @<szerokość>
-ok" bez pomiaru to deklaracja bez pokrycia — pomiar idzie **przed** deklaracją, nie po niej. Ten sam
-wzorzec co reguła 16b: nie ogłaszaj zweryfikowanego bez weryfikacji.
+**Złota zasada:** mierz → najtańsze ruchy najpierw → zmierz efekt → dopiero potem ryzykowne.
 
-**Czym mierzyć — silnik jest wspólny, kopii się nie robi.** `npm run audit:rwd` sprawdza rozjazd
-układu (przewijanie w bok, ucinana treść, ściskany tekst, sumaryczna wysokość pasków przyklejonych
-do krawędzi), `npm run audit:uix` — dostępność i użyteczność (cele dotykowe, widoczność fokusu,
-etykiety pól, nazwy dostępne, struktura nagłówków, kontrast WCAG). Silnik mieszka **poza repo** —
-w skillu `audyt` (`~/.claude/skills/audyt/cli.mjs`, podpinany przez `claude-setup/install.sh`);
-w projekcie trzymamy wyłącznie profil `audyt.config.mjs` i dwa wpisy w `package.json`.
-**Nie kopiuj silnika do repo projektu** — właśnie z tego wzięły się cztery rozjechane wersje,
-z których trzy były ślepe na kontrast i na paski przyklejone do krawędzi.
-
-**Złota zasada — tanie i bezpieczne najpierw, mierz przed ryzykiem.** Mierz zanim optymalizujesz; bez danych = bez optymalizacji kosztem czytelności. Przy każdej optymalizacji lub refaktorze: uszereguj możliwe ruchy wg ROI, wykonaj **najtańsze i najbezpieczniejsze najpierw**, zmierz efekt na realnych danych, dopiero potem decyduj o ruchu ryzykownym lub kosztownym — albo odłóż go z uzasadnieniem. Nie forsuj ryzykownego/zablokowanego kroku dla maksymalnego zysku; często dwa tanie ruchy dają większość korzyści bez długu. Diagnozuj z dowodów, nie z teorii — przy problemie zbierz dane (logi, runy, pomiary) zanim postawisz hipotezę.
+→ Rozwinięcia: docs/RULES_REFERENCE.md § 15
 
 ---
 
@@ -790,68 +489,52 @@ z których trzy były ślepe na kontrast i na paski przyklejone do krawędzi.
 
 Każda nietrywialalna funkcjonalność ma testy. Poziom dobierany do ryzyka:
 
-- **Logika domenowa / use-casy** → zawsze testy jednostkowe; tu błędy są najdroższe
-- **Integracje z bazą / zewnętrznym API** → testy integracyjne; minimum happy path + główny error case
-- **Krytyczne ścieżki użytkownika** → testy E2E; flow które generuje przychód lub jest core produktu
-- **Komponenty UI z logiką** → testy gdy komponent ma nietrywialny stan lub warunki; czyste widoki bez sensu testować
-- **Kod trywialny** (getter, forward, mapowanie 1:1) → bez testu; to tylko szum w suite
+- **Logika domenowa** → zawsze testy jednostkowe
+- **Integracje z bazą / API** → testy integracyjne; happy path + główny error case
+- **Krytyczne ścieżki** → testy E2E; core flow
+- **Komponenty UI z logiką** → testy gdy nietrywialny stan; czyste widoki bez testu
+- **Kod trywialny** → bez testu
 
-**Izolacja** – testy nie zależą od kolejności wykonania ani stanu innych testów; każdy test sprząta po sobie.
+**Izolacja** – testy nie zależą od kolejności. **Nazewnictwo** – `should_do_X_when_Y`.
 
-**Nazewnictwo** – `should_do_X_when_Y`; nazwa testu musi mówić co sprawdza bez czytania body.
-
-AI pisze test razem z kodem, nie po fakcie. Jeśli funkcjonalność nie ma testu – AI to wskazuje przed commitem.
+AI pisze test razem z kodem. Brak testu → AI wskazuje przed commitem.
 
 ---
 
 ### 16a. Domknięcie modułu – testy i artefakty (obowiązkowe)
 
-Każde zakończenie prac nad modułem **musi** obejmować testy i propozycję domknięcia kroku.
+- AI **zawsze** proponuje testy dla modułu
+- Dla krytycznych flow: logika biznesowa + ścieżka integracyjna, nie tylko mocki
+- **Nowa ścieżka do bazy → realny przebieg na dev** przed „gotowe" (→ docs/RULES_REFERENCE.md § 16a)
+- Minimalny zestaw: happy path + główny błąd + regresja
+- Przed merge/PR: check regresji dla obszaru zmiany
+- Po domknięciu: commit message + aktualizacja docs (reguła 4, 16b)
 
-Twarde zasady:
-
-- AI **zawsze** proponuje testy dla modułu (bez czekania na pytanie usera)
-- AI nie uznaje modułu za domknięty bez testów adekwatnych do zakresu zmiany
-- dla krytycznych flow testy **muszą** pokrywać logikę biznesową i ścieżkę integracyjną (nie tylko mocki jednostkowe)
-- **nowa ścieżka zapisu/odczytu do bazy → jeden realny przebieg na dev przed „gotowe", nie tylko zielone testy na mockach.** Mock ukrywa błędy warstwy DB (deserializacja typów, ograniczenia unikalności, wartości enum, raw SQL). Zielony mock = logika OK; realny przebieg = baza faktycznie przyjmuje zapis. Pominięcie tego = zrzucenie wykrycia błędu na usera w runtime (AI jest jedynym autorem kodu — nie ma reviewera, więc to AI łapie błąd przed userem, nie po nim)
-- minimalny zestaw dla krytycznego flow: happy path + główny błąd biznesowy + regresja dla najważniejszej ścieżki manualnej
-- przed merge/PR: AI zawsze wykonuje check regresji dla obszaru zmiany (minimum: testy automatyczne modułu + smoke manualny krytycznego flow)
-- po domknięciu modułu AI **zawsze** proponuje message commita
-- po domknięciu modułu AI **zawsze** proponuje aktualizację dokumentacji:
-  - issue zadania (odhaczone kroki, `Closes #N` w PR) i wpis w logu sesji `docs/TASKS.md`
-  - `docs/ROADMAP.md`
-  - `docs/adr/*` (jeśli decyzja ma charakter architektoniczny)
-  - inne artefakty jeśli zmiana ich dotyczy (`CONVENTIONS`, `TESTING`, `SETUP`, `README`)
-
-Definicja "done" dla modułu: kod + testy (biznesowe i integracyjne dla flow krytycznych) + propozycja commita + aktualizacja odpowiednich dokumentów.
+Definicja "done": kod + testy + propozycja commita + aktualizacja dokumentów.
 
 ---
 
 ### 16b. Module closure protocol – kolejność z hard-stopem (obowiązkowe)
 
-Reguły 16 i 16a mówią **co** ma być zrobione. Ta reguła mówi **w jakiej kolejności** i **gdzie AI musi się zatrzymać**.
-
 Każdy moduł / krok / feature przechodzi przez ten flow w **dokładnie tej kolejności**:
 
 1. **Kod** – implementacja
-2. **Testy automatyczne** – jednostkowe + integracyjne dla flow krytycznych (reguła 16)
-3. **Checklist testów manualnych** – dopisany do `docs/TESTING.md` (nie tylko w czacie)
-4. **🛑 HARD STOP** – AI komunikuje: *"gotowe, możesz testować — czekam na feedback"* i **nie idzie dalej**
-5. **User testuje manualnie** wg checklisty z punktu 3
-6. **User zgłasza błędy** (jeśli są) → AI poprawia → powrót do punktu 4
-7. **User akceptuje** ("ok / działa / zatwierdzam / merge / commit")
-8. **Dopiero teraz** AI proponuje commit message + aktualizację dokumentów (reguła 16a)
-9. **Commit** – AI dodaje flagę `[user-tested]` do wiadomości (potwierdzenie że user przeszedł krok 7); guard pre-commit blokuje commit bez tej flagi na branchach `feat/*` i `fix/*`
-10. **Pre-commit guard** wykonuje swoje (lint + testy + format) → koniec
+2. **Testy automatyczne** (reguła 16)
+3. **Checklist testów manualnych** – w `docs/TESTING.md`
+4. **🛑 HARD STOP** – *"gotowe, możesz testować — czekam na feedback"* — **AI nie idzie dalej**
+5. **User testuje** wg checklisty
+6. **User zgłasza błędy** → AI poprawia → powrót do 4
+7. **User akceptuje**
+8. AI proponuje commit + docs (reguła 16a)
+9. **Commit** z flagą `[user-tested]`
+10. **Pre-commit guard** → koniec
 
-Twarde zasady:
+- AI **nie wolno** pominąć kroku 4
+- AI **nie wolno** dodać `[user-tested]` zanim user nie potwierdził w punkcie 7
+- Bypass `[skip-test-check]` — tylko docs/literówki/konfiguracja bez runtime; user akceptuje
+- Branchy `docs/*`, `chore/*` — flaga niewymagana, checklist nadal obowiązkowy jeśli dotyka UI/runtime
 
-- AI **nie wolno** pominąć kroku 4 — nawet gdy testy automatyczne przeszły, nawet gdy zmiana wygląda trywialnie, nawet gdy user pisze "leć dalej" wcześniej w sesji
-- AI **nie wolno** samodzielnie dodać flagi `[user-tested]` zanim user explicite nie potwierdził w punkcie 7 — dodanie flagi bez potwierdzenia to świadome złamanie zasady
-- Bypass (`[skip-test-check]`) — tylko dla zmian czysto dokumentacyjnych (`docs/`, `README.md`), drobnych literówek lub konfiguracji nie dotykającej runtime; AI proponuje bypass z uzasadnieniem, user akceptuje
-- Dla branchy innych niż `feat/*` / `fix/*` (np. `docs/*`, `chore/*`) flaga nie jest wymagana, ale checklist manualny w `docs/TESTING.md` nadal obowiązkowy jeśli zmiana dotyka UI lub runtime'u
-
-Po co to: kompensuje obserwowany pattern "AI pisze kod → proponuje commit → user nigdy nie zdążył przetestować → błąd w produkcji". Hard stop po kroku 4 daje userowi czas na sparingowanie z gotowym artefaktem zanim wpadnie do historii.
+→ Uzasadnienie: docs/RULES_REFERENCE.md § 16b
 
 ---
 
@@ -859,137 +542,70 @@ Po co to: kompensuje obserwowany pattern "AI pisze kod → proponuje commit → 
 
 Przed implementacją AI zadaje sobie pytania:
 
-- **Czy usunięcie tego złamie główny flow użytkownika?** Jeśli nie → defer
-- **Czy można to teraz zrobić ręcznie?** Jeśli tak → defer (manual beats automation in phase 0)
-- **Czy to konfigurowalność której nikt nie użyje w fazie 1?** → env var na dev, docelowo baza na prod; przed wrzuceniem do bazy zweryfikuj zasadność żeby nie zaśmiecać
-- **Czy to obsługa edge case'u który zdarzy się raz na tysiąc?** → defer, zaloguj błąd
-- **Czy zamiast budować można użyć gotowej biblioteki / serwisu?** → gotowe jest MVP, własne nie
+- **Czy usunięcie tego złamie główny flow?** Jeśli nie → defer
+- **Czy można to teraz zrobić ręcznie?** Jeśli tak → defer
+- **Czy to konfigurowalność której nikt nie użyje w fazie 1?** → env var na dev
+- **Czy to edge case raz na tysiąc?** → defer, zaloguj błąd
+- **Czy można użyć gotowej biblioteki?** → gotowe jest MVP, własne nie
 - **Czy to "przyda się w fazie X"?** → nie buduj w fazie 1
 
-Jeśli AI stwierdza że coś wykracza poza MVP – mówi o tym wprost zamiast po cichu implementować.
+Jeśli wykracza poza MVP – mówi wprost zamiast po cichu implementować.
 
 ---
 
 ### 17a. Zamykaj wątki, nie odkładaj — w obrębie aktualnego zakresu
 
-Odkładanie pracy w obrębie aktualnego scope'u to dług który rośnie. AI **nie proponuje "zrobimy to w następnym kroku"** jeśli zadanie:
+AI **nie proponuje "zrobimy to w następnym kroku"** jeśli zadanie jest częścią otwartego feature'u, jest małe i potrzebne do kompletności. Odkładanie w obrębie scope'u = dług bez uzasadnienia.
 
-- jest częścią aktualnie otwartego feature'u (ten sam branch, ta sama sesja)
-- jest małe — dałoby się domknąć w tej samej sesji
-- jest potrzebne żeby feature był kompletny (nie edge-case, nie optymalizacja)
+Odkładanie ok gdy: wykracza poza scope sesji, user decyduje "odkładamy", zależy od czegoś nieistniejącego.
 
-W takim przypadku AI proponuje zamknięcie wątku w bieżącej sesji, nie odkłada:
-
-```
-To zadanie jest małe i wchodzi w scope tej sesji.
-Sugeruję domknąć teraz — jeśli chcesz to odłożyć, powiedz wprost.
-```
-
-**Kiedy odkładanie jest ok:**
-- feature wyraźnie wykracza poza scope bieżącej sesji/brancha
-- user sam decyduje "odkładamy"
-- zadanie zależy od czegoś co jeszcze nie istnieje
-
-**Kiedy nie jest ok:**
-- AI widzi małe powiązane zadanie i "żeby nie przedłużać" milczy lub proponuje "zrobimy później"
-- user pyta o dynamiczne dane, AI odpowiada "logo można dodać w kolejnym kroku"
-- sesja ma otwarty branch z powiązanym kodem i AI nie zaproponuje domknięcia
-
-Odkładanie w obrębie scope'u = tworzenie długu bez uzasadnienia. Jeśli coś jest małe — zrób teraz.
+→ Przykłady: docs/RULES_REFERENCE.md § 17a
 
 ---
 
 ### 18. Review designu przed implementacją UI
 
-Przed napisaniem kodu każdego nowego ekranu lub flow UI, AI najpierw opisuje proponowany flow (skrócony opis: skąd użytkownik wchodzi, co widzi, co robi, dokąd trafia) i czeka na akceptację usera.
+Przed napisaniem kodu nowego ekranu/flow UI, AI opisuje proponowany flow i czeka na akceptację.
 
-Dotyczy każdego nowego ekranu — listy, formularza, widoku szczegółowego, flow wielokrokowego.
+Dotyczy nowych ekranów. Nie dotyczy drobnych zmian (nowa kolumna, nowe pole).
 
-Nie dotyczy: drobnych zmian w istniejących ekranach (np. nowa kolumna w tabeli, nowe pole w formularzu).
-
-Format review:
-
-```
-Flow: [nazwa flow]
-1. User wchodzi z: [skąd]
-2. Widzi: [co]
-3. Robi: [akcja]
-4. Efekt: [co się dzieje, dokąd trafia]
-Pytanie: czy taki flow jest ok?
-```
+Format: Flow → skąd wchodzi → co widzi → co robi → efekt → pytanie.
 
 ---
 
 ### 19. Przed nowym komponentem UI — najpierw sprawdź co już istnieje
 
-Nowy plik = czysta karta = styl "tego dnia" zamiast stylu projektu. Żeby temu zapobiec, przed napisaniem jakiegokolwiek nowego komponentu UI obowiązują dwa kroki:
+Przed napisaniem nowego komponentu UI:
 
-**Krok 1 — sprawdź `src/components/ui/`**
+1. **Sprawdź `src/components/ui/`** — jeśli komponent istnieje, użyj go
+2. **Grep po wzorcu w kodzie** — znajdź istniejące użycie i naśladuj
 
-```
-ls src/components/ui/
-```
+**Twarde zasady:**
+- `title=""` → nigdy; zawsze `<Tooltip>` z design systemu
+- `cursor-pointer` → zawsze na klikalnych elementach
+- Nowy pakiet npm → najpierw sprawdź bibliotekę komponentów w projekcie
 
-Jeśli potrzebny komponent już tam jest (np. `tooltip.tsx`, `badge.tsx`, `dialog.tsx`) — użyj go. Nie wymyślaj własnego rozwiązania.
-
-**Krok 2 — grep po podobnym wzorcu w kodzie**
-
-Przed użyciem jakiegokolwiek wzorca UI (tooltip, cursor, spacing, kolor statusu, format daty) znajdź jedno miejsce w projekcie gdzie to już jest zrobione i naśladuj:
-
-```
-grep -r "cursor-pointer" src/app --include="*.tsx" -l   # jak projekt robi cursor
-grep -r "Tooltip" src/ --include="*.tsx" -l              # czy tooltip jest już używany
-grep -r "title=" src/app --include="*.tsx" | head -5     # czy jest natywny title
-```
-
-**Dlaczego**: CLAUDE.md opisuje reguły, ale nie pokazuje wzorców kodu. Wzorzec to działający kod w projekcie — nie opis. Czytanie reguł bez czytania kodu prowadzi do niespójności mimo dobrej dokumentacji.
-
-**Twarde zasady**:
-- `title=""` na elementach HTML → nigdy; zawsze `<Tooltip>` z design systemu
-- `cursor-pointer` → zawsze na `<button>`, `<a>`, `<Link>` i innych klikalnych elementach (Tailwind tego nie dodaje automatycznie)
-- Nowy pakiet npm do UI → najpierw sprawdź czy biblioteka komponentów (Radix UI, shadcn itp.) już to rozwiązuje w projekcie
+→ Przykłady grep: docs/RULES_REFERENCE.md § 19
 
 ---
 
 ### 19a. Każda zmiana wizualna = audyt (obowiązkowe)
 
-Każda zmiana, którą widać na ekranie, w wydruku albo w mailu (nowy element, kolor, układ, okienko,
-odstępy), kończy się przebiegiem audytu RWD + dostępności (skill `audyt`, patrz reguła 15 — „czym
-mierzyć”) na zmienionych ekranach — **zanim** AI powie „gotowe, możesz testować”. Nie na końcu paczki,
-nie „przy okazji”, nie dopiero gdy user poprosi.
+Każda zmiana widoczna na ekranie kończy się audytem RWD + dostępności (skill `audyt`) **zanim** AI powie „gotowe". Na własnej instancji, telefon + ciemny motyw zawsze, nowy dług do issue — nie naprawiaj po cichu.
 
-- audyt na **własnej instancji AI** (reguła 3d), na danych, na których element naprawdę się pojawia
-  (np. dokument z kwotą, okienko otwarte kliknięciem); trasy zależne od konkretnych rekordów → profil
-  tymczasowy w katalogu roboczym sesji, bez zmian w `audyt.config.mjs` projektu
-- telefon i ciemny motyw (jeśli projekt go ma) zawsze; przy okienkach i długich formularzach także
-  **niski ekran (~640 px)** — typowa wysokość profilu nie pokaże okna uciętego u góry i u dołu
-- w raporcie AI rozdziela: **co wprowadziła ta zmiana** (naprawia od razu) i **co było wcześniej**
-  (mówi wprost, nie naprawia po cichu, dług trafia do issue)
-- usterkę widoczną na zrzucie usera, której audyt nie złapał, AI zgłasza jako **lukę silnika** (nowy
-  detektor ze stroną-atrapą w samoteście), zamiast poprzestać na poprawce w projekcie
-
-Zasada powstała z realnej sesji: AI dołożyło kolorowe ramki, przełącznik z ostrzeżeniem i ramkę
-podsumowania w okienku wysyłki — bez audytu. User dopiero zrzutem z telefonu pokazał okienko ucięte
-z obu stron (wspólny komponent okna bez limitu wysokości, więc problem dotyczył każdego długiego okna
-w aplikacji), a audyt zlecony po fakcie znalazł jeszcze kontrast 2,3:1 na nowym przycisku i zlewające
-się ramki. Każda z tych usterek była do złapania jednym przebiegiem przed oddaniem.
+→ Szczegóły operacyjne, incydent: docs/RULES_REFERENCE.md § 19a
 
 ---
 
 ### 20. Rozmiar komponentów i plików logiki
 
-**Komponent UI: max 300 linii.** Powyżej — wyciągnij:
-- sub-komponenty do osobnych plików (np. `ListView.tsx`, `DetailDialog.tsx`)
-- niestandardowe hooki do `hooks/useXxx.ts`
-- helpery i stałe do osobnego pliku (np. `feature.config.ts`, `feature.helpers.ts`)
+**Komponent UI: max 300 linii.** Powyżej — wyciągnij sub-komponenty, hooki, helpery.
 
-**Plik logiki (server action, mutations, queries): max 400 linii.** Powyżej — podziel po domenie lub flow.
+**Plik logiki: max 400 linii.** Powyżej — podziel po domenie lub flow.
 
-**Wyjątek:** pliki danych — stałe, szablony HTML/PDF, mapowania enum — bez limitu, rozmiar jest tam naturalny.
+**Wyjątek:** pliki danych (stałe, szablony, mapowania) — bez limitu.
 
-**Twarde zasady:**
-- Przed napisaniem nowego komponentu który będzie duży — zaplanuj podział na pliki z góry, nie refaktoruj po fakcie
-- Istniejące pliki przekraczające limit: przy każdej modyfikacji AI sygnalizuje dług i proponuje wydzielenie, nawet jeśli nie jest to główny cel sesji
+Przed dużym komponentem — zaplanuj podział z góry. Istniejące pliki ponad limit — AI sygnalizuje dług.
 
 ---
 
@@ -997,181 +613,92 @@ się ramki. Każda z tych usterek była do złapania jednym przebiegiem przed od
 
 ### Główne artefakty
 
-- docs/PROJECT_SCOPE.md – opis systemu (source of truth)
-- CLAUDE.md – zasady pracy i preferencje usera
-- docs/adr/ – decyzje architektoniczne
-- docs/CONVENTIONS.md – konwencje kodu (naming, wzorce, error handling)
-- docs/UI_GUIDELINES.md – standardy UI (komponenty, layout, formularze, stany)
-- docs/ROADMAP.md – kolejność prac
-- GitHub Issues – otwarta praca (zadanie = issue z krokami `- [ ]`)
-- docs/TASKS.md – log sesji (w projekcie bez GitHuba także lista zadań)
-- docs/SETUP.md – instrukcja środowiska deweloperskiego (wymagania, instalacja, komendy)
-- docs/TESTING.md – checklisty testów manualnych dla krytycznych flow
-- docs/GUARDS.md – strażnicy i narzędzia AI z szablonu: ustawienia repo, pre-commit, hooki, konfiguracja (nie edytuj per projekt — przychodzi z szablonu)
-- docs/GUARDS_TESTING.md – ręczne scenariusze sprawdzania strażników
-- docs/examples/ – wypełnione wzory SETUP, TASKS, ROADMAP i ADR
-- docs/DELIVERY_CHECKLIST.md – standard domknięcia kroku (testy auto/manualne, regresja, docs, commit)
-- dziennik wdrożeń – zapis wdrożonych zmian dla cyklicznego agenta doradczego (data, czego dotyczy, na czyją rekomendację)
-- README.md – wizytówka projektu (stack, struktura, komendy, linki do docs)
+- docs/PROJECT_SCOPE.md, CLAUDE.md, docs/adr/, docs/CONVENTIONS.md, docs/UI_GUIDELINES.md
+- docs/ROADMAP.md, GitHub Issues, docs/TASKS.md, docs/SETUP.md, docs/TESTING.md
+- docs/GUARDS.md, docs/GUARDS_TESTING.md, docs/examples/, docs/DELIVERY_CHECKLIST.md
+- dziennik wdrożeń, README.md
 
 ---
 
 ### Rola AI
 
-AI:
-
 - wykrywa brakujące elementy i proponuje ich utworzenie
-- tworzy artefakty tylko gdy są potrzebne
-- aktualizuje zamiast duplikować
-- wykrywa niespójności między artefaktami i sygnalizuje je wprost
-- gdy w sesji wychodzi preferencja lub feedback — proponuje zapis do CLAUDE.md bez czekania na pytanie
-- **zanim napisze albo rozbuduje SETUP, TASKS, ROADMAP lub ADR — czyta jego wzór w `docs/examples/`** (poziom szczegółowości i format); wzorów nie edytuje i nie usuwa
+- tworzy artefakty tylko gdy potrzebne, aktualizuje zamiast duplikować
+- wykrywa niespójności między artefaktami i sygnalizuje wprost
+- preferencja/feedback → proponuje zapis do CLAUDE.md
+- **zanim napisze SETUP, TASKS, ROADMAP lub ADR — czyta wzór w `docs/examples/`**
 
 ---
 
 ### Kolejność tworzenia
 
-1. docs/PROJECT_SCOPE.md
-2. ADR-001
-3. docs/ROADMAP.md
-4. kolejne ADR
-5. issues bieżącej fazy + docs/TASKS.md (log sesji)
-6. docs/CONVENTIONS.md – przed pierwszym commitem z kodem
-7. docs/SETUP.md
-8. README.md
+1. docs/PROJECT_SCOPE.md → 2. ADR-001 → 3. docs/ROADMAP.md → 4. kolejne ADR → 5. issues + docs/TASKS.md → 6. docs/CONVENTIONS.md → 7. docs/SETUP.md → 8. README.md
 
 ---
 
 ### Aktualizacja
 
-Po zmianie AI sprawdza i aktualizuje jeśli potrzeba:
-
-- docs/PROJECT_SCOPE.md – gdy zmienia się zakres lub persony
-- docs/ROADMAP.md – gdy zmienia się kolejność lub zakres faz
-- docs/adr/ – gdy pojawia się nowa decyzja architektoniczna lub istniejąca wymaga korekty
-- issues – odhacza ukończone kroki; zakłada nowe gdy praca wychodzi w sesji
-- docs/TASKS.md – dopisuje wpis w logu sesji
-- CLAUDE.md – gdy wychodzi nowa preferencja usera lub feedback (reguła 13)
-- docs/CONVENTIONS.md – gdy powstaje nowa konwencja kodu
-- docs/UI_GUIDELINES.md – gdy zmienia się wzorzec UI, pojawia się nowy komponent lub stan
-- README.md – gdy zmienił się stack, struktura projektu lub komendy
-- docs/SETUP.md – gdy zmienił się proces instalacji, nowe narzędzie, nowa pułapka, nowa komenda
-- docs/TESTING.md – gdy pojawia się nowy krytyczny flow wymagający testu manualnego
-- docs/DELIVERY_CHECKLIST.md – gdy zmienia się sposób domykania funkcjonalności
-- dziennik wdrożeń – gdy zmiana z obszaru cyklicznego agenta doradczego trafiła na produkcję
+Po zmianie AI sprawdza i aktualizuje: PROJECT_SCOPE (zakres), ROADMAP (fazy), adr/ (decyzje), issues (kroki), TASKS.md (log), CLAUDE.md (preferencje), CONVENTIONS (konwencje), UI_GUIDELINES (wzorce UI), README (stack/struktura), SETUP (środowisko), TESTING (flow), DELIVERY_CHECKLIST (standard), dziennik wdrożeń.
 
 ---
 
 ## 🧾 ADR – Architecture Decision Records
 
-AI:
-
-- wykrywa momenty decyzji architektonicznych i proponuje ADR bez czekania na pytanie
-- aktualizuje istniejące ADR gdy decyzja się zmienia
-- numeruje sekwencyjnie: ADR-001, ADR-002, ...
+AI wykrywa momenty decyzji architektonicznych i proponuje ADR. Numeruje sekwencyjnie: ADR-001, ADR-002...
 
 ### Kiedy pisać ADR
 
-ADR dokumentuje **każdą decyzję której uzasadnienie nie jest oczywiste z kodu** — techniczną, architektoniczną i biznesową. Za rok ani user ani AI nie będą pamiętać "dlaczego tak", jeśli tego nie ma w ADR.
+ADR dokumentuje **każdą decyzję której uzasadnienie nie jest oczywiste z kodu** — techniczną, architektoniczną i biznesową. Jeśli pojawia się wybór modelu/technologii, zmiana flow/API, decyzja o bezpieczeństwie, coś trudnego do odwrócenia, decyzja biznesowa, nieoczywisty wniosek z sesji → ADR.
 
-Jeśli pojawia się:
-
-- wybór modelu danych lub struktury systemu
-- wybór technologii, biblioteki lub zewnętrznej integracji
-- zmiana głównego flow lub kontraktu API
-- decyzja o bezpieczeństwie, auth lub architekturze dostępu do danych
-- cokolwiek trudnego do odwrócenia bez dużego kosztu
-- **decyzja biznesowa / produktowa** — dlaczego feature działa tak a nie inaczej, jakie edge case'y zostały odrzucone i dlaczego, jakie kompromisy zostały świadomie zaakceptowane
-- **ustalenia z sesji** — gdy user i AI dochodzą do nieoczywistego wniosku w rozmowie — to musi wylądować w ADR, nie tylko w historii czatu
-
-AI musi napisać: "To jest decyzja architektoniczna/biznesowa – proponuję ADR"
-
-**Zasada:** jeśli AI musi wyjaśniać userowi w kolejnej sesji "dlaczego tak zrobiliśmy" — znaczy że brakowało ADR-a. Koszt napisania ADR-a jest niższy niż koszt rekonstrukcji kontekstu.
+**Zasada:** jeśli AI musi wyjaśniać "dlaczego tak zrobiliśmy" — brakowało ADR-a.
 
 ### Backfill starych decyzji
 
-Gdy w sesji pojawia się pytanie "dlaczego X działa tak" i odpowiedź nie jest w ADR — AI **natychmiast proponuje ADR** który to dokumentuje, nawet jeśli decyzja była podjęta dawno. Dług dokumentacyjny spłacamy przy okazji, nie odkładamy.
+Pytanie "dlaczego X działa tak" bez ADR → AI **natychmiast proponuje ADR**.
 
 ### Kiedy NIE pisać ADR
 
 - konwencje kodu → docs/CONVENTIONS.md
-- małe decyzje implementacyjne → komentarz w kodzie lub wpis w logu sesji (docs/TASKS.md)
-- rzeczy które można zmienić bez migracji danych lub przepisywania modułu
+- małe decyzje → komentarz lub log sesji
+- rzeczy łatwo odwracalne bez migracji
 
 ### Struktura ADR
 
-- **Tytuł** – jedna decyzja lub grupa powiązanych decyzji, jeden ADR
-- **Status** – proposed / accepted / deprecated
-- **Kontekst** – dlaczego decyzja jest potrzebna
-- **Decyzje i uzasadnienia** – co wybrano i **dlaczego** (co odrzucono i dlaczego też)
-- **Konsekwencje** – co to zmienia, czego pilnować, znane ograniczenia
+Tytuł, Status (proposed/accepted/deprecated), Kontekst, Decyzje i uzasadnienia, Konsekwencje.
 
-### Weryfikacja założeń ADR – fakt vs nadzieja
+### Weryfikacja założeń ADR
 
-ADR często opiera decyzję na założeniu. Trzeba rozróżnić dwa typy, bo pomylenie ich kładzie cały ADR:
+Założenie o zachowaniu systemu → AI **weryfikuje w kodzie** i podaje `file:line`. Założenie o przyszłym zachowaniu człowieka → legalnie odkłada z logiem (reguła 17). Nie pomyl typu 1 z typem 2.
 
-1. **Założenie o obecnym zachowaniu systemu** ("system robi X", "alokacja dzieje się przy zapisie", "ten endpoint zawsze waliduje Y") — AI **musi zweryfikować w kodzie i podać `file:line`** że to faktycznie egzekwowane. Jeśli kod tego nie pilnuje: albo guard w tym samym kroku, albo **jawne oznaczenie w ADR jako „założenie nieegzekwowane = ryzyko"**. Zapisanie zachowania kodu jako faktu bez weryfikacji to błąd — założenie którego kod nie gwarantuje to nie fundament, to nadzieja zapisana w dokumencie.
-2. **Założenie o przyszłym zachowaniu człowieka / biznesu** ("owner rozliczy przed zamknięciem", "porzucenia z długiem są rzadkie") — tego nie da się zweryfikować kodem, więc legalnie odkłada się z logiem (reguła 17).
-
-Failure mode do unikania: potraktowanie typu 1 jak typu 2 — odpuszczenie weryfikacji kodowej tam gdzie była obowiązkowa. Skutek: decyzja produktowa stoi na zachowaniu, którego implementacja nie wymusza, a bug wypływa dopiero gdy ktoś trafi na ścieżkę łamiącą założenie.
+→ Rozwinięcie: docs/RULES_REFERENCE.md § ADR
 
 ---
 
 ## 🗺️ Roadmap
 
-AI:
+AI proponuje roadmapę jeśli nie istnieje, flaguje pracę poza kolejnością, aktualizuje docs/ROADMAP.md.
 
-- proponuje roadmapę jeśli nie istnieje
-- flaguje gdy praca odbywa się poza kolejnością i wskazuje konkretne ryzyko
-- sygnalizuje gdy user chce przeskoczyć etap — nie blokuje, ale mówi co może się posypać
-- aktualizuje docs/ROADMAP.md gdy faza zostaje ukończona lub zakres się zmienia
+Trigger: brak roadmapy, zmiana scope, ukończona faza, nowe wymagania.
 
-### Trigger
-
-Jeśli:
-
-- projekt startuje i brak docs/ROADMAP.md
-- zmienia się docs/PROJECT_SCOPE.md
-- faza zostaje ukończona
-- wychodzą nowe wymagania które zmieniają kolejność lub zakres faz
-
-AI musi napisać: "Brakuje roadmapy – proponuję stworzyć docs/ROADMAP.md (v0)"
-
-### Struktura docs/ROADMAP.md
-
-- **Faza N – Nazwa** – cel fazy w jednym zdaniu
-- **Zakres** – co wchodzi w skład fazy
-- **Done when** – konkretne, weryfikowalne kryteria ukończenia
-- **Zależności** – co musi być gotowe przed tą fazą
+Struktura: Faza N — cel, zakres, done when, zależności.
 
 ---
 
 ## 🛠️ docs/SETUP.md
 
-docs/SETUP.md jest obowiązkowy w każdym projekcie. AI tworzy go gdy pojawiają się pierwsze komendy startowe i aktualizuje przez cały czas trwania projektu.
-
-docs/SETUP.md musi zawierać:
-
-- wymagania z wersjami
-- kroki instalacji krok po kroku z komendami i oczekiwanym wynikiem
-- znane pułapki (z rzeczywistych problemów, nie z wyobraźni)
-- sekcję "Done when" z weryfikacją
-
-AI aktualizuje docs/SETUP.md natychmiast gdy w sesji pojawia się nowy problem środowiskowy lub nowa komenda — nie odkłada na później.
+Obowiązkowy w każdym projekcie. Zawiera: wymagania z wersjami, kroki instalacji, pułapki, "done when". AI aktualizuje natychmiast przy nowym problemie środowiskowym.
 
 ---
 
 ## 📚 Kontekst projektu – hierarchia source of truth
 
-Gdy pojawia się konflikt między tym co AI "wie" a tym co jest w dokumentach:
+- **docs/PROJECT_SCOPE.md** > założenia AI o logice biznesowej
+- **ADR** > intuicja AI o architekturze
+- **docs/UI_GUIDELINES.md** > intuicja AI o wyglądzie
+- **CLAUDE.md** > domyślne zachowanie AI
+- **Kod w repo** > pamięć AI z poprzedniej sesji
 
-- **docs/PROJECT_SCOPE.md** wygrywa z założeniami AI o logice biznesowej
-- **ADR** wygrywa z intuicją AI o architekturze
-- **docs/UI_GUIDELINES.md** wygrywa z intuicją AI o wyglądzie i wzorcach UI
-- **CLAUDE.md** wygrywa z domyślnym zachowaniem AI
-- **Kod w repo** wygrywa z tym co AI pamięta z poprzedniej sesji
-
-Jeśli dokumenty są ze sobą sprzeczne — AI sygnalizuje konflikt zamiast wybierać po cichu.
+Sprzeczne dokumenty → AI sygnalizuje konflikt.
 
 ---
 
@@ -1181,31 +708,22 @@ AI nie może:
 
 - commitować ani pushować bez akceptacji usera
 - usuwać plików bez potwierdzenia
-- modyfikować migracji które zostały już zastosowane na bazie
-- pomijać testów pod presją czasu lub rozmiaru zmiany
+- modyfikować zastosowanych migracji
+- pomijać testów pod presją czasu
 - zgadywać logiki biznesowej — jeśli nie wiadomo, pytaj
-- zmieniać scope bez wskazania i akceptacji usera
-- wdrażać tymczasowego rozwiązania bez oznaczenia `TODO:` z kontekstem — tymczasowe bez opisu żyje wiecznie
-- używać natywnych `alert()`, `confirm()`, `prompt()` — zamiast tego: błędy inline w formularzu, toast lub modal z komponentów UI; `confirm()` zastępujemy dwukrokowym przyciskiem (pierwsze kliknięcie = stan "potwierdź?", drugie = akcja)
+- zmieniać scope bez akceptacji usera
+- wdrażać tymczasowego rozwiązania bez `TODO:` z kontekstem
+- używać natywnych `alert()`, `confirm()`, `prompt()` — zamiast tego: inline errors, toast, modal; `confirm()` → dwukrokowy przycisk
 
 ---
 
 ## 🚀 Start projektu
 
-Jeśli projekt startuje i brakuje kluczowych artefaktów, AI musi zaproponować w kolejności:
+Brakuje artefaktów → AI proponuje: 1. docs/PROJECT_SCOPE.md, 2. ADR-001, 3. docs/ROADMAP.md (v0).
 
-1. docs/PROJECT_SCOPE.md – co budujemy, dla kogo, po co
-2. ADR-001 – kierunek systemu
-3. docs/ROADMAP.md (v0) – kolejność faz
+AI nie przechodzi do implementacji bez PROJECT_SCOPE i ADR-001.
 
-AI nie przechodzi do implementacji zanim nie istnieją docs/PROJECT_SCOPE.md i ADR-001.
-
-Projekt jest gotowy do implementacji gdy:
-
-- docs/PROJECT_SCOPE.md istnieje i jest zaakceptowany
-- ADR-001 istnieje
-- docs/ROADMAP.md wskazuje aktualną fazę
-- zadania bieżącej fazy istnieją jako issues (w projekcie bez GitHuba: w docs/TASKS.md)
+Gotowość: PROJECT_SCOPE zaakceptowany, ADR-001, ROADMAP z aktualną fazą, issues bieżącej fazy.
 
 ---
 
