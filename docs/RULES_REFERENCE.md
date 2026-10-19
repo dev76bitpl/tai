@@ -26,7 +26,60 @@ ma jak tego zweryfikować — więc zgaduje, co AI miało na myśli, i traci zau
 
 ---
 
+## § 2. Język — guard i szczegóły
+
+**Guard językowy sprawdza znaki, nie język.** Pojedyncza litera diakrytyczna wywala build, choć zdanie jest po angielsku — najczęstszy zapalnik to **symbol waluty** (np. `600 zł` w angielskim opisie buga o płatnościach). Dlatego:
+
+- kwoty w opisach PR pisz kodem waluty (`600 PLN`), nie symbolem lokalnym
+- nazwy własne i etykiety UI w języku lokalnym → **tylko** w \`backtickach\` albo "podwójnym cudzysłowie"; te spany guard pomija
+- **skanuj treść przed wysłaniem, nie po odbiciu przez CI**
+
+---
+
 ## § 3. Commit workflow — procedury i wyjątki
+
+### Reguła główna
+
+**Branch strategy**: każda funkcjonalność / fix idzie na osobnym branchu, merge do main przez PR. Nigdy bezpośrednio na main.
+
+Przed stworzeniem nowego brancha: `git pull origin main` — zawsze, bez wyjątków.
+
+Format nazwy brancha: `feat/nazwa`, `fix/nazwa`, `docs/nazwa`.
+
+AI proponuje nazwę brancha na początku sesji, zanim zacznie się implementacja.
+
+Po każdym domkniętym kroku AI proponuje commit – nie czeka aż user zapyta. Commit obejmuje kod i dokumentację razem (jeden commit = domknięty krok).
+
+Format (zawsze po angielsku):
+
+```
+type(scope): short description
+
+- file-or-component: what changed and why
+- file-or-component: what changed and why
+- impact if non-obvious
+
+[user-tested] [skip-sync]   ← flagi ZAWSZE w body, nigdy w subject
+```
+
+Dla małych zmian – sam subject, bez body. Dla dużych – body obowiązkowe.
+
+**Flagi muszą być w body, nie w subject.** Release-please parsuje tylko subject, a nawiasy kwadratowe łamią parser.
+
+**Protokół przed każdym commitem (obowiązkowy, bez wyjątków):**
+
+1. `git status` → ustal co jest staged
+2. Skomponuj wiadomość commita ZANIM uruchomisz `git commit` (subject ≤72 zn, body ≤100 zn/linia, flagi w body)
+3. Dry-run guardów z tą wiadomością — jeden command, wszystkie guardy commit-msg naraz (komendy niżej)
+4. Jeśli wszystkie `exit: 0` → jeden `git commit`, bez iteracji
+
+**Zakaz**: `git commit` bez wcześniejszego dry-runu guardów.
+
+Po commicie zamykającym branch AI proponuje PR (tytuł + summary + test plan). Po utworzeniu PR AI sugeruje merge i **nie przechodzi do kolejnego zadania** dopóki user nie potwierdzi merge'a. Merge należy wyłącznie do usera.
+
+**Ekonomia PR/CI.** AI **batchuje** commity i proponuje **jeden PR per temat/sesja**. Push/PR proponuje gdy domknięta jest cała paczka albo user mówi wprost „wypychamy".
+
+**Sprzątanie po merge'u (obowiązkowe).** Po merge: `git checkout main` → `git pull origin main` → usunięcie brancha lokalnie (`-d`) i zdalnie. Kolejne zadanie startuje z czystego maina.
 
 ### Dry-run guardów — komendy
 
@@ -415,3 +468,179 @@ ADR często opiera decyzję na założeniu. Trzeba rozróżnić dwa typy, bo pom
 Failure mode do unikania: potraktowanie typu 1 jak typu 2 — odpuszczenie weryfikacji kodowej tam
 gdzie była obowiązkowa. Skutek: decyzja produktowa stoi na zachowaniu, którego implementacja nie
 wymusza, a bug wypływa dopiero gdy ktoś trafi na ścieżkę łamiącą założenie.
+
+---
+
+## § 4. Aktualizacja dokumentacji — reguła główna
+
+Po każdym domkniętym kroku AI proponuje aktualizację dokumentacji — nie czeka aż user zapyta.
+
+Co aktualizować:
+
+- **issue zadania** – odhaczyć domknięty krok; praca spoza scope → nowe issue
+- **docs/TASKS.md** – log sesji: co się wydarzyło i dlaczego
+- **docs/SETUP.md** – nowe komendy, pułapki, "done when"
+- **docs/ROADMAP.md** – ukończona faza, zmiana zakresu
+- **docs/CONVENTIONS.md** – nowa konwencja kodu
+- **docs/UI_GUIDELINES.md** – nowy wzorzec UI, komponent, stan
+- **docs/adr/** – nowa decyzja architektoniczna
+- **docs/TESTING.md** – nowy krytyczny flow
+- **docs/DELIVERY_CHECKLIST.md** – zmiana standardu domykania
+- **dziennik wdrożeń** – zmiana z obszaru cyklicznego agenta doradczego
+
+Kolejność: kod + dokumentacja razem w jednym commicie na końcu kroku.
+
+**Język dokumentacji — zasada dwóch warstw:**
+
+1. **Warstwa ludzka** — potocznie, co user zobaczy / czym grozi brak. **Zwięzła**.
+2. **Warstwa techniczna** — pliki, funkcje, `file:line`, root-cause. **Kompletna maszynowo**.
+
+Po każdym kroku AI proponuje też **checklistę testów manualnych** (happy path + edge case'y).
+
+**Weryfikacja mechaniczna przed edycją dokumentacji** (obowiązkowe):
+
+- Nowy plik w `docs/` → nazwa wg konwencji, wpis do README.md, link z domu
+- Przed zmianą **README.md** → `ls docs/` i zestawienie z tabelą
+- Przed zmianą **docs/ROADMAP.md** → porównaj statusy faz ze stanem issues
+- Przed zmianą **docs/TASKS.md** → dopisz do "Stan sesji" co ukończono
+
+---
+
+## § 10. Kontekst projektu — co i kiedy sprawdzać
+
+Na początku sesji AI czyta selektywnie — na podstawie tematu:
+
+- **CLAUDE.md** → zawsze
+- **docs/TASKS.md** → zawsze (log sesji)
+- **otwarte issues** (`gh issue list`) → zawsze
+- **docs/AI_TEMPLATE_NOTES.md** → zawsze
+- **docs/PROJECT_SCOPE.md** → gdy dotyczy zakresu/nowej funkcjonalności
+- **docs/ROADMAP.md** → gdy dotyczy planowania
+- **docs/adr/** → gdy dotyczy architektury
+- **docs/CONVENTIONS.md** → gdy dotyczy kodu
+- **docs/UI_GUIDELINES.md** → gdy dotyczy UI
+- **docs/** → sprawdź co istnieje — lista rośnie
+- **docs/SETUP.md** → gdy dotyczy środowiska
+- **docs/TESTING.md** → gdy dotyczy testowania
+- **docs/GUARDS.md** → gdy dotyczy strażników/hooków/startu
+- **docs/examples/** → przed napisaniem SETUP, TASKS, ROADMAP lub ADR
+
+---
+
+## § 18. Review designu przed implementacją UI
+
+Przed napisaniem kodu nowego ekranu/flow UI, AI opisuje proponowany flow i czeka na akceptację.
+
+Dotyczy nowych ekranów. Nie dotyczy drobnych zmian (nowa kolumna, nowe pole).
+
+Format: Flow → skąd wchodzi → co widzi → co robi → efekt → pytanie.
+
+---
+
+## § 19. Przed nowym komponentem UI — reguła główna
+
+Przed napisaniem nowego komponentu UI:
+
+1. **Sprawdź `src/components/ui/`** — jeśli komponent istnieje, użyj go
+2. **Grep po wzorcu w kodzie** — znajdź istniejące użycie i naśladuj
+
+**Twarde zasady:**
+- `title=""` → nigdy; zawsze `<Tooltip>` z design systemu
+- `cursor-pointer` → zawsze na klikalnych elementach
+- Nowy pakiet npm → najpierw sprawdź bibliotekę komponentów w projekcie
+
+---
+
+## § 20. Rozmiar komponentów i plików logiki
+
+**Komponent UI: max 300 linii.** Powyżej — wyciągnij sub-komponenty, hooki, helpery.
+
+**Plik logiki: max 400 linii.** Powyżej — podziel po domenie lub flow.
+
+**Wyjątek:** pliki danych (stałe, szablony, mapowania) — bez limitu.
+
+Przed dużym komponentem — zaplanuj podział z góry. Istniejące pliki ponad limit — AI sygnalizuje dług.
+
+---
+
+## § ADR. Architecture Decision Records — pełne zasady
+
+AI wykrywa momenty decyzji architektonicznych i proponuje ADR. Numeruje sekwencyjnie: ADR-001, ADR-002...
+
+### Kiedy pisać ADR
+
+ADR dokumentuje **każdą decyzję której uzasadnienie nie jest oczywiste z kodu** — techniczną, architektoniczną i biznesową. Jeśli pojawia się wybór modelu/technologii, zmiana flow/API, decyzja o bezpieczeństwie, coś trudnego do odwrócenia, decyzja biznesowa, nieoczywisty wniosek z sesji → ADR.
+
+**Zasada:** jeśli AI musi wyjaśniać "dlaczego tak zrobiliśmy" — brakowało ADR-a.
+
+### Backfill starych decyzji
+
+Pytanie "dlaczego X działa tak" bez ADR → AI **natychmiast proponuje ADR**.
+
+### Kiedy NIE pisać ADR
+
+- konwencje kodu → docs/CONVENTIONS.md
+- małe decyzje → komentarz lub log sesji
+- rzeczy łatwo odwracalne bez migracji
+
+### Struktura ADR
+
+Tytuł, Status (proposed/accepted/deprecated), Kontekst, Decyzje i uzasadnienia, Konsekwencje.
+
+---
+
+## § Roadmap
+
+AI proponuje roadmapę jeśli nie istnieje, flaguje pracę poza kolejnością, aktualizuje docs/ROADMAP.md.
+
+Trigger: brak roadmapy, zmiana scope, ukończona faza, nowe wymagania.
+
+Struktura: Faza N — cel, zakres, done when, zależności.
+
+---
+
+## § SETUP.md
+
+Obowiązkowy w każdym projekcie. Zawiera: wymagania z wersjami, kroki instalacji, pułapki, "done when". AI aktualizuje natychmiast przy nowym problemie środowiskowym.
+
+---
+
+## § Artefakty projektu
+
+### Główne artefakty
+
+docs/PROJECT_SCOPE.md, CLAUDE.md, docs/adr/, docs/CONVENTIONS.md, docs/UI_GUIDELINES.md, docs/ROADMAP.md, GitHub Issues, docs/TASKS.md, docs/SETUP.md, docs/TESTING.md, docs/GUARDS.md, docs/GUARDS_TESTING.md, docs/examples/, docs/DELIVERY_CHECKLIST.md, dziennik wdrożeń, README.md.
+
+### Rola AI
+
+- wykrywa brakujące elementy i proponuje ich utworzenie
+- tworzy artefakty tylko gdy potrzebne, aktualizuje zamiast duplikować
+- wykrywa niespójności między artefaktami i sygnalizuje wprost
+- preferencja/feedback → proponuje zapis do CLAUDE.md
+- **zanim napisze SETUP, TASKS, ROADMAP lub ADR — czyta wzór w `docs/examples/`**
+
+### Kolejność tworzenia
+
+1. docs/PROJECT_SCOPE.md → 2. ADR-001 → 3. docs/ROADMAP.md → 4. kolejne ADR → 5. issues + docs/TASKS.md → 6. docs/CONVENTIONS.md → 7. docs/SETUP.md → 8. README.md
+
+---
+
+## § Start projektu
+
+Brakuje artefaktów → AI proponuje: 1. docs/PROJECT_SCOPE.md, 2. ADR-001, 3. docs/ROADMAP.md (v0).
+
+AI nie przechodzi do implementacji bez PROJECT_SCOPE i ADR-001.
+
+Gotowość: PROJECT_SCOPE zaakceptowany, ADR-001, ROADMAP z aktualną fazą, issues bieżącej fazy.
+
+---
+
+## § Zasada nadrzędna
+
+```
+CLAUDE.md        = jak pracujemy
+docs/PROJECT_SCOPE.md = co budujemy
+ADR              = dlaczego tak, a nie inaczej
+```
+
+AI musi rozróżniać wszystkie trzy poziomy — nie mylić zasad pracy z logiką biznesową, ani logiki z uzasadnieniem decyzji architektonicznych.
