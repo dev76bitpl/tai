@@ -1,5 +1,44 @@
 # Changelog
 
+## [0.1.19](https://github.com/dev76bitpl/tai/compare/v0.1.18...v0.1.19) (2026-10-19)
+
+
+### Features
+
+* **doctor:** Check Claude Code hook wiring and pytest ([#169](https://github.com/dev76bitpl/tai/issues/169)) ([1178c0b](https://github.com/dev76bitpl/tai/commit/1178c0b084e9cec40bdcd623537f0ac796824802))
+* **doctor:** Point new clones to doctor, fix hint on every problem ([#198](https://github.com/dev76bitpl/tai/issues/198)) ([d50c697](https://github.com/dev76bitpl/tai/commit/d50c6978c1084aa993dbab946b88ae382b7c7011))
+* **guards:** Block commits that add personal data ([#143](https://github.com/dev76bitpl/tai/issues/143)) ([6fc32a0](https://github.com/dev76bitpl/tai/commit/6fc32a0856b2fd56098100930f444b2c8bfe5988))
+* **hooks:** Resolve template path without machine-specific config ([#123](https://github.com/dev76bitpl/tai/issues/123)) ([b433856](https://github.com/dev76bitpl/tai/commit/b43385670fd5260d7014a647ba9a13b9a2696d36))
+* **start:** Guided project start, stack-aware guards, safe tests in worktrees ([#182](https://github.com/dev76bitpl/tai/issues/182)) ([8af4354](https://github.com/dev76bitpl/tai/commit/8af43545fc11e753861e995736ee3c53cdf95192))
+* **start:** Set blocking GitHub repo settings in the guided start ([#189](https://github.com/dev76bitpl/tai/issues/189)) ([2ab7143](https://github.com/dev76bitpl/tai/commit/2ab714368c75fcde5b492c5aa92690999f01c3e2))
+* **start:** Wizard returns to the steps, skill choice, design stage ([#188](https://github.com/dev76bitpl/tai/issues/188)) ([ef3d269](https://github.com/dev76bitpl/tai/commit/ef3d26925ddacfab96f1202e41993bc3eafb6cfa))
+* **template:** Preview and pull template fixes into a project ([#199](https://github.com/dev76bitpl/tai/issues/199)) ([c764bbd](https://github.com/dev76bitpl/tai/commit/c764bbd2b01f06a432b32d0b17da43dbe0257c65))
+
+
+### Bug Fixes
+
+* **ci:** Scan the whole tree for secrets in guards workflow ([#168](https://github.com/dev76bitpl/tai/issues/168)) ([7428cfb](https://github.com/dev76bitpl/tai/commit/7428cfb7bc5850b1033dd76432e37ecf18c77510))
+* **deploy:** Drop the read pattern that kills a deploy script silently ([#111](https://github.com/dev76bitpl/tai/issues/111)) ([2d82f33](https://github.com/dev76bitpl/tai/commit/2d82f33fe6dc211e027ad06aa5111ef6f87e6487))
+* **guards:** A failed check is not a confirmed violation ([#109](https://github.com/dev76bitpl/tai/issues/109)) ([e4ccecf](https://github.com/dev76bitpl/tai/commit/e4ccecf9d4f5df02d19616e4a89fdae4774498e8))
+* **guards:** Exempt double-quoted strings in PR language check ([#93](https://github.com/dev76bitpl/tai/issues/93)) ([cc2cd57](https://github.com/dev76bitpl/tai/commit/cc2cd57a33318c1ecf0772f7725cd375c653e237))
+* **guards:** Lint and test guards no longer pass silently on nothing ([#191](https://github.com/dev76bitpl/tai/issues/191)) ([e95076f](https://github.com/dev76bitpl/tai/commit/e95076f8cc04d54cdfc13d628fd6757e4e2e97d0))
+* **guards:** Make guard-pii speak English like the other guards ([#146](https://github.com/dev76bitpl/tai/issues/146)) ([f7d93f0](https://github.com/dev76bitpl/tai/commit/f7d93f0210ca56a1ca48f6c8acd58f56513e632a)), closes [#145](https://github.com/dev76bitpl/tai/issues/145)
+* **guards:** Read config.local.json in commit guards and doctor ([#175](https://github.com/dev76bitpl/tai/issues/175)) ([af72b29](https://github.com/dev76bitpl/tai/commit/af72b29b684930cbcfb7500fa6f0910e6ca337cc))
+* **hooks:** Block on unreadable input, fix template-sync crash ([#164](https://github.com/dev76bitpl/tai/issues/164)) ([e9673e4](https://github.com/dev76bitpl/tai/commit/e9673e44a56204cc680f0f1b1513bdc55f6b87e9))
+* **skills:** Keep dry-run and --scan-only from writing the manifest ([#128](https://github.com/dev76bitpl/tai/issues/128)) ([d3fe881](https://github.com/dev76bitpl/tai/commit/d3fe8815417e78e7289766086c093e920df8dbe1))
+* **skills:** Sync skills from the template's origin/main only ([#197](https://github.com/dev76bitpl/tai/issues/197)) ([7e2eb2e](https://github.com/dev76bitpl/tai/commit/7e2eb2e0b20b76cb16fba2d5ac38536b03c72e21))
+* **start:** Configured stack picks guard commands, clone-only start ([#195](https://github.com/dev76bitpl/tai/issues/195)) ([8470105](https://github.com/dev76bitpl/tai/commit/84701051382c5543b4c8c616f145e29b45acbc5d))
+* **start:** Line endings, example docs kept, empty skeletons for new projects ([#192](https://github.com/dev76bitpl/tai/issues/192)) ([5080b6a](https://github.com/dev76bitpl/tai/commit/5080b6abbcfcc8f956b17ae238799479fa31830b))
+* **start:** Skills step no longer refreshes on main, stack hint returns ([#194](https://github.com/dev76bitpl/tai/issues/194)) ([c5147fe](https://github.com/dev76bitpl/tai/commit/c5147fe66872304409e4dd2e478fa8c0bd61fcf5))
+* **sync:** Keep locally changed skills and warn about blocking guards ([#202](https://github.com/dev76bitpl/tai/issues/202)) ([bf65374](https://github.com/dev76bitpl/tai/commit/bf65374c9c240428f0dc5416d4f50525f1dc7cc4))
+* **tooling:** Run doctor once and stop faking a missing py launcher ([#120](https://github.com/dev76bitpl/tai/issues/120)) ([83c6855](https://github.com/dev76bitpl/tai/commit/83c6855441993327bbd21ba726028ef4560ed034))
+* **workflow:** The note channel promised an ignore that was not there ([#110](https://github.com/dev76bitpl/tai/issues/110)) ([1815cd5](https://github.com/dev76bitpl/tai/commit/1815cd537ad9dae8689e1a34032cc71f55c5328b))
+
+
+### Code Refactoring
+
+* **rules:** Trim CLAUDE.md from 31.5 KB to 9.2 KB (-70%) ([#209](https://github.com/dev76bitpl/tai/issues/209)) ([6af5b20](https://github.com/dev76bitpl/tai/commit/6af5b205fe30f658c435d967283ad2a652116eb6))
+
 ## [0.1.18](https://github.com/dev76bitpl/tai/compare/v0.1.17...v0.1.18) (2026-06-13)
 
 
