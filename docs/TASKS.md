@@ -7,6 +7,10 @@ w GitHub Issues (`gh issue list`), nie tutaj. Fazy definiuje [docs/ROADMAP.md](R
 
 ## Stan sesji
 
+- 2026-10-28 **#212 do zrobienia** — hook startowy (`session-context.py`) nie pokazuje otwartych
+  issues projektu (czyta tylko ten plik). Decyzja właściciela: lekki sygnał — licznik + wskazówka
+  `gh issue list`, bez tytułów. Wskaźnik od sesji jarvis, żeby sesja tai nie przegapiła issue (to
+  dokładnie ta dziura, którą #212 naprawia).
 - 2026-10-18 **template_update_check = true** — przywrócenie powiadomienia o aktualizacjach
   szablonu na starcie sesji w projektach. Flaga była wyłączona od PR #200 (15.10).
 - 2026-10-18 **#206 CLAUDE.md slim** — przeniesienie szczegółów (incydenty, uzasadnienia,
