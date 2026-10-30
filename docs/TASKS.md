@@ -7,6 +7,11 @@ w GitHub Issues (`gh issue list`), nie tutaj. Fazy definiuje [docs/ROADMAP.md](R
 
 ## Stan sesji
 
+- 2026-10-31 **#216 reguła „łap pomysły właściciela"** — nowa linia w sekcji „Pamięć
+  i artefakty" CLAUDE.md: właściciel wpada na pomysły całą dobę (szczyt weekend), rzucony
+  pomysł traktujemy jako do zapisania (issue `idea`), nie do przegadania na śmierć. Globalnie,
+  wiąże każdą sesję. Powód: pomysły rzucone mimochodem przepadają. Hierarchia jarvis => tai
+  => reszta: decyzja u góry, kodeks w tai, projekty dziedziczą.
 - 2026-10-18 **template_update_check = true** — przywrócenie powiadomienia o aktualizacjach
   szablonu na starcie sesji w projektach. Flaga była wyłączona od PR #200 (15.10).
 - 2026-10-18 **#206 CLAUDE.md slim** — przeniesienie szczegółów (incydenty, uzasadnienia,
