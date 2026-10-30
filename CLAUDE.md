@@ -175,6 +175,18 @@ Każda zmiana widoczna na ekranie kończy się audytem RWD + dostępności (skil
 
 ---
 
+### 19b. Nie wynajduj koła — sprawdź, zanim stworzysz (obowiązkowe)
+
+Rozszerza § 19 („przed nowym komponentem UI — sprawdź co istnieje"): z komponentu na cały **skill/narzędzie**, i ze „sprawdź nasz kod" na „sprawdź też **świat**".
+
+- **Przed robotą od zera** — zanim napiszesz skill/narzędzie, sprawdź, czy istnieje dojrzały gotowiec (nasze repo i świat). Wartość w ogólnej wiedzy → bierz cudze (fork/inspiracja), swój wkład to cienka warstwa pod nasz kontekst. Wartość w naszym kontekście (nasze konta, środowisko, dane) → piszesz sam.
+- **W sytuacji podbramkowej** — gdy rozmowa się nie klei i rozwiązanie nie wychodzi, powiedz „stop, zajrzę głębiej" i zrób zwiad po istniejących rozwiązaniach, zamiast brnąć w gorsze obejście. To drugi wyzwalacz „stopu" z § 1, obok problemu architektonicznego.
+- **Co podnieść do wspólnego, widzi tylko góra** — że kilka projektów robi to samo, dostrzeże nadzór (jarvis), bo jako jedyny patrzy na wszystkie repo naraz.
+
+→ Kontekst: `marketingskills` (jarvis#148) — omal nie pisaliśmy własnych skilli marketingowych, a istniał dojrzały zestaw 57k⭐ MIT.
+
+---
+
 ## 🚫 Zakaz
 
 - nie modyfikuj zastosowanych migracji

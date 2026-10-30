@@ -7,6 +7,12 @@ w GitHub Issues (`gh issue list`), nie tutaj. Fazy definiuje [docs/ROADMAP.md](R
 
 ## Stan sesji
 
+- 2026-10-31 **#214 reguła 19b „nie wynajduj koła"** — nowy blok w CLAUDE.md po § 19a:
+  przed pisaniem skilla/narzędzia od zera sprawdź, czy istnieje dojrzały gotowiec (nasze
+  repo i świat); w sytuacji podbramkowej „stop, zajrzę głębiej" zamiast gorszego obejścia.
+  Uogólnia § 19 z komponentu na cały skill i z „nasz kod" na „świat". Powód: omal nie
+  pisaliśmy własnych skilli marketingowych przy dojrzałym `marketingskills` (jarvis#148).
+  Na razie `idea` — do przedyskutowania, PR jako propozycja.
 - 2026-10-31 **#216 reguła „łap pomysły właściciela"** — nowa linia w sekcji „Pamięć
   i artefakty" CLAUDE.md: właściciel wpada na pomysły całą dobę (szczyt weekend), rzucony
   pomysł traktujemy jako do zapisania (issue `idea`), nie do przegadania na śmierć. Globalnie,
