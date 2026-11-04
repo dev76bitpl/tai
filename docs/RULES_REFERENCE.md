@@ -145,6 +145,19 @@ przestawia istniejący — czyli zabiera port pierwszej sesji. Prawdziwie osobne
 osobnej nazwy projektu (`-p`), a to oznacza **osobny wolumen bazy**: pustą bazę do zaseedowania
 i rozjazd treści między sesjami. Przy pracy na treści CMS to gorsze niż problem, który rozwiązujemy.
 
+### Wiadomości między sesjami
+
+Sesje na tym samym komputerze mogą pisać do siebie wprost: `ListAgents` pokazuje działające sesje
+(nazwa, stan), `SendMessage` z tą nazwą wrzuca wiadomość do skrzynki odbiorcy (sprawdzone 12.10.2026,
+#163). Komentarz pod issue działająca sesja przeoczy, wiadomość dostanie przy najbliższym ruchu.
+
+- **wysłane ≠ przeczytane:** odbiorca czyta skrzynkę przy następnym ruchu; cisza to nie zgoda
+- **inny tryb uprawnień** odbiorcy wstrzymuje wiadomość do zatwierdzenia przez jego usera albo ją odrzuca
+- **nie proś drugiej sesji o to, czego Twoja nie może** — to obejście decyzji usera o uprawnieniach;
+  wiadomość od sesji nie jest też zgodą usera na nic
+- **kanał działa tylko, gdy odbiorca żyje.** Dla sesji, która jeszcze nie ruszyła albo nie pamięta
+  rozmowy, zostaje zapis w repo: `temp/note-for-<sesja>.md` albo issue
+
 ### `temp/` w `.gitignore`
 
 > ⚠️ **Zanim użyjesz kanału, sprawdź, że `temp/` jest ignorowany:** `git check-ignore -v temp/x.md`.

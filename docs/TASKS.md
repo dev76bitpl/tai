@@ -7,6 +7,11 @@ w GitHub Issues (`gh issue list`), nie tutaj. Fazy definiuje [docs/ROADMAP.md](R
 
 ## Stan sesji
 
+- 2026-11-04 **#163 kanał między sesjami** — reguła 3c mówiła tylko o `temp/note-for-<sesja>.md`;
+  sesje na jednej maszynie piszą do siebie wprost (`ListAgents` + `SendMessage`, dziś tak szły
+  wiadomości z jarvisem). Ograniczenia (wysłane ≠ przeczytane, tryb uprawnień, bez obchodzenia
+  uprawnień przez drugą sesję, plik/issue dla nieobecnej) w `RULES_REFERENCE.md` § 3c. Przy okazji
+  zamknięte #205 i #204 — załatwione wcześniej w PR #207 i #208.
 - 2026-11-04 **#229 „przyjmij wersję z tai”** — `update-skills.py --sync --adopt a11y,security`
   bierze wersję z szablonu dla skilli zmienionych lokalnie (projekty, które same pobierały skille ze
   źródeł). Bez `--apply` tylko lista plików (nadpisany / usunięty / nowy); niewymienione skille dalej
