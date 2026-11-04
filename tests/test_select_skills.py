@@ -279,10 +279,11 @@ def test_should_list_groups_without_writing(project):
 # ── sync must not bring excluded skills back ─────────────────────────────────
 
 def test_should_not_resync_excluded_skills_in_update_skills(tmp_path, monkeypatch, capsys):
-    updater = _load("update_skills_for_exclusion", ROOT / "scripts" / "update-skills.py")
+    updater = _load("skills_sync_for_exclusion", ROOT / "scripts" / "skills_sync.py")
     template = tmp_path / "template"
     project_root = tmp_path / "project"
-    for name in ("prestashop", "adr"):
+    # vendored ones too: the template hands their files over since #221
+    for name in ("prestashop", "adr", "wp-plugin-development", "security"):
         (template / ".claude" / "skills" / name).mkdir(parents=True)
         (template / ".claude" / "skills" / name / "SKILL.md").write_text("# skill", encoding="utf-8")
     (template / "skills-manifest.json").write_text(json.dumps({
@@ -303,5 +304,7 @@ def test_should_not_resync_excluded_skills_in_update_skills(tmp_path, monkeypatc
     assert "adr" in after["custom_skills"] and "prestashop" not in after["custom_skills"]
     assert "security" in after["skills"] and "wp-plugin-development" not in after["skills"]
     assert not (project_root / ".claude" / "skills" / "prestashop").exists()
+    assert not (project_root / ".claude" / "skills" / "wp-plugin-development").exists()
     assert (project_root / ".claude" / "skills" / "adr").exists()
+    assert (project_root / ".claude" / "skills" / "security").exists()
     assert after["excluded_skills"] == ["prestashop", "wp-plugin-development"]

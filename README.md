@@ -84,15 +84,20 @@ gałęzi roboczej (np. `git switch -c chore/update-skills`), nigdy na `main`. Gd
 zablokuje aktualizację skilla („znaleziono podejrzane wzorce”), skill zostaje w obecnej wersji i dalej
 działa — przejrzyj zgłoszone linie w źródle i zdecyduj; zablokowanej aktualizacji nie wymuszaj.
 
+**Skille zewnętrzne (vendored) aktualizuje wyłącznie tai.** tai pobiera je ze źródeł, przegląda diff
+i skan bezpieczeństwa, a projekty dostają zatwierdzoną wersję synchronizacją — wszystkie tę samą.
+W projekcie `update-skills.py` bez `--sync` odmawia i wskazuje sync. Skill wycofany w tai sync usuwa
+z projektu, o ile projekt go nie zmienił. Nowsza wersja u źródła albo
+poprawka do skilla zewnętrznego → zgłoszenie w tai, nie aktualizacja w projekcie (#221).
+
 ```bash
-# Vendored skille — sprawdź i zaktualizuj z GitHub
+# W tai — skille zewnętrzne ze źródeł na GitHubie
 python3 scripts/update-skills.py          # podgląd aktualizacji
 python3 scripts/update-skills.py --apply  # zastosuj
 
-# Istniejący projekt — pobierz zmiany z t-ai
+# W projekcie — wszystkie skille (własne i zewnętrzne) z tai
 python3 scripts/update-skills.py --sync          # podgląd
 python3 scripts/update-skills.py --sync --apply  # zastosuj
-python3 scripts/update-skills.py --full-sync     # sync + vendored w jednym kroku
 
 # Walidacja
 python3 scripts/validate-skills.py        # waliduj frontmatter SKILL.md
@@ -113,7 +118,7 @@ Jeśli projekt był założony przed wprowadzeniem t-ai:
 cp /sciezka/do/tai/scripts/update-skills.py scripts/update-skills.py
 
 # 2. Pobierz wszystko — ścieżka do template rozstrzyga się sama
-python3 scripts/update-skills.py --full-sync
+python3 scripts/update-skills.py --sync --apply
 ```
 
 ### Poprawki z szablonu: strażnicy, hooki, skrypty
@@ -129,7 +134,7 @@ polecenie lintu albo testów wpisane w `.claude/hooks/config.json` nie da się u
 strażnicy zablokowaliby nim każdy commit (typowo odziedziczone `composer lint` / `composer test`).
 
 **Projekt bez `scripts/update-from-template.py`** (założony przed ADR-006) dostaje go w trzech krokach, na gałęzi
-roboczej. Samo `update-skills.py` bez `--sync` sprawdza tylko skille z GitHuba i skryptów szablonu nie rusza:
+roboczej. Samo `update-skills.py` bez `--sync` w projekcie nic nie robi (skille zewnętrzne aktualizuje tai):
 
 ```bash
 python3 scripts/update-skills.py --sync           # 1. podgląd — stara wersja nadpisuje skille zmienione w projekcie

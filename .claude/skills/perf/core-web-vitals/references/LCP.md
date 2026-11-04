@@ -46,8 +46,8 @@ res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
 
 **For images:**
 ```html
-<!-- Preload LCP image -->
-<link rel="preload" as="image" href="/hero.webp"
+<!-- Preload only when a trace shows the LCP image is discovered late -->
+<link rel="preload" as="image" href="/hero.webp" 
       imagesrcset="/hero-400.webp 400w, /hero-800.webp 800w"
       imagesizes="100vw"
       fetchpriority="high">
@@ -56,7 +56,7 @@ res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
 <picture>
   <source srcset="/hero.avif" type="image/avif">
   <source srcset="/hero.webp" type="image/webp">
-  <img src="/hero.jpg" width="1200" height="600"
+  <img src="/hero.jpg" width="1200" height="600" 
        fetchpriority="high" alt="Hero">
 </picture>
 ```
@@ -81,9 +81,9 @@ res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
     .hero { /* ... */ }
     .nav { /* ... */ }
   </style>
-
+  
   <!-- Defer non-critical CSS -->
-  <link rel="preload" href="/styles.css" as="style"
+  <link rel="preload" href="/styles.css" as="style" 
         onload="this.onload=null;this.rel='stylesheet'">
 </head>
 ```
@@ -145,7 +145,7 @@ function Page() {
 import Image from 'next/image';
 
 // LCP image with priority
-<Image
+<Image 
   src="/hero.jpg"
   priority
   fill
@@ -170,11 +170,11 @@ import Image from 'next/image';
 import { Image } from 'astro:assets';
 import hero from '../assets/hero.jpg';
 ---
-<Image
-  src={hero}
-  loading="eager"
+<Image 
+  src={hero} 
+  loading="eager" 
   decoding="sync"
-  alt="Hero"
+  alt="Hero" 
 />
 ```
 
@@ -185,7 +185,7 @@ import hero from '../assets/hero.jpg';
 new PerformanceObserver((entryList) => {
   const entries = entryList.getEntries();
   const lastEntry = entries[entries.length - 1];
-
+  
   console.log('LCP:', {
     element: lastEntry.element,
     time: lastEntry.startTime,
@@ -199,10 +199,12 @@ new PerformanceObserver((entryList) => {
 
 ## Common issues
 
-| Issue | Impact | Fix |
-|-------|--------|-----|
-| No preload for LCP image | +500-1000ms | Add `<link rel="preload">` |
-| Large unoptimized image | +300-800ms | Compress, use WebP/AVIF |
-| Render-blocking CSS | +200-500ms | Inline critical CSS |
-| Slow TTFB | +300-2000ms | CDN, edge caching |
-| Client-rendered content | +500-2000ms | SSR/SSG |
+| Issue | Evidence to confirm | Typical fix |
+|-------|---------------------|-------------|
+| LCP resource discovered late | Large resource load delay in `LCPBreakdown` or `LCPDiscovery` | Put it in initial HTML, add priority, and preload only when still necessary |
+| Large image transfer | Resource load duration and response bytes dominate | Resize/compress and choose an appropriate format |
+| Render-blocking CSS | `RenderBlocking` insight and long render delay | Remove unused rules, split non-critical CSS, or inline only proven critical CSS |
+| Slow TTFB | `DocumentLatency` insight or LCP TTFB subpart dominates | Cache, reduce redirects, or optimize server work |
+| Client-rendered LCP | LCP element absent from initial HTML and render delay dominates | SSR, static rendering, or earlier rendering |
+
+Do not attach generic millisecond savings to these fixes. Measure the relevant LCP subpart before and after under equivalent conditions.

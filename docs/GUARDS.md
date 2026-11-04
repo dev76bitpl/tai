@@ -288,7 +288,7 @@ Skille ogólne (`scope`, `adr`, `api`, `debug`, `deploy`, `git`, `retro`) zostaj
 | `php` | `laravel-rules`, `php-modernization`, `symfony` | laravel, symfony, magento, wordpress, prestashop |
 | `shops` | `prestashop`, `shoper` | prestashop |
 | `typescript` | `typescript`, `nextjs` | node |
-| `design` | `design-taste-frontend`, `redesign-existing-projects` | wszystkie poza python i go |
+| `design` | `design-taste-frontend` | wszystkie poza python i go |
 | `ui` | `ui-ux-pro-max`, `a11y`, pakiet jakości stron (`perf`) | wszystkie |
 | `marketing` | `copywriting`, `cro` | wordpress |
 | `review` | `review`, `security` | wszystkie |
@@ -297,7 +297,7 @@ Stos `inny` albo nieustawiony proponuje wszystkie grupy; zostawienie wszystkich,
 (`skill_groups`, `excluded_skills`) — synchronizacja z szablonu pomija wyłączone skille, więc nie
 wracają przy następnej wiadomości. Zmiana zdania: `python3 scripts/select-skills.py` jeszcze raz;
 grupa dodana z powrotem wraca przy najbliższej synchronizacji
-(`python3 scripts/update-skills.py --sync --apply`, potem `--apply`). Bez terminala:
+(`python3 scripts/update-skills.py --sync --apply`). Bez terminala:
 `--keep php,ui,review` albo `--all`; stan pokazuje `--list`. Katalogi skilli spoza manifestu
 (`seo`, `performance`, `core-web-vitals`, `best-practices`, `web-quality-audit`) nie należą do
 żadnej grupy i zostają.

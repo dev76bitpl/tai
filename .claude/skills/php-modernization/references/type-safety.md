@@ -1,3 +1,6 @@
+<!-- SPDX-License-Identifier: CC-BY-SA-4.0 -->
+<!-- SPDX-FileCopyrightText: Netresearch DTT GmbH -->
+
 # Type Safety Patterns in PHP
 
 ## Strict Types Declaration
@@ -356,6 +359,79 @@ class UserRepository implements RepositoryInterface
 
 ## Assertions and Guards
 
+### `preg_match()` returns `false`, not `0`, on malformed UTF-8
+
+With the `/u` modifier PCRE validates the whole subject before matching. An
+invalid byte makes `preg_match()` return **`false`** — not `0` — so the common
+shapes silently conflate "no match" with "could not be examined":
+
+```php
+$r = preg_match('/\s/u', $value);   // false on malformed UTF-8
+
+// WRONG - the match test: false === 1 is false, so a byte-damaged
+// subject reads as "no match" and travels on as if it were clean
+if ($r === 1) { /* has whitespace */ }
+
+// WRONG - conflates false with 0: !false is true, same wrong branch
+if (!preg_match('/\s/u', $value)) { /* "no match" */ }
+
+// ALSO WRONG, differently - the no-match test: false === 0 is false
+// too, so NEITHER branch runs and the error is silently skipped
+if ($r === 0) { /* never reached for a malformed subject */ }
+
+// RIGHT - settle the encoding first, then match
+if (preg_match('//u', $value) !== 1) {
+    // not valid UTF-8: reject, log, or transcode - do not fall through
+    return null;
+}
+if (preg_match('/\s/u', $value) === 1) { /* now meaningful */ }
+```
+
+Note the asymmetry: `=== 1` and `!preg_match(...)` take the wrong branch, while
+`=== 0` takes no branch at all. Only the first of those looks like a working
+guard, which is why it is the one that ships.
+
+`'//u'` is an empty pattern with the modifier: it matches any valid UTF-8
+subject and fails on a malformed one, so it is an encoding check that needs no
+`mbstring`. `preg_last_error_msg()` names the cause (`Malformed UTF-8
+characters, possibly incorrectly encoded`).
+
+Why it matters beyond the branch: a value that passes an inverted guard keeps
+travelling. Symfony's `UnicodeString` constructor throws
+`InvalidArgumentException` on invalid UTF-8, and `AsciiSlugger` builds one — so
+a single bad byte reaching a slugger aborts the whole run with an exception
+attributed to whatever template called it, naming neither the input nor its
+origin. Validate the encoding where the value enters, and keep the raw value out
+of the log message: it is the one thing that cannot be written safely.
+
+### `$` accepts a trailing newline — anchor validation with `\A…\z`
+
+In PCRE `$` matches at the very end of the subject **or before a final
+newline**. A pattern meant to say "the whole string is of this form" therefore
+also accepts the same string followed by `\n`:
+
+```php
+preg_match('/^[a-z0-9._-]+$/', "file.html\n");    // 1 - the newline gets through
+preg_match('/^[a-z0-9._-]+\z/', "file.html\n");   // 0
+preg_match('/^[a-z0-9._-]+$/D', "file.html\n");   // 0 - D: $ means end only
+preg_match('/^[a-z0-9._-]+\Z/', "file.html\n");   // 1 - \Z behaves like $
+
+// with m, ^ also matches after an inner newline, and D is ignored
+preg_match('/^[a-z0-9-]+\z/m', "bad!\nvalid-slug");    // 1
+preg_match('/\A[a-z0-9-]+\z/m', "bad!\nvalid-slug");   // 0
+```
+
+For a whitelist, a fast path that skips a stricter parser, or any check whose
+job is to reject what does not match, anchor both ends absolutely: `\A…\z`.
+`^…\z` and `^…$` with `D` hold only as long as nobody adds `m`. `\Z` is not
+the fix; it has the same trailing-newline allowance as `$`.
+
+It stays invisible because hand-picked examples never end in a newline. A
+fast path in front of `League\Uri` (`~^(?!/)[\x21-\x39\x3B-\x7E]+$~`) let
+`"~\n"` through as a relative path where the parser it replaced throws; only a
+differential test against the old implementation over every byte and a seeded
+random corpus found it. Pin the anchor with a case that ends in `"\n"`.
+
 ### Type Guards
 
 ```php
@@ -566,3 +642,60 @@ class UserRepository extends AbstractRepository
     }
 }
 ```
+
+## JSON: Empty Object vs. Empty Array
+
+PHP conflates `[]` (empty array) and `{}` (empty object) in ways that break
+strict JSON consumers — LLM tool-calling APIs (OpenAI, Ollama), JSON Schema
+validators, and any peer that distinguishes the two types.
+
+**Two traps, one root cause — `[]` and `{}` are the same empty PHP array:**
+
+```php
+// Trap 1 — encoding: an empty PHP array becomes a JSON array, never an object.
+json_encode([]);                       // "[]"   ← NOT "{}"
+json_encode(['properties' => []]);     // {"properties":[]}  ← invalid where an object is required
+
+// Trap 2 — decoding with associative=true collapses an empty object to [].
+json_decode('{}', true);               // []     (array)  ← type is now wrong
+json_decode('{}', true) === [];        // true
+json_decode('{}');                     // stdClass {}  (object)  ← preserved
+```
+
+A JSON Schema `properties` block, or a tool call's `arguments`, MUST serialize
+as `{}` when empty. Sending `[]` gets the whole request rejected — Ollama, for
+example, returns HTTP 400 `Value looks like object, but can't find closing '}'
+symbol`.
+
+**Rules:**
+
+- For a field that must be a JSON **object**, represent "empty" as
+  `new \stdClass()` (or `(object) []`), not `[]`. Normalize at the value's
+  construction site so every serialization path is correct:
+
+  ```php
+  if (($schema['properties'] ?? null) === []) {
+      $schema['properties'] = new \stdClass();   // serializes as {}
+  }
+  ```
+
+- When a decoded value must **round-trip** as an object, decode with
+  `json_decode($json)` (objects) — not `json_decode($json, true)` (which turns
+  an empty `{}` into `[]` and re-encodes it wrong on the next hop).
+
+- Prefer normalizing in a **shared value object's constructor** over each
+  provider/serializer: adapters that read the raw property directly (not via a
+  `toArray()`) then get the correct type too, and `fromArray(toArray())` stays
+  idempotent:
+
+  ```php
+  public function __construct(array|object $properties)
+  {
+      // Empty array would serialize as []; force an empty object to {}.
+      $this->properties = $properties === [] ? new \stdClass() : (object) $properties;
+  }
+  ```
+
+**Symptom to recognize:** an intermittent-looking 4xx from a JSON API that
+actually correlates with *which optional/empty field is present* (e.g. only
+fails when a parameterless tool is offered) — not with timing or connections.

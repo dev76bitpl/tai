@@ -1,4 +1,4 @@
-"""Tests for the skills age check in .claude/hooks/session-context.py.
+"""Tests for the skills age check of the session-start hook (.claude/hooks/skills_check.py).
 
 The hook runs on every prompt. The age check used datetime without importing it, so the first
 message in every new project ended in a traceback (#141).
@@ -9,7 +9,8 @@ from pathlib import Path
 
 import pytest
 
-HOOK = Path(__file__).resolve().parents[1] / "session-context.py"
+# The age check moved to skills_check.py with the split of session-context.py (#221).
+HOOK = Path(__file__).resolve().parents[1] / "skills_check.py"
 
 
 @pytest.fixture()

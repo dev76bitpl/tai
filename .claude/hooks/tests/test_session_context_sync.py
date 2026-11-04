@@ -11,13 +11,20 @@ from pathlib import Path
 import pytest
 
 HOOK = Path(__file__).resolve().parents[1] / "session-context.py"
+# The skill checks live in skills_check.py since the split (#221); session-context.py calls them.
+SKILLS_CHECK = Path(__file__).resolve().parents[1] / "skills_check.py"
+
+
+def _load(path: Path, name: str):
+    spec = importlib.util.spec_from_file_location(name, path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 @pytest.fixture()
 def hook(tmp_path, monkeypatch):
-    spec = importlib.util.spec_from_file_location("session_context_under_test", HOOK)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
+    module = _load(SKILLS_CHECK, "skills_check_under_test")
     project = tmp_path / "project"
     project.mkdir()
     monkeypatch.setattr(module, "MONOREPO_ROOT", project)
@@ -61,6 +68,7 @@ def test_should_see_no_desync_when_only_excluded_skills_are_absent(hook):
     _template(template)
     (project / ".claude" / "skills" / "adr").mkdir(parents=True)
     (project / ".claude" / "skills" / "adr" / "SKILL.md").write_text("# skill", encoding="utf-8")
+    (project / ".claude" / "skills" / "security").mkdir()
     _project(project, {"custom_skills": {"adr": {}}, "skills": {"security": {}},
                        "excluded_skills": ["prestashop", "wp-plugin-development"]})
     assert module._local_desynced(template) == ([], [], [])
@@ -142,15 +150,15 @@ def test_should_sync_when_the_released_template_differs(hook, tmp_path, monkeypa
 
 # ── the template notice must reach the screen, not only the model (ADR-006, decision 7) ──
 
-def test_should_show_template_notice_on_screen_and_keep_it_in_context(hook):
-    module, _, _ = hook
+def test_should_show_template_notice_on_screen_and_keep_it_in_context():
+    module = _load(HOOK, "session_context_under_test")
     out = json.loads(module.render("[SESSION START]\n\nnotice", "notice"))
     assert out["systemMessage"] == "notice"
     assert out["hookSpecificOutput"] == {"hookEventName": "UserPromptSubmit", "additionalContext": "[SESSION START]\n\nnotice"}
 
 
-def test_should_keep_plain_context_when_nothing_must_be_shown(hook):
-    module, _, _ = hook
+def test_should_keep_plain_context_when_nothing_must_be_shown():
+    module = _load(HOOK, "session_context_under_test")
     assert module.render("[SESSION START]\n\ntasks", None) == "[SESSION START]\n\ntasks"
 
 
@@ -176,6 +184,8 @@ def test_should_report_a_locally_changed_skill_instead_of_a_download(hook, monke
     for name in ("adr", "prestashop"):
         (project / ".claude" / "skills" / name).mkdir(parents=True)
         (project / ".claude" / "skills" / name / "SKILL.md").write_text("# ours", encoding="utf-8")
+    for name in ("security", "wp-plugin-development"):
+        (project / ".claude" / "skills" / name).mkdir(parents=True)
     _project(project, {"custom_skills": {"adr": {}, "prestashop": {}}, "skills": {"security": {}, "wp-plugin-development": {}}})
     monkeypatch.setattr(module, "resolve_template_path", lambda config: str(template))
     monkeypatch.setattr(module.subprocess, "run",
@@ -183,3 +193,69 @@ def test_should_report_a_locally_changed_skill_instead_of_a_download(hook, monke
     message = module.check_template_skills_sync({})
     assert "Pobrano" not in message
     assert "adr, prestashop" in message and "porównaj ręcznie" in message
+
+
+# ── vendored skills follow the template's version, not only its manifest names (#221) ──
+
+ENTRY = {"local_path": ".claude/skills/review", "commit": "c2", "checked": "2000-01-01"}
+
+
+@pytest.mark.parametrize("project_skills,has_dir,expected", [
+    ({"code-review": ENTRY}, True, []),
+    ({"code-review": dict(ENTRY, commit="c1")}, True, ["code-review"]),   # template reviewed a newer one
+    ({}, False, ["code-review"]),                                          # never synced
+    ({"code-review": ENTRY}, False, ["code-review"]),                     # entry without files
+])
+def test_should_list_vendored_skills_waiting_for_sync(hook, project_skills, has_dir, expected):
+    module, project, template = hook
+    template.mkdir()
+    (template / "skills-manifest.json").write_text(json.dumps({"custom_skills": {}, "skills": {"code-review": ENTRY}}),
+                                                   encoding="utf-8")
+    _project(project, {"custom_skills": {}, "skills": project_skills})
+    if has_dir:
+        (project / ".claude" / "skills" / "review").mkdir(parents=True)
+    assert module._local_desynced(template)[2] == expected
+
+
+@pytest.mark.parametrize("config,warns", [({}, False), ({"is_template": True}, True)])
+def test_should_ask_to_check_upstream_only_in_the_template(hook, config, warns):
+    module, project, _ = hook
+    _project(project, {"custom_skills": {}, "skills": {"code-review": ENTRY}})
+    warning = module.check_skills_staleness(config) or ""
+    assert ("Vendored" in warning) is warns
+
+
+def test_should_name_skills_the_template_retired(hook):
+    module, project, template = hook
+    _template(template)
+    _project(project, {"custom_skills": {"adr": {}, "old-custom": {}}, "skills": {"security": {}, "redesign": {}}})
+    assert module._retired(template) == ["old-custom", "redesign"]
+
+
+def test_should_sync_and_report_a_retired_skill(hook, monkeypatch):
+    module, project, template = hook
+    _template(template)
+    (project / "scripts").mkdir()
+    (project / "scripts" / "update-skills.py").write_text("# not run: subprocess is replaced", encoding="utf-8")
+    for name in ("adr", "prestashop", "security", "wp-plugin-development"):
+        (project / ".claude" / "skills" / name).mkdir(parents=True)
+        (project / ".claude" / "skills" / name / "SKILL.md").write_text("# skill", encoding="utf-8")
+    _project(project, {"custom_skills": {"adr": {}, "prestashop": {}},
+                       "skills": {"security": {}, "wp-plugin-development": {}, "redesign": {}}})
+    monkeypatch.setattr(module, "resolve_template_path", lambda config: str(template))
+    monkeypatch.setattr(module.subprocess, "run", lambda *a, **k: _Done(""))
+    assert "usunięte (wycofane w szablonie): redesign" in module.check_template_skills_sync({})
+
+
+def test_should_run_without_the_skill_checks_module(tmp_path, monkeypatch):
+    """A partial update that brings session-context.py without skills_check.py must not break prompts."""
+    import shutil
+    import sys
+    monkeypatch.delitem(sys.modules, "skills_check", raising=False)
+    monkeypatch.setattr(sys, "path", [p for p in sys.path if Path(p).resolve() != HOOK.parent])
+    hooks = tmp_path / ".claude" / "hooks"
+    hooks.mkdir(parents=True)
+    for name in ("session-context.py", "stack.py"):
+        shutil.copy2(HOOK.parent / name, hooks / name)
+    module = _load(hooks / "session-context.py", "session_context_without_skills_check")
+    assert module.skills_check is None
