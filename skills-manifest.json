@@ -1,6 +1,12 @@
 {
   "_readme": "Tracks vendored external skills. Run: python3 scripts/update-skills.py",
   "stale_after_days": 30,
+  "_opt_in_groups_comment": "Groups a project gets only after choosing them in scripts/select-skills.py (#219); every other group reaches a project that never chose. Keep in step with GROUPS there.",
+  "opt_in_groups": [
+    "seo",
+    "social",
+    "sales"
+  ],
   "script_integrity": {
     "update-skills.py": "3ae6c680bdcbc102dcdb5798a1a9b7f73ea10b510e461d8144e41a03a5ebe5f7"
   },
@@ -27,13 +33,16 @@
       "reviewed": "2026-05-24"
     },
     "prestashop": {
-      "reviewed": "2026-05-24"
+      "reviewed": "2026-05-24",
+      "group": "shops"
     },
     "shoper": {
-      "reviewed": "2026-05-24"
+      "reviewed": "2026-05-24",
+      "group": "shops"
     },
     "symfony": {
-      "reviewed": "2026-05-24"
+      "reviewed": "2026-05-24",
+      "group": "php"
     }
   },
   "skills": {
@@ -42,14 +51,16 @@
       "local_path": ".claude/skills/copywriting",
       "remote_path": "skills/copywriting",
       "commit": "88c79f6528a9347420e57ceb1fff9a60de651768",
-      "checked": "2026-11-04"
+      "checked": "2026-11-04",
+      "group": "marketing"
     },
     "cro": {
       "repo": "https://github.com/coreyhaines31/marketingskills",
       "local_path": ".claude/skills/cro",
       "remote_path": "skills/cro",
       "commit": "88c79f6528a9347420e57ceb1fff9a60de651768",
-      "checked": "2026-11-04"
+      "checked": "2026-11-04",
+      "group": "marketing"
     },
     "ui-ux-pro-max": {
       "repo": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill",
@@ -59,14 +70,16 @@
       "checked": "2026-11-04",
       "exclude": [
         "tests"
-      ]
+      ],
+      "group": "ui"
     },
     "security": {
       "repo": "https://github.com/agamm/claude-code-owasp",
       "local_path": ".claude/skills/security",
       "remote_path": ".claude/skills/owasp-security",
       "commit": "1ae29cb22518560e3625d77f2ae64f61647d9201",
-      "checked": "2026-11-04"
+      "checked": "2026-11-04",
+      "group": "review"
     },
     "a11y": {
       "repo": "https://github.com/fecarrico/A11Y.md",
@@ -76,14 +89,16 @@
       "checked": "2026-11-04",
       "own_files": [
         "SKILL.md"
-      ]
+      ],
+      "group": "ui"
     },
     "web-quality-skills": {
       "repo": "https://github.com/addyosmani/web-quality-skills",
       "local_path": ".claude/skills/perf",
       "remote_path": "skills",
       "commit": "afa8da942115f2961fdbfa80807ea0b232ff6c00",
-      "checked": "2026-11-04"
+      "checked": "2026-11-04",
+      "group": "ui"
     },
     "code-review": {
       "repo": "https://github.com/awesome-skills/code-review-skill",
@@ -97,49 +112,56 @@
         ".gitignore"
       ],
       "commit": "4850184dfd7765ea7b3c5c4e9b6cf8e0815ee7cb",
-      "checked": "2026-11-04"
+      "checked": "2026-11-04",
+      "group": "review"
     },
     "wp-plugin-development": {
       "repo": "https://github.com/jorgerosal/wordpress-skills",
       "local_path": ".claude/skills/wp-plugin-development",
       "remote_path": "claude-skills/wp-plugin-development",
       "commit": "8c964424d05ba34b3ea5641f7181d4c13829e06f",
-      "checked": "2026-11-04"
+      "checked": "2026-11-04",
+      "group": "wordpress"
     },
     "wp-theme-development": {
       "repo": "https://github.com/jorgerosal/wordpress-skills",
       "local_path": ".claude/skills/wp-theme-development",
       "remote_path": "claude-skills/wp-theme-development",
       "commit": "8c964424d05ba34b3ea5641f7181d4c13829e06f",
-      "checked": "2026-11-04"
+      "checked": "2026-11-04",
+      "group": "wordpress"
     },
     "wp-security-review": {
       "repo": "https://github.com/jorgerosal/wordpress-skills",
       "local_path": ".claude/skills/wp-security-review",
       "remote_path": "claude-skills/wp-security-review",
       "commit": "8c964424d05ba34b3ea5641f7181d4c13829e06f",
-      "checked": "2026-11-04"
+      "checked": "2026-11-04",
+      "group": "wordpress"
     },
     "wp-woocommerce-dev": {
       "repo": "https://github.com/jorgerosal/wordpress-skills",
       "local_path": ".claude/skills/wp-woocommerce-dev",
       "remote_path": "claude-skills/wp-woocommerce-dev",
       "commit": "8c964424d05ba34b3ea5641f7181d4c13829e06f",
-      "checked": "2026-11-04"
+      "checked": "2026-11-04",
+      "group": "wordpress"
     },
     "wp-block-development": {
       "repo": "https://github.com/jorgerosal/wordpress-skills",
       "local_path": ".claude/skills/wp-block-development",
       "remote_path": "claude-skills/wp-block-development",
       "commit": "8c964424d05ba34b3ea5641f7181d4c13829e06f",
-      "checked": "2026-11-04"
+      "checked": "2026-11-04",
+      "group": "wordpress"
     },
     "laravel-rules": {
       "repo": "https://github.com/fbarrento/laravel-agent-kit",
       "local_path": ".claude/skills/laravel-rules",
       "remote_path": "skills/laravel-rules",
       "commit": "00447bf01f150cbfdaed0e3983e74dafbd740b09",
-      "checked": "2026-11-04"
+      "checked": "2026-11-04",
+      "group": "php"
     },
     "php-modernization": {
       "repo": "https://github.com/netresearch/php-modernization-skill",
@@ -150,7 +172,8 @@
         "templates"
       ],
       "commit": "9a3d7e016dd54053bff5e64e6ddc1e46a68b769e",
-      "checked": "2026-11-04"
+      "checked": "2026-11-04",
+      "group": "php"
     },
     "mastering-typescript": {
       "repo": "https://github.com/SpillwaveSolutions/mastering-typescript-skill",
@@ -161,21 +184,222 @@
         "scripts"
       ],
       "commit": "2f74a00f731f2ea4d48f45d852067a7be8efd0d1",
-      "checked": "2026-11-04"
+      "checked": "2026-11-04",
+      "group": "typescript"
     },
     "nextjs-app-router": {
       "repo": "https://github.com/mileson/agent-skills",
       "local_path": ".claude/skills/nextjs",
       "remote_path": "nextjs-app-router-patterns",
       "commit": "88c229ad6e65cc31de31e652962176ca68e42bd7",
-      "checked": "2026-11-04"
+      "checked": "2026-11-04",
+      "group": "typescript"
     },
     "design-taste-frontend": {
       "repo": "https://github.com/Leonxlnx/taste-skill",
       "local_path": ".claude/skills/design-taste-frontend",
       "remote_path": "skills/taste-skill",
       "commit": "d237dd399d57524945c0c81327da5da19f7a468d",
-      "checked": "2026-10-13"
+      "checked": "2026-10-13",
+      "group": "design"
+    },
+    "product-marketing": {
+      "repo": "https://github.com/coreyhaines31/marketingskills",
+      "remote_path": "skills/product-marketing",
+      "local_path": ".claude/skills/product-marketing",
+      "commit": "88c79f6528a9347420e57ceb1fff9a60de651768",
+      "checked": "2026-11-04",
+      "group": "marketing",
+      "exclude": [
+        "evals"
+      ]
+    },
+    "copy-editing": {
+      "repo": "https://github.com/coreyhaines31/marketingskills",
+      "remote_path": "skills/copy-editing",
+      "local_path": ".claude/skills/copy-editing",
+      "commit": "88c79f6528a9347420e57ceb1fff9a60de651768",
+      "checked": "2026-11-04",
+      "group": "marketing",
+      "exclude": [
+        "evals"
+      ]
+    },
+    "marketing-psychology": {
+      "repo": "https://github.com/coreyhaines31/marketingskills",
+      "remote_path": "skills/marketing-psychology",
+      "local_path": ".claude/skills/marketing-psychology",
+      "commit": "88c79f6528a9347420e57ceb1fff9a60de651768",
+      "checked": "2026-11-04",
+      "group": "marketing",
+      "exclude": [
+        "evals"
+      ]
+    },
+    "ab-testing": {
+      "repo": "https://github.com/coreyhaines31/marketingskills",
+      "remote_path": "skills/ab-testing",
+      "local_path": ".claude/skills/ab-testing",
+      "commit": "88c79f6528a9347420e57ceb1fff9a60de651768",
+      "checked": "2026-11-04",
+      "group": "marketing",
+      "exclude": [
+        "evals"
+      ]
+    },
+    "seo-audit": {
+      "repo": "https://github.com/coreyhaines31/marketingskills",
+      "remote_path": "skills/seo-audit",
+      "local_path": ".claude/skills/seo-audit",
+      "commit": "88c79f6528a9347420e57ceb1fff9a60de651768",
+      "checked": "2026-11-04",
+      "group": "seo",
+      "exclude": [
+        "evals"
+      ]
+    },
+    "ai-seo": {
+      "repo": "https://github.com/coreyhaines31/marketingskills",
+      "remote_path": "skills/ai-seo",
+      "local_path": ".claude/skills/ai-seo",
+      "commit": "88c79f6528a9347420e57ceb1fff9a60de651768",
+      "checked": "2026-11-04",
+      "group": "seo",
+      "exclude": [
+        "evals"
+      ]
+    },
+    "schema": {
+      "repo": "https://github.com/coreyhaines31/marketingskills",
+      "remote_path": "skills/schema",
+      "local_path": ".claude/skills/schema",
+      "commit": "88c79f6528a9347420e57ceb1fff9a60de651768",
+      "checked": "2026-11-04",
+      "group": "seo",
+      "exclude": [
+        "evals"
+      ]
+    },
+    "content-strategy": {
+      "repo": "https://github.com/coreyhaines31/marketingskills",
+      "remote_path": "skills/content-strategy",
+      "local_path": ".claude/skills/content-strategy",
+      "commit": "88c79f6528a9347420e57ceb1fff9a60de651768",
+      "checked": "2026-11-04",
+      "group": "seo",
+      "exclude": [
+        "evals"
+      ]
+    },
+    "site-architecture": {
+      "repo": "https://github.com/coreyhaines31/marketingskills",
+      "remote_path": "skills/site-architecture",
+      "local_path": ".claude/skills/site-architecture",
+      "commit": "88c79f6528a9347420e57ceb1fff9a60de651768",
+      "checked": "2026-11-04",
+      "group": "seo",
+      "exclude": [
+        "evals"
+      ]
+    },
+    "programmatic-seo": {
+      "repo": "https://github.com/coreyhaines31/marketingskills",
+      "remote_path": "skills/programmatic-seo",
+      "local_path": ".claude/skills/programmatic-seo",
+      "commit": "88c79f6528a9347420e57ceb1fff9a60de651768",
+      "checked": "2026-11-04",
+      "group": "seo",
+      "exclude": [
+        "evals"
+      ]
+    },
+    "social": {
+      "repo": "https://github.com/coreyhaines31/marketingskills",
+      "remote_path": "skills/social",
+      "local_path": ".claude/skills/social",
+      "commit": "88c79f6528a9347420e57ceb1fff9a60de651768",
+      "checked": "2026-11-04",
+      "group": "social",
+      "exclude": [
+        "evals"
+      ]
+    },
+    "video": {
+      "repo": "https://github.com/coreyhaines31/marketingskills",
+      "remote_path": "skills/video",
+      "local_path": ".claude/skills/video",
+      "commit": "88c79f6528a9347420e57ceb1fff9a60de651768",
+      "checked": "2026-11-04",
+      "group": "social",
+      "exclude": [
+        "evals"
+      ]
+    },
+    "image": {
+      "repo": "https://github.com/coreyhaines31/marketingskills",
+      "remote_path": "skills/image",
+      "local_path": ".claude/skills/image",
+      "commit": "88c79f6528a9347420e57ceb1fff9a60de651768",
+      "checked": "2026-11-04",
+      "group": "social",
+      "exclude": [
+        "evals"
+      ]
+    },
+    "cold-email": {
+      "repo": "https://github.com/coreyhaines31/marketingskills",
+      "remote_path": "skills/cold-email",
+      "local_path": ".claude/skills/cold-email",
+      "commit": "88c79f6528a9347420e57ceb1fff9a60de651768",
+      "checked": "2026-11-04",
+      "group": "sales",
+      "exclude": [
+        "evals"
+      ]
+    },
+    "prospecting": {
+      "repo": "https://github.com/coreyhaines31/marketingskills",
+      "remote_path": "skills/prospecting",
+      "local_path": ".claude/skills/prospecting",
+      "commit": "88c79f6528a9347420e57ceb1fff9a60de651768",
+      "checked": "2026-11-04",
+      "group": "sales",
+      "exclude": [
+        "evals"
+      ]
+    },
+    "sales-enablement": {
+      "repo": "https://github.com/coreyhaines31/marketingskills",
+      "remote_path": "skills/sales-enablement",
+      "local_path": ".claude/skills/sales-enablement",
+      "commit": "88c79f6528a9347420e57ceb1fff9a60de651768",
+      "checked": "2026-11-04",
+      "group": "sales",
+      "exclude": [
+        "evals"
+      ]
+    },
+    "competitors": {
+      "repo": "https://github.com/coreyhaines31/marketingskills",
+      "remote_path": "skills/competitors",
+      "local_path": ".claude/skills/competitors",
+      "commit": "88c79f6528a9347420e57ceb1fff9a60de651768",
+      "checked": "2026-11-04",
+      "group": "sales",
+      "exclude": [
+        "evals"
+      ]
+    },
+    "competitor-profiling": {
+      "repo": "https://github.com/coreyhaines31/marketingskills",
+      "remote_path": "skills/competitor-profiling",
+      "local_path": ".claude/skills/competitor-profiling",
+      "commit": "88c79f6528a9347420e57ceb1fff9a60de651768",
+      "checked": "2026-11-04",
+      "group": "sales",
+      "exclude": [
+        "evals"
+      ]
     }
   }
 }

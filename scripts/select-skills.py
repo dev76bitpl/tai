@@ -48,8 +48,17 @@ GROUPS: dict[str, dict] = {
     "design": {"label": "Projektowanie wyglądu", "custom": [],
                "vendored": ["design-taste-frontend"]},
     "ui": {"label": "UI i dostępność", "custom": [], "vendored": ["ui-ux-pro-max", "a11y", "web-quality-skills"]},
-    "marketing": {"label": "Marketing i treści", "custom": [], "vendored": ["copywriting", "cro"]},
+    "marketing": {"label": "Marketing: tekst i konwersja", "custom": [], "vendored": [
+        "product-marketing", "copywriting", "copy-editing", "marketing-psychology", "cro", "ab-testing"]},
     "review": {"label": "Przegląd kodu i bezpieczeństwo", "custom": [], "vendored": ["code-review", "security"]},
+    # Added in #219 after the existing ones, so the numbers the wizard shows stay the same.
+    # opt_in: a project gets the group only after choosing it (skills-manifest.json opt_in_groups).
+    "seo": {"label": "SEO i treści (na życzenie)", "opt_in": True, "custom": [], "vendored": [
+        "seo-audit", "ai-seo", "schema", "content-strategy", "site-architecture", "programmatic-seo"]},
+    "social": {"label": "Social media, wideo, grafika (na życzenie)", "opt_in": True, "custom": [],
+               "vendored": ["social", "video", "image"]},
+    "sales": {"label": "Sprzedaż i konkurencja (na życzenie)", "opt_in": True, "custom": [], "vendored": [
+        "cold-email", "prospecting", "sales-enablement", "competitors", "competitor-profiling"]},
 }
 
 # Groups proposed for a stack (the name scripts/set-stack.py records in config.json).
@@ -58,7 +67,7 @@ STACK_DEFAULTS: dict[str, list[str]] = {
     "laravel": ["php", "design", "ui", "review"],
     "symfony": ["php", "design", "ui", "review"],
     "magento": ["php", "design", "ui", "review"],
-    "wordpress": ["wordpress", "php", "design", "ui", "marketing", "review"],
+    "wordpress": ["wordpress", "php", "design", "ui", "marketing", "seo", "review"],
     "prestashop": ["php", "shops", "design", "ui", "review"],
     "rails": ["design", "ui", "review"],
     "python": ["ui", "review"],
@@ -71,8 +80,8 @@ def group_names(group: str) -> list[str]:
 
 
 def default_groups(stack: str | None) -> list[str]:
-    """Proposed groups for a stack; everything when the stack is unknown."""
-    return list(STACK_DEFAULTS.get(stack or "", GROUPS))
+    """Proposed groups for a stack; every group but the opt-in ones when the stack is unknown."""
+    return list(STACK_DEFAULTS.get(stack or "", [g for g in GROUPS if not GROUPS[g].get("opt_in")]))
 
 
 def project_stack() -> str | None:
@@ -162,12 +171,14 @@ def print_groups(manifest: dict, highlighted: list[str]) -> None:
 
 
 def is_provisional(manifest: dict, keep: list[str]) -> bool:
-    """Keeping every group before the stack is known removes nothing and is not a real choice.
+    """Keeping every group, or the default proposal, before the stack is known is not a real choice.
 
     Saving it would turn the stack proposal off for good (the next run shows the recorded groups).
+    The default proposal leaves out only the opt-in groups, which a project that never chose does
+    not get from the sync either (skills_sync.off_by_group).
     """
     first_choice = not isinstance(manifest.get("skill_groups"), list)
-    return first_choice and project_stack() is None and set(keep) == set(GROUPS)
+    return first_choice and project_stack() is None and set(keep) in (set(GROUPS), set(default_groups(None)))
 
 
 def choose_interactively(manifest: dict) -> list[str] | None:
@@ -180,7 +191,7 @@ def choose_interactively(manifest: dict) -> list[str] | None:
     elif stack in STACK_DEFAULTS:
         print(paint(f"  ● = propozycja dla stosu „{stack}”. Skille ogólne zostają zawsze.", DIM))
     else:
-        print(paint("  Stos projektu nie jest jeszcze ustawiony, więc proponuję wszystkie grupy.", DIM))
+        print(paint("  Stos projektu nie jest jeszcze ustawiony, więc proponuję wszystkie grupy poza tymi „na życzenie”.", DIM))
     print_groups(manifest, proposed)
     print()
     while True:

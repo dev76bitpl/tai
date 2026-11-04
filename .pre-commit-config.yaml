@@ -36,7 +36,7 @@ repos:
       # skills-manifest.json; tests/test_update_skills.py keeps the two in step.
       - id: trailing-whitespace
         args: [--markdown-linebreak-ext=md]
-        exclude: &vendored_skills ^\.claude/skills/(a11y|copywriting|cro|design-taste-frontend|laravel-rules|nextjs|perf|php-modernization|review|security|typescript|ui-ux-pro-max|wp-block-development|wp-plugin-development|wp-security-review|wp-theme-development|wp-woocommerce-dev)/
+        exclude: &vendored_skills ^\.claude/skills/(a11y|ab-testing|ai-seo|cold-email|competitor-profiling|competitors|content-strategy|copy-editing|copywriting|cro|design-taste-frontend|image|laravel-rules|marketing-psychology|nextjs|perf|php-modernization|product-marketing|programmatic-seo|prospecting|review|sales-enablement|schema|security|seo-audit|site-architecture|social|typescript|ui-ux-pro-max|video|wp-block-development|wp-plugin-development|wp-security-review|wp-theme-development|wp-woocommerce-dev)/
       - id: end-of-file-fixer
         exclude: *vendored_skills
       - id: check-yaml
