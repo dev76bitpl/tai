@@ -632,3 +632,18 @@ def test_should_sync_a_project_that_has_only_the_new_update_skills(tmp_path):
     assert (project / "scripts" / "skills_sync.py").is_file()
     assert (project / "scripts" / "skills_upstream.py").is_file()
     assert (project / ".claude" / "skills" / "adr" / "SKILL.md").read_text(encoding="utf-8") == "adr\n"
+
+
+# ── vendored skills stay byte-identical to upstream: the whitespace fixers skip them (#221) ──
+
+import re as _re  # noqa: E402
+
+
+def test_should_keep_whitespace_fixers_off_every_vendored_skill():
+    config = (ROOT / ".pre-commit-config.yaml").read_text(encoding="utf-8")
+    found = _re.search(r"exclude: &vendored_skills \^\\\.claude/skills/\(([^)]*)\)/", config)
+    assert found, "trailing-whitespace has no &vendored_skills exclude"
+    assert config.count("exclude: *vendored_skills") == 1  # end-of-file-fixer reuses it
+    manifest = _json.loads((ROOT / "skills-manifest.json").read_text(encoding="utf-8"))
+    vendored = {entry["local_path"].rsplit("/", 1)[-1] for entry in manifest["skills"].values()}
+    assert set(found.group(1).split("|")) == vendored

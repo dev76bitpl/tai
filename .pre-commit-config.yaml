@@ -31,9 +31,14 @@ repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
+      # Vendored skills stay byte-identical to upstream (#221): a fixed copy shows as changed on
+      # every upstream check. The list is the local_path of every "skills" entry in
+      # skills-manifest.json; tests/test_update_skills.py keeps the two in step.
       - id: trailing-whitespace
         args: [--markdown-linebreak-ext=md]
+        exclude: &vendored_skills ^\.claude/skills/(a11y|copywriting|cro|design-taste-frontend|laravel-rules|nextjs|perf|php-modernization|review|security|typescript|ui-ux-pro-max|wp-block-development|wp-plugin-development|wp-security-review|wp-theme-development|wp-woocommerce-dev)/
       - id: end-of-file-fixer
+        exclude: *vendored_skills
       - id: check-yaml
       - id: check-json
       - id: check-merge-conflict

@@ -20,8 +20,8 @@ The instinct of many developers (and even AI sometimes) is to create a `div` and
 
 ```tsx
 // OverviewCard.tsx
-<div
-  onClick={() => navigate('/components')}
+<div 
+  onClick={() => navigate('/components')} 
   className="glass-panel p-6 cursor-pointer hover:border-blue-500"
 >
   <Puzzle className="w-5 h-5" />
@@ -35,7 +35,7 @@ If something can be clicked to trigger an action or navigation, it must be a sem
 
 ```tsx
 // OverviewCard.tsx
-<button
+<button 
   onClick={() => navigate('/components')}
   className="glass-panel p-6 text-left hover:border-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
 >
@@ -107,8 +107,8 @@ Link the `label` to the `input` using `htmlFor` (in React) or `for` pointing to 
 
 ```tsx
 // AuthForm.tsx
-<label
-  htmlFor="auth-email"
+<label 
+  htmlFor="auth-email" 
   className="block text-xs font-semibold uppercase"
 >
   Email
@@ -146,7 +146,7 @@ Add `role="alert"`. This way, the exact moment the message appears in the DOM, t
 ```tsx
 // Notification.tsx
 {error && (
-  <div
+  <div 
     role="alert"
     className="p-3 bg-red-100 text-red-700 border border-red-500"
   >

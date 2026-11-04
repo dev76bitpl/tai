@@ -17,6 +17,8 @@ w GitHub Issues (`gh issue list`), nie tutaj. Fazy definiuje [docs/ROADMAP.md](R
   i `design-taste-frontend` zablokowane przez skan. Naprawione: `--apply` kasował skill, gdy źródło
   przeniosło katalog. Podział plików ponad 400 linii: `update-skills.py` → + `skills_sync.py`,
   `skills_upstream.py`; `session-context.py` → + `skills_check.py`. Decyzja w ADR-006 (10).
+  Fixery białych znaków (`trailing-whitespace`, `end-of-file-fixer`) pomijają skille zewnętrzne
+  — kopia poprawiona przez fixer wyglądała przy każdym sprawdzeniu źródła na zmienioną.
 - 2026-11-04 **#220 sync skilli: CRLF i `__pycache__` to nie zmiana lokalna** — porównanie
   w `update-skills.py` i `update-from-template.py` zamienia CRLF na LF w plikach tekstowych,
   `skill_state()` pomija `__pycache__`/`.pyc`. Powód: stare klony z CRLF (new.cdue,
