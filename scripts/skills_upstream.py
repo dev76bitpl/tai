@@ -163,6 +163,10 @@ def check_skill(
             return True, False
 
         old_files = base.collect_files(local_path, exclude) if local_path.exists() else {}
+        # Our own files in a vendored skill (e.g. a SKILL.md wrapping upstream docs that have
+        # none): kept across updates and left out of the comparison (#225).
+        own = set(skill.get("own_files", []))
+        old_files = {k: v for k, v in old_files.items() if k not in own}
         new_files = base.collect_files(remote_src, exclude)
 
         # Skan bezpieczeństwa nowych plików
@@ -208,9 +212,13 @@ def check_skill(
 
         if apply:
             print(f"\n  ⬆️  Aktualizuję {name}...")
+            kept = {rel: (local_path / rel).read_bytes() for rel in own if (local_path / rel).is_file()}
             if local_path.exists():
                 shutil.rmtree(local_path)
             shutil.copytree(remote_src, local_path, ignore=shutil.ignore_patterns(*exclude) if exclude else None)
+            for rel, data in kept.items():
+                (local_path / rel).parent.mkdir(parents=True, exist_ok=True)
+                (local_path / rel).write_bytes(data)
             skill["commit"] = new_commit
             skill["checked"] = str(date.today())
             print(f"  ✅ Zaktualizowano do {new_commit[:8]}")
