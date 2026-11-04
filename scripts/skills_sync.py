@@ -139,20 +139,39 @@ def retired_state(dst: Path, history: "dict[str, set[str]] | None") -> str:
     return "retired"
 
 
+def adopt_report(src: Path, dst: Path) -> list[str]:
+    """What taking the template's copy of a locally changed skill does to the project's files."""
+    theirs, ours = skill_blobs(src), skill_blobs(dst)
+    lines = [f"nadpisany: {rel}" for rel in sorted(ours) if rel in theirs and ours[rel] != theirs[rel]]
+    lines += [f"usunięty:  {rel}" for rel in sorted(ours) if rel not in theirs]
+    lines += [f"nowy:      {rel}" for rel in sorted(theirs) if rel not in ours]
+    return lines
+
+
 def sync_skill_dir(label: str, src: Path, dst: Path, history: "dict[str, set[str]] | None",
-                   apply: bool) -> str:
+                   apply: bool, adopt: bool = False) -> str:
     """Report one skill directory against the template and, with apply, copy it when it is new or
-    outdated. Returns its state (see skill_state()); a "local" skill is never touched."""
+    outdated. Returns its state (see skill_state()); a "local" skill is touched only when the owner
+    named it in --adopt (#229) — then it takes the template's copy and the state is "adopted"."""
     state = skill_state(dst.name, src, dst, history)
     if state == "current":
         print(f"  ✅ {label:<25} aktualny")
         return state
-    if state == "local":
+    if state == "local" and not adopt:
         print(f"  ! {label:<25} zmieniony lokalnie — porównaj ręcznie, synchronizacja go nie rusza")
         return state
+    if state == "local":
+        changes = adopt_report(src, dst)
+        verb = "przyjęta" if apply else "do przyjęcia"
+        print(f"  ⇐ {label:<25} wersja z szablonu {verb} (--adopt): zmiany projektu znikają, plików: {len(changes)}")
+        for line in changes[:15]:
+            print(f"      {line}")
+        if len(changes) > 15:
+            print(f"      … i {len(changes) - 15} więcej")
+        state = "adopted"
     if state == "new":
         print(f"  + {label:<25} NOWY")
-    else:
+    elif state == "outdated":
         src_files, dst_files = collect_files(src), collect_files(dst)
         changed = sum(1 for k, v in src_files.items() if dst_files.get(k) != v)
         added = sum(1 for k in src_files if k not in dst_files)
@@ -164,7 +183,8 @@ def sync_skill_dir(label: str, src: Path, dst: Path, history: "dict[str, set[str
     return state
 
 
-def sync_from_template(template_root: Path, apply: bool, history: "dict[str, set[str]] | None" = None) -> None:
+def sync_from_template(template_root: Path, apply: bool, history: "dict[str, set[str]] | None" = None,
+                       adopt: "set[str] | None" = None) -> None:
     """
     Synchronize skills and manifest from the AI template.
 
@@ -199,6 +219,11 @@ def sync_from_template(template_root: Path, apply: bool, history: "dict[str, set
     print(f"    Projekt:  {ROOT}\n")
 
     synced = 0
+    adopt = set(adopt or ())
+    unknown = sorted(adopt - set(template_custom) - set(template_vendored))
+    if unknown:
+        print(f"❌ --adopt: szablon nie ma skilli: {', '.join(unknown)}")
+        sys.exit(1)
     local_skills: list[str] = []
 
     # ── Custom skills ─────────────────────────────────────────────────────────
@@ -212,7 +237,7 @@ def sync_from_template(template_root: Path, apply: bool, history: "dict[str, set
         if not src.exists():
             continue
 
-        state = sync_skill_dir(skill_name, src, dst, history, apply)
+        state = sync_skill_dir(skill_name, src, dst, history, apply, skill_name in adopt)
         if state == "local":
             local_skills.append(skill_name)
         elif state != "current":
@@ -231,7 +256,7 @@ def sync_from_template(template_root: Path, apply: bool, history: "dict[str, set
         src, dst = template_root / local_path, ROOT / local_path
         if not src.exists():
             continue
-        state = sync_skill_dir(skill_name, src, dst, history, apply)
+        state = sync_skill_dir(skill_name, src, dst, history, apply, skill_name in adopt)
         if state == "local":
             local_skills.append(skill_name)
             continue

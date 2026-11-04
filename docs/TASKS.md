@@ -7,6 +7,12 @@ w GitHub Issues (`gh issue list`), nie tutaj. Fazy definiuje [docs/ROADMAP.md](R
 
 ## Stan sesji
 
+- 2026-11-04 **#229 „przyjmij wersję z tai”** — `update-skills.py --sync --adopt a11y,security`
+  bierze wersję z szablonu dla skilli zmienionych lokalnie (projekty, które same pobierały skille ze
+  źródeł). Bez `--apply` tylko lista plików (nadpisany / usunięty / nowy); niewymienione skille dalej
+  chronione. Gdy szablon nie zna jeszcze `--adopt`, skrypt bierze logikę z kopii projektu (błąd
+  znaleziony w teście właściciela). Hook podpowiada `--adopt`. Kurs: 3 z 5 skilli różnią się tylko
+  białymi znakami (stary pre-commit bez wykluczenia z #224) — najpierw `update-from-template.py`.
 - 2026-11-04 **#219 skille marketingowe** — 18 skilli z `coreyhaines31/marketingskills` (oryginały EN,
   sam markdown, bez `evals/`) w grupach: `marketing` (z `copywriting` i `cro`) idzie do wszystkich,
   `seo`, `social`, `sales` **na życzenie** — tylko po wyborze w `select-skills.py`. Powód: żaden projekt
