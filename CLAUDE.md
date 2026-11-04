@@ -53,7 +53,8 @@ git worktree remove ../<repo>-<temat>          # po zmergowaniu
 
 **Worktree nie wystarczy — środowisko dev ma jednego właściciela.** Sesja podnosi środowisko → zapisuje to w `temp/DEV-ENV-OWNER.md`; druga **nie restartuje cudzego kontenera**. Druga sesja pracuje bez środowiska dev.
 
-**Kanał między sesjami: `temp/note-for-<sesja>.md`.** Przed użyciem sprawdź, że `temp/` jest w `.gitignore`.
+**Kanał między sesjami:** żywej sesji na tej maszynie piszesz wprost (`ListAgents` + `SendMessage`);
+ślad dla sesji, której teraz nie ma → `temp/note-for-<sesja>.md` (sprawdź, że `temp/` jest w `.gitignore`) albo issue.
 
 **Po wykryciu współdzielenia katalogu AI:**
 
