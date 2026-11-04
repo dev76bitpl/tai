@@ -54,9 +54,12 @@
     "ui-ux-pro-max": {
       "repo": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill",
       "local_path": ".claude/skills/ui-ux-pro-max",
-      "remote_path": "src/ui-ux-pro-max",
-      "commit": "b7e3af80f6e331f6fb456667b82b12cade7c9d35",
-      "checked": "2026-06-12"
+      "remote_path": ".claude/skills/ui-ux-pro-max",
+      "commit": "dd9a1b4cf9f67ca2e326f646d93e101b2778db30",
+      "checked": "2026-11-04",
+      "exclude": [
+        "tests"
+      ]
     },
     "security": {
       "repo": "https://github.com/agamm/claude-code-owasp",
@@ -70,7 +73,10 @@
       "local_path": ".claude/skills/a11y",
       "remote_path": "docs/en",
       "commit": "9fb9a023c7625a70a0ecbc8420181c100bcdb529",
-      "checked": "2026-11-04"
+      "checked": "2026-11-04",
+      "own_files": [
+        "SKILL.md"
+      ]
     },
     "web-quality-skills": {
       "repo": "https://github.com/addyosmani/web-quality-skills",

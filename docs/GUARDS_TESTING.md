@@ -238,6 +238,13 @@ W projekcie z lokalnym klonem tai (np. `cdue-elearning`, na gałęzi roboczej). 
       → pierwsza wiadomość pokazuje „Pobrano zmiany z template → … vendored: …” albo nic, bez błędu;
       bez `skills_check.py` sesja startuje normalnie (tylko bez sprawdzania skilli)
 
+### Scenariusz 13e — każdy skill zewnętrzny ma `SKILL.md`; nasze pliki przeżywają aktualizację (#225)
+
+- [ ] `ls .claude/skills/ui-ux-pro-max/SKILL.md .claude/skills/a11y/SKILL.md` → oba istnieją; w `ui-ux-pro-max/scripts/` nie ma `tests/`
+- [ ] `head -4 .claude/skills/a11y/SKILL.md` → `name: a11y` i polskie wyzwalacze (dostępność, kontrast…)
+- [ ] W tai: `python3 scripts/update-skills.py --skill a11y` → „Aktualny” albo diff **bez** „USUNIĘTY PLIK: SKILL.md”
+- [ ] Nowa sesja Claude Code w tai → w liście skilli są `a11y` i `ui-ux-pro-max`
+
 ### Scenariusz 13c — końce linii i `__pycache__` nie robią ze skilla „zmienionego lokalnie”
 
 - [ ] W projekcie zamień końce linii w `.claude/skills/adr/SKILL.md` na CRLF (`unix2dos` albo edytor), treść bez zmian

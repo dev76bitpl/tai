@@ -647,3 +647,53 @@ def test_should_keep_whitespace_fixers_off_every_vendored_skill():
     manifest = _json.loads((ROOT / "skills-manifest.json").read_text(encoding="utf-8"))
     vendored = {entry["local_path"].rsplit("/", 1)[-1] for entry in manifest["skills"].values()}
     assert set(found.group(1).split("|")) == vendored
+
+
+# ── a vendored skill never reaches projects without a SKILL.md (#225) ─────────────
+
+def test_should_ship_a_skill_md_with_every_vendored_skill():
+    """ui-ux-pro-max (wrong remote_path) and a11y (upstream has none) lost theirs in #85 unnoticed."""
+    manifest = _json.loads((ROOT / "skills-manifest.json").read_text(encoding="utf-8"))
+    missing = [name for name, entry in manifest["skills"].items()
+               if not list((ROOT / entry["local_path"]).glob("**/SKILL.md"))]
+    assert missing == []
+
+
+def test_should_keep_own_files_of_a_vendored_skill_across_an_upstream_update(tmp_path, monkeypatch):
+    project = tmp_path / "project"
+    skill_dir = project / ".claude" / "skills" / "a11y"
+    skill_dir.mkdir(parents=True)
+    (skill_dir / "SKILL.md").write_text("our wrapper\n", encoding="utf-8")
+    (skill_dir / "A11Y.md").write_text("old docs\n", encoding="utf-8")
+    monkeypatch.setattr(sync, "ROOT", project)
+
+    def fake_clone(url, target):
+        (target / "docs").mkdir(parents=True)
+        (target / "docs" / "A11Y.md").write_text("new docs\n", encoding="utf-8")
+        return "new-commit"
+
+    monkeypatch.setattr(up, "clone_repo", fake_clone)
+    entry = {"repo": "x", "remote_path": "docs", "local_path": ".claude/skills/a11y", "commit": "old",
+             "own_files": ["SKILL.md"]}
+    assert up.check_skill("a11y", entry, apply=True) == (True, True)
+    assert (skill_dir / "SKILL.md").read_text(encoding="utf-8") == "our wrapper\n"
+    assert (skill_dir / "A11Y.md").read_text(encoding="utf-8") == "new docs\n"
+
+
+def test_should_not_count_own_files_as_an_upstream_change(tmp_path, monkeypatch):
+    project = tmp_path / "project"
+    skill_dir = project / ".claude" / "skills" / "a11y"
+    skill_dir.mkdir(parents=True)
+    (skill_dir / "SKILL.md").write_text("our wrapper\n", encoding="utf-8")
+    (skill_dir / "A11Y.md").write_text("docs\n", encoding="utf-8")
+    monkeypatch.setattr(sync, "ROOT", project)
+
+    def fake_clone(url, target):
+        (target / "docs").mkdir(parents=True)
+        (target / "docs" / "A11Y.md").write_text("docs\n", encoding="utf-8")
+        return "same"
+
+    monkeypatch.setattr(up, "clone_repo", fake_clone)
+    entry = {"repo": "x", "remote_path": "docs", "local_path": ".claude/skills/a11y", "commit": "same",
+             "own_files": ["SKILL.md"]}
+    assert up.check_skill("a11y", entry, apply=False) == (False, True)

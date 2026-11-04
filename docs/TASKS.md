@@ -7,6 +7,13 @@ w GitHub Issues (`gh issue list`), nie tutaj. Fazy definiuje [docs/ROADMAP.md](R
 
 ## Stan sesji
 
+- 2026-11-04 **#225 `ui-ux-pro-max` i `a11y` bez `SKILL.md`** — od aktualizacji #85 (czerwiec) oba
+  skille w tai nie miały `SKILL.md`: `ui-ux-pro-max` brany z katalogu źródła bez niego, a `a11y`
+  miał nasz własny `SKILL.md`, który aktualizacja ze źródła skasowała. Po #221 sync zabrałby
+  `SKILL.md` pięciu projektom. Naprawione: właściwy katalog źródła (+ wyjątek dla testów autora,
+  skan przechodzi), nasz `SKILL.md` dla `a11y` z odnośnikami do nowych `guide-*.md`, pole
+  `own_files` w manifeście (aktualizacja ze źródła go zostawia), test: każdy skill zewnętrzny ma
+  `SKILL.md`. Usunięta stara globalna kopia `~/.claude/skills/ui-ux-pro-max` (dublowała skill).
 - 2026-11-04 **#221 skille zewnętrzne z tai, nie ze źródła** — sync kopiuje do projektów pliki
   skilli zewnętrznych (dotąd tylko wpis w manifeście; pliki każdy projekt pobierał sam z GitHuba,
   więc wersje się rozjeżdżały, a `design-taste-frontend` w większości projektów nie miał plików).
