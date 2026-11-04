@@ -612,6 +612,23 @@ Struktura: Faza N — cel, zakres, done when, zależności.
 
 ---
 
+## § Termin w issue
+
+Decyzja właściciela 31.10.2026 (#218, panel jarvisa — dev76bitpl/jarvis#124). Issues nie miały
+terminów, więc nikt nie wiedział, co jest „na dziś”: sesje i jarvis zgadywały, a zgadywanie
+wywierało presję i ustalało priorytety za właściciela. Termin konta w jednym z projektów żył tylko
+w notatce przekazania i panel go nie widział.
+
+- **format:** osobna linijka w treści issue, od początku wiersza: `termin: RRRR-MM-DD`
+  (np. `termin: 2026-11-30`). Jedna na issue; panel czyta tylko taką linijkę
+- **tylko prawdziwy termin:** zewnętrzny (urząd, klient, wygaśnięcie usługi) albo ustalony
+  z właścicielem. Sesja nie dopisuje terminu z własnej oceny, „żeby było szybciej”
+- **termin minął** → przesuń datę albo przytnij zakres i napisz w komentarzu dlaczego
+  (zgodnie z „Kamienie i terminy mają być prawdziwe”)
+- **box „Na dziś” w panelu** = terminy na dziś i jutro + to, co właściciel sam przypnie
+- **szablon issue** `.github/ISSUE_TEMPLATE/sprawa.md` ma tę linijkę; przy `gh issue create
+  --body` szablon nie działa, więc sesja dopisuje linijkę sama
+
 ## § SETUP.md
 
 Obowiązkowy w każdym projekcie. Zawiera: wymagania z wersjami, kroki instalacji, pułapki, "done when". AI aktualizuje natychmiast przy nowym problemie środowiskowym.

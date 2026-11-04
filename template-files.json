@@ -15,6 +15,7 @@
     ".gitattributes",
     ".editorconfig",
     ".github/pull_request_template.md",
+    ".github/ISSUE_TEMPLATE/*",
     ".github/workflows/guards.yml",
     ".github/workflows/pr-language.yml",
     "docs/GUARDS.md",

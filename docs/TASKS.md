@@ -7,6 +7,10 @@ w GitHub Issues (`gh issue list`), nie tutaj. Fazy definiuje [docs/ROADMAP.md](R
 
 ## Stan sesji
 
+- 2026-11-04 **#218 termin w issue** — linijka `termin: RRRR-MM-DD` w treści issue, tylko prawdziwy
+  termin (decyzja właściciela 31.10, panel jarvis#124: box „Na dziś”). Reguła w `CLAUDE.md`, szczegóły
+  w `RULES_REFERENCE.md` § Termin w issue, szablon `.github/ISSUE_TEMPLATE/sprawa.md` (idzie do
+  projektów przez `template-files.json`), test zgodności szablonu z regułą.
 - 2026-11-04 **#163 kanał między sesjami** — reguła 3c mówiła tylko o `temp/note-for-<sesja>.md`;
   sesje na jednej maszynie piszą do siebie wprost (`ListAgents` + `SendMessage`, dziś tak szły
   wiadomości z jarvisem). Ograniczenia (wysłane ≠ przeczytane, tryb uprawnień, bez obchodzenia
