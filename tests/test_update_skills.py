@@ -1,4 +1,4 @@
-"""Tests for scripts/update-skills.py"""
+"""Tests for scripts/update-skills.py and the modules it splits into (skills_sync, skills_upstream)."""
 import importlib.util
 from pathlib import Path
 
@@ -16,10 +16,13 @@ def _load():
 
 
 mod = _load()
-scan_file = mod.scan_file
-diff_files = mod.diff_files
-collect_files = mod.collect_files
-strip_md_code_blocks = mod.strip_md_code_blocks
+# The modules update-skills.py imports by name (scripts/ is on sys.path once it is loaded).
+import skills_sync as sync  # noqa: E402
+import skills_upstream as up  # noqa: E402
+scan_file = up.scan_file
+diff_files = up.diff_files
+collect_files = sync.collect_files
+strip_md_code_blocks = up.strip_md_code_blocks
 
 
 # ── scan_file ─────────────────────────────────────────────────────────────────
@@ -228,13 +231,13 @@ class TestManifestWrite:
         path = tmp_path / "skills-manifest.json"
         original = '{"skills": {"demo": {"repo": "x", "local_path": "y", "remote_path": "."}}}'
         path.write_text(original, encoding="utf-8")
-        monkeypatch.setattr(mod, "MANIFEST_PATH", path)
+        monkeypatch.setattr(sync, "MANIFEST_PATH", path)
 
         def fake_check(name, skill, apply):
             skill["checked"] = "2026-09-28"
             return False, True
 
-        monkeypatch.setattr(mod, "check_skill", fake_check)
+        monkeypatch.setattr(up, "check_skill", fake_check)
         return path, original
 
     @pytest.mark.parametrize("argv", [[], ["--scan-only"]])
@@ -319,9 +322,9 @@ def test_should_bring_update_from_template_script_to_older_projects(tmp_path, mo
     (template / "scripts" / "update-from-template.py").write_text("# released\n", encoding="utf-8")
     project = tmp_path / "project"
     (project / "scripts").mkdir(parents=True)
-    monkeypatch.setattr(mod, "ROOT", project)
-    monkeypatch.setattr(mod, "MANIFEST_PATH", project / "skills-manifest.json")
-    mod.sync_from_template(template, apply=apply)
+    monkeypatch.setattr(sync, "ROOT", project)
+    monkeypatch.setattr(sync, "MANIFEST_PATH", project / "skills-manifest.json")
+    sync.sync_from_template(template, apply=apply)
     assert (project / "scripts" / "update-from-template.py").exists() is apply
 
 
@@ -348,8 +351,8 @@ def _skill_project(tmp_path: Path, monkeypatch, files: dict) -> Path:
     for rel, text in files.items():
         (project / ".claude" / "skills" / "adr" / rel).parent.mkdir(parents=True, exist_ok=True)
         (project / ".claude" / "skills" / "adr" / rel).write_text(text, encoding="utf-8")
-    monkeypatch.setattr(mod, "ROOT", project)
-    monkeypatch.setattr(mod, "MANIFEST_PATH", project / "skills-manifest.json")
+    monkeypatch.setattr(sync, "ROOT", project)
+    monkeypatch.setattr(sync, "MANIFEST_PATH", project / "skills-manifest.json")
     return project
 
 
@@ -362,54 +365,54 @@ def _skill_project(tmp_path: Path, monkeypatch, files: dict) -> Path:
 def test_should_classify_a_skill_against_the_template_history(tmp_path, monkeypatch, files, state):
     template = _skill_template(tmp_path)
     project = _skill_project(tmp_path, monkeypatch, files)
-    history = mod.skill_history(template, "HEAD")
+    history = sync.skill_history(template, "HEAD")
     src, dst = template / ".claude" / "skills" / "adr", project / ".claude" / "skills" / "adr"
-    assert mod.skill_state("adr", src, dst, history) == state
+    assert sync.skill_state("adr", src, dst, history) == state
 
 
 def test_should_treat_every_difference_as_outdated_without_history(tmp_path, monkeypatch):
     template = _skill_template(tmp_path)
     project = _skill_project(tmp_path, monkeypatch, {"SKILL.md": "edited in the project\n"})
     src, dst = template / ".claude" / "skills" / "adr", project / ".claude" / "skills" / "adr"
-    assert mod.skill_state("adr", src, dst, None) == "outdated"
-    assert mod.skill_state("adr", src, project / "missing", None) == "new"
+    assert sync.skill_state("adr", src, dst, None) == "outdated"
+    assert sync.skill_state("adr", src, project / "missing", None) == "new"
 
 
 def test_should_leave_a_locally_changed_skill_alone_and_list_it(tmp_path, monkeypatch, capsys):
     template = _skill_template(tmp_path)
     project = _skill_project(tmp_path, monkeypatch, {"SKILL.md": "edited in the project\n"})
-    mod.sync_from_template(template, apply=True, history=mod.skill_history(template, "HEAD"))
+    sync.sync_from_template(template, apply=True, history=sync.skill_history(template, "HEAD"))
     assert (project / ".claude" / "skills" / "adr" / "SKILL.md").read_text(encoding="utf-8") == "edited in the project\n"
-    assert f"{mod.LOCAL_SKILLS_LINE} adr" in capsys.readouterr().out
+    assert f"{sync.LOCAL_SKILLS_LINE} adr" in capsys.readouterr().out
 
 
 def test_should_replace_a_skill_left_at_an_older_release(tmp_path, monkeypatch, capsys):
     template = _skill_template(tmp_path)
     project = _skill_project(tmp_path, monkeypatch, {"SKILL.md": "v1\n"})
-    mod.sync_from_template(template, apply=True, history=mod.skill_history(template, "HEAD"))
+    sync.sync_from_template(template, apply=True, history=sync.skill_history(template, "HEAD"))
     assert (project / ".claude" / "skills" / "adr" / "SKILL.md").read_text(encoding="utf-8") == "v2\n"
-    assert mod.LOCAL_SKILLS_LINE not in capsys.readouterr().out
+    assert sync.LOCAL_SKILLS_LINE not in capsys.readouterr().out
 
 
 def test_should_give_the_same_blob_id_as_git(tmp_path):
     file = tmp_path / "f.md"
     file.write_bytes("zażółć\n".encode("utf-8"))
     out = _subprocess.run(["git", "hash-object", "--no-filters", str(file)], capture_output=True, text=True)
-    assert mod.git_blob(file) == out.stdout.strip()
+    assert sync.git_blob(file) == out.stdout.strip()
 
 
 def test_should_give_a_crlf_text_file_the_blob_of_its_lf_version(tmp_path):
     lf, crlf = tmp_path / "lf.md", tmp_path / "crlf.md"
     lf.write_bytes(b"a\nb\n")
     crlf.write_bytes(b"a\r\nb\r\n")
-    assert mod.git_blob(crlf) == mod.git_blob(lf)
+    assert sync.git_blob(crlf) == sync.git_blob(lf)
 
 
 def test_should_keep_crlf_in_a_binary_file(tmp_path):
     lf, crlf = tmp_path / "lf.bin", tmp_path / "crlf.bin"
     lf.write_bytes(b"\0a\nb\n")
     crlf.write_bytes(b"\0a\r\nb\r\n")
-    assert mod.git_blob(crlf) != mod.git_blob(lf)
+    assert sync.git_blob(crlf) != sync.git_blob(lf)
 
 
 @pytest.mark.parametrize("content", [b"v2\r\n", b"v1\r\n"])
@@ -418,7 +421,7 @@ def test_should_not_call_a_crlf_checkout_a_local_change(tmp_path, monkeypatch, c
     project = _skill_project(tmp_path, monkeypatch, {"SKILL.md": ""})
     dst = project / ".claude" / "skills" / "adr"
     (dst / "SKILL.md").write_bytes(content)
-    state = mod.skill_state("adr", template / ".claude" / "skills" / "adr", dst, mod.skill_history(template, "HEAD"))
+    state = sync.skill_state("adr", template / ".claude" / "skills" / "adr", dst, sync.skill_history(template, "HEAD"))
     assert state == ("current" if content == b"v2\r\n" else "outdated")
 
 
@@ -427,4 +430,205 @@ def test_should_ignore_python_bytecode_in_a_skill(tmp_path, monkeypatch):
     project = _skill_project(tmp_path, monkeypatch, {"SKILL.md": "v2\n", "scripts/__pycache__/core.cpython-312.pyc": "x",
                                                      "scripts/stray.pyc": "x"})
     src, dst = template / ".claude" / "skills" / "adr", project / ".claude" / "skills" / "adr"
-    assert mod.skill_state("adr", src, dst, mod.skill_history(template, "HEAD")) == "current"
+    assert sync.skill_state("adr", src, dst, sync.skill_history(template, "HEAD")) == "current"
+
+
+# ── #221: vendored skills come from the template, not from upstream ─────────────
+
+VENDORED = {"repo": "https://example.invalid/upstream", "remote_path": "skills/review",
+            "local_path": ".claude/skills/review", "commit": "c2", "checked": "2026-11-04"}
+
+
+def _vendored_template(tmp_path: Path) -> Path:
+    """A template whose vendored skill "review" (in .claude/skills/review) had v1, then v2."""
+    repo = tmp_path / "template"
+    skill = repo / ".claude" / "skills" / "review" / "SKILL.md"
+    skill.parent.mkdir(parents=True)
+    manifest = repo / "skills-manifest.json"
+    manifest.write_text(_json.dumps({"custom_skills": {}, "skills": {"code-review": dict(VENDORED, commit="c1")}}),
+                        encoding="utf-8")
+    skill.write_text("v1\n", encoding="utf-8")
+    _git(repo, "init", "-q")
+    _git(repo, "add", ".")
+    _git(repo, "commit", "-qm", "v1")
+    skill.write_text("v2\n", encoding="utf-8")
+    manifest.write_text(_json.dumps({"custom_skills": {}, "skills": {"code-review": VENDORED}}), encoding="utf-8")
+    _git(repo, "commit", "-qam", "v2")
+    return repo
+
+
+def _vendored_project(tmp_path: Path, monkeypatch, content: "str | None", commit: str = "c1") -> Path:
+    project = tmp_path / "project"
+    project.mkdir()
+    if content is not None:
+        (project / ".claude" / "skills" / "review").mkdir(parents=True)
+        (project / ".claude" / "skills" / "review" / "SKILL.md").write_text(content, encoding="utf-8")
+    (project / "skills-manifest.json").write_text(
+        _json.dumps({"custom_skills": {}, "skills": {"code-review": dict(VENDORED, commit=commit)}}), encoding="utf-8")
+    monkeypatch.setattr(mod, "ROOT", project)
+    monkeypatch.setattr(sync, "ROOT", project)
+    monkeypatch.setattr(sync, "MANIFEST_PATH", project / "skills-manifest.json")
+    return project
+
+
+@pytest.mark.parametrize("content", [None, "v1\n"])
+def test_should_copy_a_new_or_outdated_vendored_skill_from_the_template(tmp_path, monkeypatch, content):
+    template = _vendored_template(tmp_path)
+    project = _vendored_project(tmp_path, monkeypatch, content)
+    sync.sync_from_template(template, apply=True, history=sync.skill_history(template, "HEAD"))
+    assert (project / ".claude" / "skills" / "review" / "SKILL.md").read_text(encoding="utf-8") == "v2\n"
+    manifest = _json.loads((project / "skills-manifest.json").read_text(encoding="utf-8"))
+    assert manifest["skills"]["code-review"]["commit"] == "c2"  # the version the template reviewed
+
+
+def test_should_leave_a_vendored_skill_updated_in_the_project_alone(tmp_path, monkeypatch, capsys):
+    template = _vendored_template(tmp_path)
+    project = _vendored_project(tmp_path, monkeypatch, "fetched from upstream by the project\n", commit="c9")
+    sync.sync_from_template(template, apply=True, history=sync.skill_history(template, "HEAD"))
+    skill = project / ".claude" / "skills" / "review" / "SKILL.md"
+    assert skill.read_text(encoding="utf-8") == "fetched from upstream by the project\n"
+    assert f"{sync.LOCAL_SKILLS_LINE} code-review" in capsys.readouterr().out
+    manifest = _json.loads((project / "skills-manifest.json").read_text(encoding="utf-8"))
+    assert manifest["skills"]["code-review"]["commit"] == "c9"
+
+
+def test_should_not_fetch_vendored_skills_from_upstream_in_a_project(tmp_path, monkeypatch, capsys):
+    project = _vendored_project(tmp_path, monkeypatch, "v1\n")
+    monkeypatch.setattr(up, "check_skill", lambda *a, **k: pytest.fail("a project fetched from upstream"))
+    monkeypatch.setattr("sys.argv", ["update-skills.py", "--apply"])
+    with pytest.raises(SystemExit) as stop:
+        mod.main()
+    assert stop.value.code == 1
+    assert "--sync --apply" in capsys.readouterr().out
+
+
+def test_should_fetch_vendored_skills_from_upstream_in_the_template(tmp_path, monkeypatch):
+    project = _vendored_project(tmp_path, monkeypatch, "v1\n")
+    (project / ".claude" / "hooks").mkdir(parents=True)
+    (project / ".claude" / "hooks" / "config.json").write_text('{"is_template": true}', encoding="utf-8")
+    checked = []
+    monkeypatch.setattr(up, "check_skill", lambda name, *a, **k: checked.append(name) or (False, True))
+    monkeypatch.setattr("sys.argv", ["update-skills.py"])
+    mod.main()
+    assert checked == ["code-review"]
+
+
+def test_should_keep_a_skill_whose_upstream_folder_is_gone(tmp_path, monkeypatch):
+    """taste-skill retired skills/redesign-skill: the update deleted ours and crashed (#221)."""
+    project = tmp_path / "project"
+    skill_dir = project / ".claude" / "skills" / "redesign"
+    skill_dir.mkdir(parents=True)
+    (skill_dir / "SKILL.md").write_text("ours\n", encoding="utf-8")
+    monkeypatch.setattr(sync, "ROOT", project)
+
+    def fake_clone(url, target):
+        (target / "skills" / "other").mkdir(parents=True)
+        return "new-commit"
+
+    monkeypatch.setattr(up, "clone_repo", fake_clone)
+    entry = {"repo": "x", "remote_path": "skills/redesign-skill", "local_path": ".claude/skills/redesign",
+             "commit": "old"}
+    assert up.check_skill("redesign", entry, apply=True) == (True, False)
+    assert (skill_dir / "SKILL.md").read_text(encoding="utf-8") == "ours\n"
+    assert entry["commit"] == "old"
+
+
+# ── skills the template retired leave the project too, unless the project changed them (#221) ──
+
+def _retiring_template(tmp_path: Path) -> Path:
+    """A template that shipped vendored "redesign" and then retired it."""
+    repo = tmp_path / "template"
+    skill = repo / ".claude" / "skills" / "redesign" / "SKILL.md"
+    skill.parent.mkdir(parents=True)
+    entry = {"repo": "x", "remote_path": "r", "local_path": ".claude/skills/redesign", "commit": "c1"}
+    (repo / "skills-manifest.json").write_text(_json.dumps({"custom_skills": {}, "skills": {"redesign": entry}}),
+                                               encoding="utf-8")
+    skill.write_text("shipped\n", encoding="utf-8")
+    _git(repo, "init", "-q")
+    _git(repo, "add", ".")
+    _git(repo, "commit", "-qm", "ship")
+    _git(repo, "rm", "-rq", ".claude/skills/redesign")
+    (repo / "skills-manifest.json").write_text(_json.dumps({"custom_skills": {}, "skills": {}}), encoding="utf-8")
+    _git(repo, "commit", "-qam", "retire")
+    return repo
+
+
+def _project_with(tmp_path: Path, monkeypatch, name: str, content: str, section: str = "skills") -> Path:
+    project = tmp_path / "project"
+    (project / ".claude" / "skills" / name).mkdir(parents=True)
+    (project / ".claude" / "skills" / name / "SKILL.md").write_text(content, encoding="utf-8")
+    entry = {"local_path": f".claude/skills/{name}", "commit": "c1"} if section == "skills" else {}
+    manifest = {"custom_skills": {}, "skills": {}}
+    manifest[section][name] = entry
+    (project / "skills-manifest.json").write_text(_json.dumps(manifest), encoding="utf-8")
+    monkeypatch.setattr(sync, "ROOT", project)
+    monkeypatch.setattr(sync, "MANIFEST_PATH", project / "skills-manifest.json")
+    return project
+
+
+def test_should_remove_a_skill_the_template_retired(tmp_path, monkeypatch, capsys):
+    template = _retiring_template(tmp_path)
+    project = _project_with(tmp_path, monkeypatch, "redesign", "shipped\n")
+    sync.sync_from_template(template, apply=True, history=sync.skill_history(template, "HEAD"))
+    assert not (project / ".claude" / "skills" / "redesign").exists()
+    assert "redesign" not in _json.loads((project / "skills-manifest.json").read_text(encoding="utf-8"))["skills"]
+    assert f"{sync.RETIRED_SKILLS_LINE} redesign" in capsys.readouterr().out
+
+
+def test_should_only_report_a_retired_skill_without_apply(tmp_path, monkeypatch):
+    template = _retiring_template(tmp_path)
+    project = _project_with(tmp_path, monkeypatch, "redesign", "shipped\n")
+    sync.sync_from_template(template, apply=False, history=sync.skill_history(template, "HEAD"))
+    assert (project / ".claude" / "skills" / "redesign" / "SKILL.md").exists()
+
+
+@pytest.mark.parametrize("name,content,section,with_history", [
+    ("redesign", "changed in the project\n", "skills", True),   # retired, but the project edited it
+    ("ours", "the project's own skill\n", "custom_skills", True),  # never shipped by the template
+    ("redesign", "shipped\n", "skills", False),                   # no history: cannot prove it was ours
+])
+def test_should_keep_a_skill_it_cannot_prove_the_template_shipped(tmp_path, monkeypatch, name, content, section,
+                                                                   with_history):
+    template = _retiring_template(tmp_path)
+    project = _project_with(tmp_path, monkeypatch, name, content, section)
+    history = sync.skill_history(template, "HEAD") if with_history else None
+    sync.sync_from_template(template, apply=True, history=history)
+    assert (project / ".claude" / "skills" / name / "SKILL.md").read_text(encoding="utf-8") == content
+    assert name in _json.loads((project / "skills-manifest.json").read_text(encoding="utf-8"))[section]
+
+
+# ── the split (#221): a project that got only the new update-skills.py still syncs ──
+
+import shutil as _shutil  # noqa: E402
+import sys as _sys  # noqa: E402
+
+
+def test_should_sync_a_project_that_has_only_the_new_update_skills(tmp_path):
+    """An older sync copies update-skills.py alone; the modules must arrive with the next --sync."""
+    template = tmp_path / "template"
+    for rel in ("scripts/update-skills.py", "scripts/skills_sync.py", "scripts/skills_upstream.py",
+                ".claude/hooks/stack.py"):
+        (template / rel).parent.mkdir(parents=True, exist_ok=True)
+        _shutil.copy2(ROOT / rel, template / rel)
+    (template / ".claude" / "skills" / "adr").mkdir(parents=True)
+    (template / ".claude" / "skills" / "adr" / "SKILL.md").write_text("adr\n", encoding="utf-8")
+    (template / "skills-manifest.json").write_text(_json.dumps({"custom_skills": {"adr": {}}, "skills": {}}),
+                                                   encoding="utf-8")
+    _git(template, "init", "-q")
+    _git(template, "add", ".")
+    _git(template, "commit", "-qm", "release")
+    _git(template, "update-ref", "refs/remotes/origin/main", "HEAD")
+
+    project = tmp_path / "project"
+    for rel in ("scripts/update-skills.py", ".claude/hooks/stack.py"):
+        (project / rel).parent.mkdir(parents=True, exist_ok=True)
+        _shutil.copy2(ROOT / rel, project / rel)
+    (project / "skills-manifest.json").write_text('{"custom_skills": {}, "skills": {}}', encoding="utf-8")
+
+    done = _subprocess.run([_sys.executable, str(project / "scripts" / "update-skills.py"), "--sync", "--apply"],
+                           capture_output=True, text=True, encoding="utf-8",
+                           env={**__import__("os").environ, "AI_TEMPLATE_PATH": str(template)})
+    assert done.returncode == 0, done.stdout + done.stderr
+    assert (project / "scripts" / "skills_sync.py").is_file()
+    assert (project / "scripts" / "skills_upstream.py").is_file()
+    assert (project / ".claude" / "skills" / "adr" / "SKILL.md").read_text(encoding="utf-8") == "adr\n"

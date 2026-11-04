@@ -220,6 +220,24 @@ Wymaga projektu postawionego z szablonu, z lokalnym klonem szablonu (`ai_templat
       „Źródło: … w stanie origin/main (katalog roboczy pomijam)”, zmieniony skill „aktualny”
 - [ ] Wiadomość w Claude Code w projekcie → brak „Pobrano zmiany z template” dla tego skilla
 
+### Scenariusz 13d — skille zewnętrzne z tai, nie ze źródła; wycofane znikają (#221)
+
+W projekcie z lokalnym klonem tai (np. `cdue-elearning`, na gałęzi roboczej). Skopiuj z tai **tylko**
+`scripts/update-skills.py` — tak zostawi projekt starszy sync — i ustaw `AI_TEMPLATE_PATH` na tai z tą zmianą:
+
+- [ ] `python3 scripts/update-skills.py --sync --apply` → działa mimo braku `scripts/skills_sync.py`;
+      po nim `scripts/skills_sync.py` i `scripts/skills_upstream.py` są w projekcie (sekcja „Scripts”: `NOWY`)
+
+- [ ] `python3 scripts/update-skills.py` (bez `--sync`) → komunikat „Skille zewnętrzne aktualizuje szablon (tai)…”, nic nie pobiera
+- [ ] `python3 scripts/update-skills.py --sync` → sekcja „Vendored skills” pokazuje `+ design-taste-frontend NOWY` i `~` przy skillach odświeżonych w tai
+- [ ] `--sync --apply` → `.claude/skills/design-taste-frontend/SKILL.md` istnieje; `commit` w `skills-manifest.json` taki jak w tai
+- [ ] Dopisz linię do `.claude/skills/a11y/A11Y.md` i jeszcze raz `--sync` → `a11y` w „Pominięte (zmienione lokalnie)”, plik nietknięty
+- [ ] Skill wycofany: projekt z `redesign-existing-projects` w manifeście i niezmienionymi plikami → `--sync` pokazuje „wycofany w szablonie — do usunięcia”, `--sync --apply` usuwa katalog i wpis
+- [ ] W tai: `python3 scripts/update-skills.py` → sprawdza źródła jak dotąd (tu wolno)
+- [ ] Nowa sesja Claude Code w projekcie z nowymi `.claude/hooks/session-context.py` i `skills_check.py`
+      → pierwsza wiadomość pokazuje „Pobrano zmiany z template → … vendored: …” albo nic, bez błędu;
+      bez `skills_check.py` sesja startuje normalnie (tylko bez sprawdzania skilli)
+
 ### Scenariusz 13c — końce linii i `__pycache__` nie robią ze skilla „zmienionego lokalnie”
 
 - [ ] W projekcie zamień końce linii w `.claude/skills/adr/SKILL.md` na CRLF (`unix2dos` albo edytor), treść bez zmian

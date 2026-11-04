@@ -79,6 +79,23 @@ nie dociera do projektów, które powstały wcześniej, i nikt o tym nie wie.
 
 9. **Dwie paczki.** Najpierw decyzja 1 (mała, od razu przydatna), potem decyzje 2–8.
 
+10. **Skille zewnętrzne (vendored) projekt dostaje z szablonu, nie ze źródła** (dopisane
+    2026-11-04, #221). Do tej pory sync z szablonu dopisywał projektowi tylko wpis w manifeście,
+    a pliki każdy projekt pobierał sam z GitHuba (`update-skills.py --apply`). Każdy miał więc
+    wersję z dnia, w którym ktoś to uruchomił; skille dodane w szablonie (`design-taste-frontend`,
+    `redesign-existing-projects`, #188) w większości projektów nie miały plików. Teraz
+    `update-skills.py --sync` kopiuje skille zewnętrzne tak samo jak własne (z tą samą ochroną
+    zmian lokalnych, decyzja 5), a wpis w manifeście przejmuje `commit` z szablonu. Ze źródeł
+    pobiera tylko szablon — przegląda diff i skan bezpieczeństwa raz, dla wszystkich.
+    W projekcie `update-skills.py` bez `--sync` odmawia i wskazuje sync; hook startu sesji
+    widzi skill zewnętrzny do pobrania po różnicy `commit` i nie przypomina projektowi
+    o sprawdzaniu źródeł. Skill wycofany w szablonie (zniknął z jego manifestu) sync usuwa
+    z projektu — tylko gdy każdy plik jest w wersji, którą szablon kiedyś dostarczył; zmieniony
+    w projekcie albo własny projektu zostaje i trafia do „porównaj ręcznie”. Bez historii
+    szablonu nic nie jest usuwane. Pierwszy przypadek: źródło wcieliło `redesign-existing-projects`
+    w `design-taste-frontend`. Odrzucone: zostawić pobieranie w projektach i dopisać tylko regułę —
+    rozjazd jest wbudowany w mechanizm, reguła by go nie zatrzymała.
+
 ## Konsekwencje
 
 - Poprawki strażników docierają do starszych projektów przy najbliższej sesji jako

@@ -35,7 +35,7 @@ krótkie słowo które wpisujesz świadomie. Nie używaj składni `/command` (to
 | `nextjs` | nextjs-app-router | Next.js App Router, RSC, Server Actions, streaming, caching |
 | `copywriting` | copywriting | Pisanie/poprawa marketingowego copy (landing, hero, CTA, pricing) |
 | `cro` | cro | Optymalizacja konwersji strony/formularza |
-| `szablon graficzny`, `landing`, `redesign` | design-taste-frontend, redesign-existing-projects | Kierunek wyglądu stron i landingów bez „stylu AI”; przebudowa wyglądu istniejącego projektu |
+| `szablon graficzny`, `landing`, `redesign` | design-taste-frontend | Kierunek wyglądu stron i landingów bez „stylu AI”; przebudowa wyglądu istniejącego projektu |
 | `audyt` | audyt *(poza repo)* | **Pomiar** RWD i dostępności na żywej aplikacji — `npm run audit:rwd` / `audit:uix` |
 
 ## Skille zewnętrzne (vendored)
@@ -53,7 +53,6 @@ krótkie słowo które wpisujesz świadomie. Nie używaj składni `/command` (to
 | `wp-woocommerce-dev` | [jorgerosal/wordpress-skills](https://github.com/jorgerosal/wordpress-skills) | WooCommerce: rozszerzenia, szablony, REST API, optymalizacja wydajności |
 | `wp-block-development` | [jorgerosal/wordpress-skills](https://github.com/jorgerosal/wordpress-skills) | Gutenberg: block.json, dynamic blocks, Interactivity API, wzorce edytora |
 | `design-taste-frontend` | [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) (MIT) | Kierunek wyglądu dla stron, landingów i portfolio: czyta brief, dobiera język wizualny, pilnuje, żeby wynik nie wyglądał jak szablon |
-| `redesign-existing-projects` | [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) (MIT) | Przebudowa wyglądu istniejącej strony albo aplikacji: najpierw audyt, potem poprawki układu, odstępów i hierarchii bez psucia działania |
 
 **`impeccable` — celowo poza szablonem.** [pbakaus/impeccable](https://github.com/pbakaus/impeccable)
 (Apache-2.0) to więcej niż instrukcje: niesie zbundlowane skrypty przeglądarkowe (ok. 2 MB), na których
@@ -133,6 +132,9 @@ Po `claude plugin install figma@claude-plugins-official` i uwierzytelnieniu:
 ## Zarządzanie skillami
 
 Aktualizacja zmienia wiele plików — rób ją na gałęzi roboczej, nie na `main`. Skill, którego aktualizację zablokował skan bezpieczeństwa, zostaje w obecnej wersji i działa.
+
+Skille zewnętrzne aktualizuje ze źródeł **tylko tai**; projekty dostają je z tai przez
+`python3 scripts/update-skills.py --sync --apply` (ADR-006 decyzja 10). Polecenia poniżej działają w tai.
 
 ```bash
 # Sprawdź aktualizacje (dry-run)

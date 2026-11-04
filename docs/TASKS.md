@@ -7,6 +7,16 @@ w GitHub Issues (`gh issue list`), nie tutaj. Fazy definiuje [docs/ROADMAP.md](R
 
 ## Stan sesji
 
+- 2026-11-04 **#221 skille zewnętrzne z tai, nie ze źródła** — sync kopiuje do projektów pliki
+  skilli zewnętrznych (dotąd tylko wpis w manifeście; pliki każdy projekt pobierał sam z GitHuba,
+  więc wersje się rozjeżdżały, a `design-taste-frontend` w większości projektów nie miał plików).
+  Projekt bez `--sync` odmawia pobierania ze źródeł. Skill wycofany w tai sync usuwa z projektu,
+  jeśli projekt go nie zmienił (prośba właściciela). Odświeżone ze źródeł: a11y, code-review,
+  php-modernization, web-quality-skills, copywriting, security, cro, nextjs-app-router; usunięty
+  `redesign-existing-projects` (źródło wcieliło go w `design-taste-frontend`); `ui-ux-pro-max`
+  i `design-taste-frontend` zablokowane przez skan. Naprawione: `--apply` kasował skill, gdy źródło
+  przeniosło katalog. Podział plików ponad 400 linii: `update-skills.py` → + `skills_sync.py`,
+  `skills_upstream.py`; `session-context.py` → + `skills_check.py`. Decyzja w ADR-006 (10).
 - 2026-11-04 **#220 sync skilli: CRLF i `__pycache__` to nie zmiana lokalna** — porównanie
   w `update-skills.py` i `update-from-template.py` zamienia CRLF na LF w plikach tekstowych,
   `skill_state()` pomija `__pycache__`/`.pyc`. Powód: stare klony z CRLF (new.cdue,
