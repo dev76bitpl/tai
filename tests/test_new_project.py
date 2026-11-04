@@ -174,7 +174,8 @@ class TestDocsOfANewProject:
             assert "new-project.py" not in path.read_text(encoding="utf-8"), path.name
 
     def test_should_refer_to_the_examples_from_the_rules(self):
-        assert "docs/examples/" in (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
+        # The rule lives in RULES_REFERENCE.md since CLAUDE.md was trimmed (#209)
+        assert "docs/examples/" in (ROOT / "docs" / "RULES_REFERENCE.md").read_text(encoding="utf-8")
 
     def test_should_point_readme_scaffold_to_doctor_after_cloning(self, started):
         """Joining a project starts with doctor (ADR-006); the script it names must stay in the project."""

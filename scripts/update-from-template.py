@@ -13,6 +13,7 @@ porównywany po sekcjach.
 """
 import argparse
 import fnmatch
+import hashlib
 import importlib.util
 import json
 import re
@@ -101,8 +102,14 @@ def historical_blobs(repo: Path, ref: str, paths: list[str]) -> dict[str, set[st
 
 
 def blob_of(file: Path) -> str:
-    done = subprocess.run(["git", "hash-object", "--no-filters", str(file)], capture_output=True, text=True)
-    return done.stdout.strip()
+    """The blob id git stores for this file under `* text=auto eol=lf`. A text file (no NUL in the
+    first 8000 bytes, git's own test) has CRLF folded to LF first, so a CRLF checkout of an unchanged
+    file matches the template history instead of counting as a local change (the same rule as
+    git_blob in update-skills.py)."""
+    data = file.read_bytes()
+    if b"\0" not in data[:8000]:
+        data = data.replace(b"\r\n", b"\n")
+    return hashlib.sha1(b"blob %d\0" % len(data) + data).hexdigest()
 
 
 def sections(text: str) -> dict[str, str]:
