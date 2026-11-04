@@ -290,10 +290,13 @@ Skille ogólne (`scope`, `adr`, `api`, `debug`, `deploy`, `git`, `retro`) zostaj
 | `typescript` | `typescript`, `nextjs` | node |
 | `design` | `design-taste-frontend` | wszystkie poza python i go |
 | `ui` | `ui-ux-pro-max`, `a11y`, pakiet jakości stron (`perf`) | wszystkie |
-| `marketing` | `copywriting`, `cro` | wordpress |
+| `marketing` | `product-marketing`, `copywriting`, `copy-editing`, `marketing-psychology`, `cro`, `ab-testing` | wordpress |
 | `review` | `review`, `security` | wszystkie |
+| `seo` *(na życzenie)* | `seo-audit`, `ai-seo`, `schema`, `content-strategy`, `site-architecture`, `programmatic-seo` | wordpress |
+| `social` *(na życzenie)* | `social`, `video`, `image` | — |
+| `sales` *(na życzenie)* | `cold-email`, `prospecting`, `sales-enablement`, `competitors`, `competitor-profiling` | — |
 
-Stos `inny` albo nieustawiony proponuje wszystkie grupy; zostawienie wszystkich, zanim stos jest ustawiony, nie jest zapisywane, więc po wywiadzie wraca propozycja pod stos. Wybór zapisuje się w `skills-manifest.json`
+Stos `inny` albo nieustawiony proponuje wszystkie grupy poza tymi **na życzenie**; zostawienie wszystkich albo tej propozycji, zanim stos jest ustawiony, nie jest zapisywane, więc po wywiadzie wraca propozycja pod stos. Grupy na życzenie (`opt_in_groups` w manifeście) projekt dostaje z synchronizacji dopiero po ich wybraniu; projekt bez wyboru dostaje wszystkie pozostałe, a skill dodany później do grupy, której projekt nie wybrał, też nie przychodzi. Wybór zapisuje się w `skills-manifest.json`
 (`skill_groups`, `excluded_skills`) — synchronizacja z szablonu pomija wyłączone skille, więc nie
 wracają przy następnej wiadomości. Zmiana zdania: `python3 scripts/select-skills.py` jeszcze raz;
 grupa dodana z powrotem wraca przy najbliższej synchronizacji
