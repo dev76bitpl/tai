@@ -238,6 +238,16 @@ W projekcie z lokalnym klonem tai (np. `cdue-elearning`, na gałęzi roboczej). 
       → pierwsza wiadomość pokazuje „Pobrano zmiany z template → … vendored: …” albo nic, bez błędu;
       bez `skills_check.py` sesja startuje normalnie (tylko bez sprawdzania skilli)
 
+### Scenariusz 13f — skille marketingowe w grupach; seo/social/sales na życzenie (#219)
+
+W kopii projektu bez wybranych grup (`skill_groups` brak w `skills-manifest.json`), z tai z tą zmianą:
+
+- [ ] `python3 scripts/update-skills.py --sync` → `+ product-marketing`, `copy-editing`, `marketing-psychology`, `ab-testing` NOWE;
+      `seo-audit`, `social`, `cold-email` itd. jako „wyłączony w projekcie”
+- [ ] `python3 scripts/select-skills.py` → grupy 9–11 z dopiskiem „(na życzenie)”; wybierz np. `7 9` (marketing + seo), potwierdź
+- [ ] Znów `--sync --apply` → przychodzą skille `seo`; `social` i `sales` dalej wyłączone
+- [ ] Nowa sesja Claude Code → bez komunikatu o pobieraniu skilli z grup niewybranych
+
 ### Scenariusz 13e — każdy skill zewnętrzny ma `SKILL.md`; nasze pliki przeżywają aktualizację (#225)
 
 - [ ] `ls .claude/skills/ui-ux-pro-max/SKILL.md .claude/skills/a11y/SKILL.md` → oba istnieją; w `ui-ux-pro-max/scripts/` nie ma `tests/`

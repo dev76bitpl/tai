@@ -697,3 +697,52 @@ def test_should_not_count_own_files_as_an_upstream_change(tmp_path, monkeypatch)
     entry = {"repo": "x", "remote_path": "docs", "local_path": ".claude/skills/a11y", "commit": "same",
              "own_files": ["SKILL.md"]}
     assert up.check_skill("a11y", entry, apply=False) == (False, True)
+
+
+# ── a project that chose skill groups does not get skills of groups it left out (#219) ──
+
+def _grouped_template(tmp_path: Path, opt_in: "list[str] | None" = None) -> Path:
+    opt_in = opt_in or []
+    repo = tmp_path / "template"
+    for name in ("copy-editing", "seo-audit"):
+        (repo / ".claude" / "skills" / name).mkdir(parents=True)
+        (repo / ".claude" / "skills" / name / "SKILL.md").write_text(f"{name}\n", encoding="utf-8")
+    entry = lambda name, group: {"repo": "x", "remote_path": name, "local_path": f".claude/skills/{name}",  # noqa: E731
+                                 "commit": "c1", "group": group}
+    (repo / "skills-manifest.json").write_text(_json.dumps({"opt_in_groups": opt_in, "custom_skills": {}, "skills": {
+        "copy-editing": entry("copy-editing", "marketing"), "seo-audit": entry("seo-audit", "seo")}}), encoding="utf-8")
+    _git(repo, "init", "-q")
+    _git(repo, "add", ".")
+    _git(repo, "commit", "-qm", "c1")
+    return repo
+
+
+@pytest.mark.parametrize("manifest,opt_in,expected", [
+    ({"skill_groups": ["marketing"]}, [], {"copy-editing"}),                    # chose groups: seo stays out
+    ({}, [], {"copy-editing", "seo-audit"}),                                    # never chose: everything...
+    ({}, ["seo"], {"copy-editing"}),                                            # ...but the opt-in groups
+    ({"skill_groups": ["marketing", "seo"]}, ["seo"], {"copy-editing", "seo-audit"}),  # opted in
+])
+def test_should_bring_only_skills_of_kept_groups(tmp_path, monkeypatch, manifest, opt_in, expected):
+    template = _grouped_template(tmp_path, opt_in)
+    project = tmp_path / "project"
+    project.mkdir()
+    (project / "skills-manifest.json").write_text(_json.dumps({"custom_skills": {}, "skills": {}, **manifest}),
+                                                  encoding="utf-8")
+    monkeypatch.setattr(sync, "ROOT", project)
+    monkeypatch.setattr(sync, "MANIFEST_PATH", project / "skills-manifest.json")
+    sync.sync_from_template(template, apply=True, history=sync.skill_history(template, "HEAD"))
+    assert {p.name for p in (project / ".claude" / "skills").iterdir()} == expected
+
+
+def test_should_give_every_grouped_skill_the_group_of_select_skills():
+    """The manifest's `group` (read by sync and the hook) and select-skills.py GROUPS must agree."""
+    spec = importlib.util.spec_from_file_location("select_skills_for_groups", ROOT / "scripts" / "select-skills.py")
+    select = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(select)
+    expected = {name: group for group, data in select.GROUPS.items() for name in data["vendored"] + data["custom"]}
+    manifest = _json.loads((ROOT / "skills-manifest.json").read_text(encoding="utf-8"))
+    actual = {name: entry["group"] for section in ("custom_skills", "skills")
+              for name, entry in manifest[section].items() if entry.get("group")}
+    assert actual == expected
+    assert manifest["opt_in_groups"] == [g for g, data in select.GROUPS.items() if data.get("opt_in")]

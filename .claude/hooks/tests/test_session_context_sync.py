@@ -259,3 +259,18 @@ def test_should_run_without_the_skill_checks_module(tmp_path, monkeypatch):
         shutil.copy2(HOOK.parent / name, hooks / name)
     module = _load(hooks / "session-context.py", "session_context_without_skills_check")
     assert module.skills_check is None
+
+
+def test_should_not_wait_for_skills_of_groups_the_project_left_out(hook):
+    """Same rule as the sync (skills_sync.off_by_group, #219), read from the project's scripts."""
+    module, project, template = hook
+    template.mkdir()
+    (template / "skills-manifest.json").write_text(json.dumps({"custom_skills": {}, "skills": {
+        "seo-audit": dict(ENTRY, local_path=".claude/skills/seo-audit", group="seo")}}), encoding="utf-8")
+    _project(project, {"custom_skills": {}, "skills": {}, "skill_groups": ["marketing"]})
+    (project / "scripts").mkdir()
+    real = Path(__file__).resolve().parents[3] / "scripts" / "skills_sync.py"
+    (project / "scripts" / "skills_sync.py").write_text(real.read_text(encoding="utf-8"), encoding="utf-8")
+    assert module._local_desynced(template)[2] == []
+    _project(project, {"custom_skills": {}, "skills": {}})        # never chose groups: it waits
+    assert module._local_desynced(template)[2] == ["seo-audit"]

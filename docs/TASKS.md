@@ -7,6 +7,14 @@ w GitHub Issues (`gh issue list`), nie tutaj. Fazy definiuje [docs/ROADMAP.md](R
 
 ## Stan sesji
 
+- 2026-11-04 **#219 skille marketingowe** — 18 skilli z `coreyhaines31/marketingskills` (oryginały EN,
+  sam markdown, bez `evals/`) w grupach: `marketing` (z `copywriting` i `cro`) idzie do wszystkich,
+  `seo`, `social`, `sales` **na życzenie** — tylko po wyborze w `select-skills.py`. Powód: żaden projekt
+  nie wybrał jeszcze grup, więc wszystko u wszystkich podwoiłoby opisy skilli ładowane w każdej sesji
+  (14,8 tys. → 29,3 tys. znaków; z samym `marketing` +4,6 tys.). Sync i hook nie przynoszą skilli
+  z grup, których projekt nie wybrał (pole `group` w manifeście, `opt_in_groups`). Plik kontekstu
+  marki: `.agents/product-marketing.md` w repo projektu. `seo` a `seo-audit`/`ai-seo` — uzupełnienie
+  (technika vs diagnoza rankingu vs wyszukiwarki AI); stara kopia `seo` w katalogu skilli poza #219.
 - 2026-11-04 **#225 `ui-ux-pro-max` i `a11y` bez `SKILL.md`** — od aktualizacji #85 (czerwiec) oba
   skille w tai nie miały `SKILL.md`: `ui-ux-pro-max` brany z katalogu źródła bez niego, a `a11y`
   miał nasz własny `SKILL.md`, który aktualizacja ze źródła skasowała. Po #221 sync zabrałby

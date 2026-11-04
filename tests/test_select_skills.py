@@ -77,8 +77,9 @@ def test_should_propose_only_known_groups_for_every_stack():
     for stack, groups in mod.STACK_DEFAULTS.items():
         assert stack in set_stack.STACK_PRESETS
         assert set(groups) <= set(mod.GROUPS)
-    assert mod.default_groups("inny") == list(mod.GROUPS)  # unknown stack: everything
-    assert mod.default_groups(None) == list(mod.GROUPS)
+    # unknown stack: everything but the opt-in groups (#219)
+    assert mod.default_groups("inny") == [g for g in mod.GROUPS if not mod.GROUPS[g].get("opt_in")]
+    assert mod.default_groups(None) == mod.default_groups("inny")
 
 
 # ── apply_selection ──────────────────────────────────────────────────────────
@@ -148,7 +149,7 @@ def test_should_refuse_to_delete_outside_the_skills_directory(project):
 @pytest.mark.parametrize("answer, expected", [
     ("", ["php", "review"]), ("w", "ALL"), ("1 4", ["wordpress", "typescript"]),
     ("4,1", ["wordpress", "typescript"]), ("php review", ["php", "review"]), ("8 8", ["review"]),
-    ("5", ["design"]), ("9", None), ("0", None), ("cobol", None),
+    ("5", ["design"]), ("9", ["seo"]), ("12", None), ("0", None), ("cobol", None),
 ])
 def test_should_read_answer_as_proposed_all_numbers_or_names(answer, expected):
     mod = _load()
@@ -174,8 +175,8 @@ def test_should_propose_groups_for_the_project_stack(project, monkeypatch, capsy
 
 def test_should_propose_everything_when_stack_is_not_set(project, monkeypatch):
     mod, _ = project
-    _answers(monkeypatch, "")  # nothing to remove, so no confirmation
-    assert mod.choose_interactively(mod.load_manifest()) == list(mod.GROUPS)
+    _answers(monkeypatch, "", "")  # Enter = proposal; the opt-in groups go, Enter confirms
+    assert mod.choose_interactively(mod.load_manifest()) == mod.default_groups(None)
 
 
 def test_should_name_what_will_be_removed_and_change_nothing_when_user_declines(project, monkeypatch, capsys):
@@ -205,7 +206,7 @@ def test_should_show_current_choice_when_run_again(project, monkeypatch):
 def test_should_not_record_keeping_everything_before_the_stack_is_set(project, monkeypatch, capsys):
     mod, root = project
     monkeypatch.setattr(mod.sys.stdin, "isatty", lambda: True)
-    _answers(monkeypatch, "")  # Enter = all groups, nothing to remove
+    _answers(monkeypatch, "", "")  # Enter = proposal (all but opt-in), Enter confirms removing those
     assert mod.main([]) == 0
     assert "skill_groups" not in _manifest(root)
     (root / ".claude" / "hooks").mkdir(parents=True)

@@ -111,6 +111,22 @@ def skill_state(name: str, src: Path, dst: Path, history: "dict[str, set[str]] |
     return "outdated"
 
 
+def off_by_group(template_manifest: dict, project_manifest: dict) -> set[str]:
+    """Skills of groups the project left out. select-skills.py records the kept groups in the
+    project's `skill_groups`; a skill added later to a group left out must not arrive either (#219).
+    The group of a skill is the `group` of its entry in the template's manifest. A project that
+    never chose groups gets every group except the template's `opt_in_groups`."""
+    kept = project_manifest.get("skill_groups")
+    if isinstance(kept, list):
+        off = lambda group: group not in kept  # noqa: E731
+    else:
+        opt_in = set(template_manifest.get("opt_in_groups", []) or [])
+        off = lambda group: group in opt_in  # noqa: E731
+    return {name for section in ("custom_skills", "skills")
+            for name, entry in template_manifest.get(section, {}).items()
+            if isinstance(entry, dict) and entry.get("group") and off(entry["group"])}
+
+
 def retired_state(dst: Path, history: "dict[str, set[str]] | None") -> str:
     """"retired" when every file of a skill the template no longer has is one the template once
     shipped there — safe to delete; otherwise "local" (the project changed it or it is its own).
@@ -175,7 +191,7 @@ def sync_from_template(template_root: Path, apply: bool, history: "dict[str, set
     template_vendored = template_manifest.get("skills", {})
     project_vendored = project_manifest.get("skills", {})
     # Skills the project switched off (scripts/select-skills.py) — sync must not bring them back.
-    excluded = set(project_manifest.get("excluded_skills", []) or [])
+    excluded = set(project_manifest.get("excluded_skills", []) or []) | off_by_group(template_manifest, project_manifest)
 
     mode = "APPLY" if apply else "DRY-RUN"
     print(f"🔄  update-skills.py --sync — tryb: {mode}")

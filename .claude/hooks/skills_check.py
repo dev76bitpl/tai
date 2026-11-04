@@ -64,8 +64,9 @@ def _local_desynced(template_root: Path) -> tuple[list[str], list[str], list[str
     skills_dir = MONOREPO_ROOT / ".claude" / "skills"
     tmpl_skills_dir = template_root / ".claude" / "skills"
 
-    # Skills the project switched off (scripts/select-skills.py) are not "missing".
-    excluded = set(proj.get("excluded_skills", []) or [])
+    # Skills the project switched off (scripts/select-skills.py) are not "missing", nor are those of
+    # groups it left out — the same rule the sync applies (skills_sync.off_by_group, #219).
+    excluded = set(proj.get("excluded_skills", []) or []) | _off_by_group(tmpl, proj)
 
     missing, outdated = [], []
     for name in tmpl.get("custom_skills", {}):
@@ -88,6 +89,18 @@ def _local_desynced(template_root: Path) -> tuple[list[str], list[str], list[str
         )
     )
     return missing, outdated, missing_v
+
+
+def _off_by_group(tmpl: dict, proj: dict) -> set[str]:
+    """skills_sync.off_by_group from the project's scripts; nothing when the project lacks it."""
+    path = MONOREPO_ROOT / "scripts" / "skills_sync.py"
+    try:
+        spec = importlib.util.spec_from_file_location("skills_sync_for_hook", path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module.off_by_group(tmpl, proj)
+    except Exception:
+        return set()
 
 
 def _retired(template_root: Path) -> list[str]:

@@ -35,6 +35,9 @@ krótkie słowo które wpisujesz świadomie. Nie używaj składni `/command` (to
 | `nextjs` | nextjs-app-router | Next.js App Router, RSC, Server Actions, streaming, caching |
 | `copywriting` | copywriting | Pisanie/poprawa marketingowego copy (landing, hero, CTA, pricing) |
 | `cro` | cro | Optymalizacja konwersji strony/formularza |
+| `product marketing`, `copy editing`, `a/b test` | product-marketing, copy-editing, marketing-psychology, ab-testing | Kontekst marki, redakcja, psychologia, testy A/B (grupa `marketing`) |
+| `seo audit`, `ai seo`, `schema` | seo-audit, ai-seo, schema, content-strategy, site-architecture, programmatic-seo | SEO i treści (grupa `seo`, na życzenie) |
+| `social`, `video`, `cold email` | social, video, image, cold-email, prospecting, sales-enablement, competitors, competitor-profiling | Social i sprzedaż (grupy `social`, `sales`, na życzenie) |
 | `szablon graficzny`, `landing`, `redesign` | design-taste-frontend | Kierunek wyglądu stron i landingów bez „stylu AI”; przebudowa wyglądu istniejącego projektu |
 | `audyt` | audyt *(poza repo)* | **Pomiar** RWD i dostępności na żywej aplikacji — `npm run audit:rwd` / `audit:uix` |
 
@@ -53,6 +56,31 @@ krótkie słowo które wpisujesz świadomie. Nie używaj składni `/command` (to
 | `wp-woocommerce-dev` | [jorgerosal/wordpress-skills](https://github.com/jorgerosal/wordpress-skills) | WooCommerce: rozszerzenia, szablony, REST API, optymalizacja wydajności |
 | `wp-block-development` | [jorgerosal/wordpress-skills](https://github.com/jorgerosal/wordpress-skills) | Gutenberg: block.json, dynamic blocks, Interactivity API, wzorce edytora |
 | `design-taste-frontend` | [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) (MIT) | Kierunek wyglądu dla stron, landingów i portfolio: czyta brief, dobiera język wizualny, pilnuje, żeby wynik nie wyglądał jak szablon |
+| `product-marketing` | [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) (MIT) | Kontekst marki: produkt, odbiorcy, pozycjonowanie, ton — zapisuje `.agents/product-marketing.md`, z którego czytają pozostałe skille marketingowe |
+| `copy-editing` | [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) (MIT) | Redakcja istniejącego tekstu marketingowego |
+| `marketing-psychology` | [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) (MIT) | Psychologia i modele mentalne w marketingu |
+| `ab-testing` | [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) (MIT) | Planowanie i ocena testów A/B |
+| `seo-audit` | [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) (MIT) | Audyt SEO strony: technika, on-page, spadki ruchu |
+| `ai-seo` | [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) (MIT) | Widoczność w wyszukiwarkach AI (AI Overviews, cytowania przez LLM) |
+| `schema` | [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) (MIT) | Dane strukturalne schema.org |
+| `content-strategy` | [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) (MIT) | Strategia treści i planowanie tematów |
+| `site-architecture` | [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) (MIT) | Struktura serwisu, nawigacja, linkowanie wewnętrzne |
+| `programmatic-seo` | [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) (MIT) | Strony generowane masowo pod frazy (programmatic SEO) |
+| `social` | [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) (MIT) | Treści i plan publikacji w social media |
+| `video` | [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) (MIT) | Scenariusze i produkcja wideo marketingowego |
+| `image` | [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) (MIT) | Grafiki marketingowe i prompty do generowania obrazów |
+| `cold-email` | [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) (MIT) | Zimne maile i sekwencje follow-up |
+| `prospecting` | [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) (MIT) | Wyszukiwanie i kwalifikacja potencjalnych klientów |
+| `sales-enablement` | [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) (MIT) | Materiały dla sprzedaży: decki, one-pagery, obsługa obiekcji |
+| `competitors` | [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) (MIT) | Strony porównawcze i alternatywy wobec konkurencji |
+| `competitor-profiling` | [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) (MIT) | Profile konkurentów: oferta, ceny, pozycjonowanie |
+
+**Skille marketingowe (#219)** są po angielsku, jak w oryginale. Prawie każdy czyta **plik kontekstu
+marki `.agents/product-marketing.md` w repo projektu** (nie w tai) — zakłada go skill `product-marketing`
+przy pierwszym użyciu („set up product marketing context”). Grupy `seo`, `social` i `sales` są
+**na życzenie**: projekt dostaje je dopiero po wybraniu w `python3 scripts/select-skills.py`
+(`skills-manifest.json` → `opt_in_groups`). Pozostałe skille z `marketingskills` (reklamy, cykl życia SaaS
+i in.) celowo nie weszły.
 
 **`impeccable` — celowo poza szablonem.** [pbakaus/impeccable](https://github.com/pbakaus/impeccable)
 (Apache-2.0) to więcej niż instrukcje: niesie zbundlowane skrypty przeglądarkowe (ok. 2 MB), na których
