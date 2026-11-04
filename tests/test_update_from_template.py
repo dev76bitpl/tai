@@ -85,6 +85,14 @@ def test_should_classify_each_template_file_against_the_released_main(template, 
     }
 
 
+def test_should_not_call_a_crlf_checkout_a_local_change(template, project):
+    (project / "scripts" / "same.py").write_bytes(b"same\r\n")
+    (project / "scripts" / "guard.py").write_bytes(b"v1\r\n")
+    files = mod.compare(template, "origin/main", project).files
+    assert files["scripts/same.py"] == mod.CURRENT
+    assert files["scripts/guard.py"] == mod.OUTDATED
+
+
 def test_should_ignore_template_working_directory_and_excluded_files(template, project):
     files = mod.compare(template, "origin/main", project).files
     assert "scripts/wip.py" not in files

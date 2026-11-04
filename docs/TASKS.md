@@ -7,6 +7,14 @@ w GitHub Issues (`gh issue list`), nie tutaj. Fazy definiuje [docs/ROADMAP.md](R
 
 ## Stan sesji
 
+- 2026-11-04 **#220 sync skilli: CRLF i `__pycache__` to nie zmiana lokalna** — porównanie
+  w `update-skills.py` i `update-from-template.py` zamienia CRLF na LF w plikach tekstowych,
+  `skill_state()` pomija `__pycache__`/`.pyc`. Powód: stare klony z CRLF (new.cdue,
+  technik-informatyk, matura, osmoklasista) i bajtkod skryptów `ui-ux-pro-max` sprawiały,
+  że skill wyglądał na zmieniony lokalnie i sync go pomijał. Odczyt na projektach: new.cdue
+  27→0, technik-informatyk 28→0, matura/osmoklasista 24→5 (reszta to prawdziwe różnice).
+  Przy okazji test wzorów `docs/examples/` szuka reguły w `RULES_REFERENCE.md` (po #209).
+  #147 zamknięte decyzją właściciela, PR #94 bez wydania.
 - 2026-10-31 **#214 reguła 19b „nie wynajduj koła"** — nowy blok w CLAUDE.md po § 19a:
   przed pisaniem skilla/narzędzia od zera sprawdź, czy istnieje dojrzały gotowiec (nasze
   repo i świat); w sytuacji podbramkowej „stop, zajrzę głębiej" zamiast gorszego obejścia.

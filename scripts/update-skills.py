@@ -335,10 +335,30 @@ SKILLS_DIR = ".claude/skills"
 LOCAL_SKILLS_LINE = "Pominięte (zmienione lokalnie):"
 
 
+# Generated next to a skill's scripts and never tracked: they say nothing about the skill's content.
+UNTRACKED_PARTS = {"__pycache__"}
+UNTRACKED_SUFFIXES = {".pyc", ".pyo"}
+
+
 def git_blob(file: Path) -> str:
-    """The blob id git gives this file's bytes (`git hash-object --no-filters`), without a process."""
+    """The blob id git stores for this file under `* text=auto eol=lf`, without a process.
+    A text file (no NUL in the first 8000 bytes, git's own test) has CRLF folded to LF first, so a
+    working tree checked out with CRLF matches the template's LF history instead of looking edited."""
     data = file.read_bytes()
+    if b"\0" not in data[:8000]:
+        data = data.replace(b"\r\n", b"\n")
     return hashlib.sha1(b"blob %d\0" % len(data) + data).hexdigest()
+
+
+def skill_blobs(root: Path) -> dict[str, str]:
+    """relative path -> blob id for every file of a skill except generated ones (__pycache__, .pyc)."""
+    blobs = {}
+    for f in root.rglob("*"):
+        rel = f.relative_to(root)
+        if not f.is_file() or UNTRACKED_PARTS & set(rel.parts) or f.suffix in UNTRACKED_SUFFIXES:
+            continue
+        blobs[rel.as_posix()] = git_blob(f)
+    return blobs
 
 
 def skill_history(repo: Path, ref: str) -> "dict[str, set[str]] | None":
@@ -361,8 +381,7 @@ def skill_state(name: str, src: Path, dst: Path, history: "dict[str, set[str]] |
     counts as outdated, as before."""
     if not dst.exists():
         return "new"
-    released = {f.relative_to(src).as_posix(): git_blob(f) for f in src.rglob("*") if f.is_file()}
-    mine = {f.relative_to(dst).as_posix(): git_blob(f) for f in dst.rglob("*") if f.is_file()}
+    released, mine = skill_blobs(src), skill_blobs(dst)
     if released == mine:
         return "current"
     if history is None:

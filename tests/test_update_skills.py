@@ -393,6 +393,38 @@ def test_should_replace_a_skill_left_at_an_older_release(tmp_path, monkeypatch, 
 
 def test_should_give_the_same_blob_id_as_git(tmp_path):
     file = tmp_path / "f.md"
-    file.write_bytes("zażółć\r\n".encode("utf-8"))
+    file.write_bytes("zażółć\n".encode("utf-8"))
     out = _subprocess.run(["git", "hash-object", "--no-filters", str(file)], capture_output=True, text=True)
     assert mod.git_blob(file) == out.stdout.strip()
+
+
+def test_should_give_a_crlf_text_file_the_blob_of_its_lf_version(tmp_path):
+    lf, crlf = tmp_path / "lf.md", tmp_path / "crlf.md"
+    lf.write_bytes(b"a\nb\n")
+    crlf.write_bytes(b"a\r\nb\r\n")
+    assert mod.git_blob(crlf) == mod.git_blob(lf)
+
+
+def test_should_keep_crlf_in_a_binary_file(tmp_path):
+    lf, crlf = tmp_path / "lf.bin", tmp_path / "crlf.bin"
+    lf.write_bytes(b"\0a\nb\n")
+    crlf.write_bytes(b"\0a\r\nb\r\n")
+    assert mod.git_blob(crlf) != mod.git_blob(lf)
+
+
+@pytest.mark.parametrize("content", [b"v2\r\n", b"v1\r\n"])
+def test_should_not_call_a_crlf_checkout_a_local_change(tmp_path, monkeypatch, content):
+    template = _skill_template(tmp_path)
+    project = _skill_project(tmp_path, monkeypatch, {"SKILL.md": ""})
+    dst = project / ".claude" / "skills" / "adr"
+    (dst / "SKILL.md").write_bytes(content)
+    state = mod.skill_state("adr", template / ".claude" / "skills" / "adr", dst, mod.skill_history(template, "HEAD"))
+    assert state == ("current" if content == b"v2\r\n" else "outdated")
+
+
+def test_should_ignore_python_bytecode_in_a_skill(tmp_path, monkeypatch):
+    template = _skill_template(tmp_path)
+    project = _skill_project(tmp_path, monkeypatch, {"SKILL.md": "v2\n", "scripts/__pycache__/core.cpython-312.pyc": "x",
+                                                     "scripts/stray.pyc": "x"})
+    src, dst = template / ".claude" / "skills" / "adr", project / ".claude" / "skills" / "adr"
+    assert mod.skill_state("adr", src, dst, mod.skill_history(template, "HEAD")) == "current"

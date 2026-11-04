@@ -220,6 +220,14 @@ Wymaga projektu postawionego z szablonu, z lokalnym klonem szablonu (`ai_templat
       „Źródło: … w stanie origin/main (katalog roboczy pomijam)”, zmieniony skill „aktualny”
 - [ ] Wiadomość w Claude Code w projekcie → brak „Pobrano zmiany z template” dla tego skilla
 
+### Scenariusz 13c — końce linii i `__pycache__` nie robią ze skilla „zmienionego lokalnie”
+
+- [ ] W projekcie zamień końce linii w `.claude/skills/adr/SKILL.md` na CRLF (`unix2dos` albo edytor), treść bez zmian
+      → `python3 scripts/update-skills.py --sync` (bez `--apply`) → `adr` aktualny, **nie** w „Pominięte (zmienione lokalnie)”
+- [ ] W `.claude/skills/ui-ux-pro-max/scripts/` uruchom dowolny skrypt (powstaje `__pycache__/`) → ten sam sync → skill nie trafia do „Pominięte”
+- [ ] Prawdziwa zmiana treści w `SKILL.md` dowolnego skilla → nadal „Pominięte (zmienione lokalnie)”
+- [ ] `python3 scripts/update-from-template.py` w projekcie z plikiem szablonu przepisanym na CRLF → plik „aktualny”, nie „zmieniony lokalnie”
+
 ## Rozstrzyganie ścieżki do template (`resolve_template_source`)
 
 Kontekst: `ai_template_path` był czytany tylko z commitowanego `config.json`, więc
