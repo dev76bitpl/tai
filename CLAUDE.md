@@ -206,6 +206,10 @@ Feedback i preferencje → CLAUDE.md. Pamięć maszynowa = kontekst tymczasowy. 
 **Gdzie żyje otwarta praca:** w projekcie na GitHubie → issues. `docs/TASKS.md` = log sesji.
 Projekt bez GitHuba → `docs/TASKS.md` jako lista zadań (ADR-004).
 
+**Termin w issue:** sprawa z prawdziwym terminem (zewnętrznym albo ustalonym z właścicielem)
+ma w treści osobną linijkę `termin: RRRR-MM-DD`. Sesja terminów nie wymyśla; minął → przesuń
+albo przytnij zakres. → docs/RULES_REFERENCE.md § Termin w issue
+
 **Pomysł właściciela = złap i zapisz.** Właściciel wpada na pomysły całą dobę, szczyt
 w weekend. Rzucony pomysł traktuj jako **do zapisania** (issue `idea`), nie do przegadania
 na śmierć: łap → zapisz → ewentualnie dopytaj później. Nie gub pomysłu w dyskusji o nim.
