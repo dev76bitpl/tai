@@ -1,4 +1,5 @@
 """Tests for scripts/update-skills.py and the modules it splits into (skills_sync, skills_upstream)."""
+import inspect
 import importlib.util
 from pathlib import Path
 
@@ -746,3 +747,65 @@ def test_should_give_every_grouped_skill_the_group_of_select_skills():
               for name, entry in manifest[section].items() if entry.get("group")}
     assert actual == expected
     assert manifest["opt_in_groups"] == [g for g, data in select.GROUPS.items() if data.get("opt_in")]
+
+
+# ── --adopt: the owner takes the template's copy of a locally changed skill (#229) ──
+
+def test_should_take_the_template_copy_of_an_adopted_local_skill(tmp_path, monkeypatch, capsys):
+    template = _skill_template(tmp_path)
+    project = _skill_project(tmp_path, monkeypatch, {"SKILL.md": "fetched upstream by the project\n", "extra.md": "x\n"})
+    monkeypatch.setattr(sync, "ROOT", project)
+    monkeypatch.setattr(sync, "MANIFEST_PATH", project / "skills-manifest.json")
+    sync.sync_from_template(template, apply=True, history=sync.skill_history(template, "HEAD"), adopt={"adr"})
+    skill = project / ".claude" / "skills" / "adr"
+    assert (skill / "SKILL.md").read_text(encoding="utf-8") == "v2\n"
+    assert not (skill / "extra.md").exists()
+    out = capsys.readouterr().out
+    assert "nadpisany: SKILL.md" in out and "usunięty:  extra.md" in out
+    assert sync.LOCAL_SKILLS_LINE not in out
+
+
+def test_should_only_show_an_adoption_without_apply(tmp_path, monkeypatch, capsys):
+    template = _skill_template(tmp_path)
+    project = _skill_project(tmp_path, monkeypatch, {"SKILL.md": "ours\n"})
+    monkeypatch.setattr(sync, "ROOT", project)
+    monkeypatch.setattr(sync, "MANIFEST_PATH", project / "skills-manifest.json")
+    sync.sync_from_template(template, apply=False, history=sync.skill_history(template, "HEAD"), adopt={"adr"})
+    assert (project / ".claude" / "skills" / "adr" / "SKILL.md").read_text(encoding="utf-8") == "ours\n"
+    assert "do przyjęcia" in capsys.readouterr().out
+
+
+def test_should_keep_protecting_local_skills_not_named_in_adopt(tmp_path, monkeypatch, capsys):
+    template = _skill_template(tmp_path)
+    project = _skill_project(tmp_path, monkeypatch, {"SKILL.md": "ours\n"})
+    monkeypatch.setattr(sync, "ROOT", project)
+    monkeypatch.setattr(sync, "MANIFEST_PATH", project / "skills-manifest.json")
+    sync.sync_from_template(template, apply=True, history=sync.skill_history(template, "HEAD"), adopt=set())
+    assert (project / ".claude" / "skills" / "adr" / "SKILL.md").read_text(encoding="utf-8") == "ours\n"
+    assert f"{sync.LOCAL_SKILLS_LINE} adr" in capsys.readouterr().out
+
+
+def test_should_refuse_to_adopt_a_skill_the_template_lacks(tmp_path, monkeypatch):
+    template = _skill_template(tmp_path)
+    _skill_project(tmp_path, monkeypatch, {"SKILL.md": "ours\n"})
+    monkeypatch.setattr(sync, "MANIFEST_PATH", tmp_path / "project" / "skills-manifest.json")
+    with pytest.raises(SystemExit):
+        sync.sync_from_template(template, apply=True, history=None, adopt={"no-such-skill"})
+
+
+def test_should_refuse_adopt_without_sync(monkeypatch):
+    monkeypatch.setattr("sys.argv", ["update-skills.py", "--adopt", "a11y"])
+    with pytest.raises(SystemExit) as stop:
+        mod.main()
+    assert stop.value.code == 2
+
+
+def test_should_use_the_project_sync_when_the_template_predates_adopt(tmp_path):
+    old = tmp_path / "scripts"
+    old.mkdir()
+    (old / "skills_sync.py").write_text("def sync_from_template(template_root, apply, history=None):\n    pass\n",
+                                        encoding="utf-8")
+    template_sync = mod.sync_module(tmp_path)
+    assert "adopt" not in inspect.signature(template_sync.sync_from_template).parameters
+    own_sync = mod.sync_module(tmp_path, own=True)
+    assert "adopt" in inspect.signature(own_sync.sync_from_template).parameters

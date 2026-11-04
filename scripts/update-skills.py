@@ -9,12 +9,14 @@ Użycie:
     python3 scripts/update-skills.py --scan-only  # tylko skan bezpieczeństwa
 
     python3 scripts/update-skills.py --sync --apply   # w projekcie: wszystkie skille z szablonu
+    python3 scripts/update-skills.py --sync --adopt a11y   # podgląd: wersja z szablonu zamiast lokalnej
 
 Domyślnie działa w trybie dry-run — żadne zmiany nie są wprowadzane bez --apply.
 Skille zewnętrzne pobiera ze źródeł wyłącznie szablon (tai); projekt dostaje je przez --sync (#221).
 """
 import argparse
 import importlib.util
+import inspect
 import json
 import shutil
 import subprocess
@@ -122,11 +124,13 @@ def is_template_repo() -> bool:
     return isinstance(config, dict) and config.get("is_template") is True
 
 
-def sync_module(template_root: Path):
+def sync_module(template_root: Path, own: bool = False):
     """skills_sync as the template ships it, pointed at this project. The template's copy runs the
     sync it is about to install, and a project that got only this file from an older sync
-    (before the split) still works — the module comes along on --apply (SHIPPED_FILES)."""
-    for candidate in (template_root / "scripts" / "skills_sync.py", SCRIPTS / "skills_sync.py"):
+    (before the split) still works — the module comes along on --apply (SHIPPED_FILES).
+    own=True takes the project's copy: for a feature the template has not released yet."""
+    candidates = [template_root / "scripts" / "skills_sync.py", SCRIPTS / "skills_sync.py"]
+    for candidate in candidates[1:] if own else candidates:
         if candidate.is_file():
             break
     else:
@@ -145,12 +149,17 @@ def main() -> None:
     parser.add_argument("--skill", help="Zaktualizuj tylko wskazany skill")
     parser.add_argument("--scan-only", action="store_true", help="Tylko skan bezpieczeństwa, bez diff")
     parser.add_argument("--sync", action="store_true", help="Synchronizuj skille (własne i zewnętrzne) z ai_template_path")
+    parser.add_argument("--adopt", metavar="SKILL[,SKILL]",
+                        help="Z --sync: przyjmij wersję z szablonu dla skilli zmienionych lokalnie (#229)")
     parser.add_argument("--full-sync", action="store_true", help="To samo co --sync --apply (zostawione dla starych poleceń)")
     args = parser.parse_args()
 
     if args.full_sync:
         args.sync = True
         args.apply = True
+
+    if args.adopt and not args.sync:
+        parser.error("--adopt działa tylko z --sync")
 
     if args.sync:
         template_ref = find_template_ref()
@@ -180,7 +189,18 @@ def main() -> None:
                 template_root = tmp_clone
 
         try:
-            sync_module(template_root).sync_from_template(template_root, apply=args.apply, history=history)
+            adopt = {n.strip() for n in (args.adopt or "").split(",") if n.strip()}
+            sync = sync_module(template_root)
+            if not adopt:
+                sync.sync_from_template(template_root, apply=args.apply, history=history)
+            else:
+                if "adopt" not in inspect.signature(sync.sync_from_template).parameters:
+                    # The template's sync predates #229; this project's copy has it.
+                    sync = sync_module(template_root, own=True)
+                    if "adopt" not in inspect.signature(sync.sync_from_template).parameters:
+                        print("❌ --adopt wymaga nowszego scripts/skills_sync.py (#229) w szablonie lub projekcie")
+                        sys.exit(1)
+                sync.sync_from_template(template_root, apply=args.apply, history=history, adopt=adopt)
         finally:
             if tmp_clone:
                 shutil.rmtree(tmp_clone, ignore_errors=True)

@@ -138,7 +138,8 @@ def _skipped_local(stdout: str) -> list[str]:
 
 def _local_notice(names: list[str]) -> str:
     return (f"⚠️  [t-ai] Skille zmienione w projekcie, inne niż w szablonie: {', '.join(names)}"
-            f" — nie nadpisane, porównaj ręcznie (python3 scripts/update-skills.py --sync)")
+            f" — nie nadpisane, porównaj ręcznie (python3 scripts/update-skills.py --sync);"
+            f" wersja z szablonu zamiast lokalnej: --sync --adopt <nazwa>")
 
 
 def check_template_skills_sync(config: dict) -> str | None:

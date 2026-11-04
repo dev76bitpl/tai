@@ -87,7 +87,9 @@ działa — przejrzyj zgłoszone linie w źródle i zdecyduj; zablokowanej aktua
 **Skille zewnętrzne (vendored) aktualizuje wyłącznie tai.** tai pobiera je ze źródeł, przegląda diff
 i skan bezpieczeństwa, a projekty dostają zatwierdzoną wersję synchronizacją — wszystkie tę samą.
 W projekcie `update-skills.py` bez `--sync` odmawia i wskazuje sync. Skill wycofany w tai sync usuwa
-z projektu, o ile projekt go nie zmienił. Nowsza wersja u źródła albo
+z projektu, o ile projekt go nie zmienił. Skill zmieniony w projekcie (np. pobrany kiedyś samodzielnie
+ze źródła) zostaje, dopóki nie przyjmiesz wersji z tai: `python3 scripts/update-skills.py --sync --adopt a11y`
+pokazuje, które pliki zostaną nadpisane albo usunięte, a z `--apply` je podmienia (#229). Nowsza wersja u źródła albo
 poprawka do skilla zewnętrznego → zgłoszenie w tai, nie aktualizacja w projekcie (#221).
 
 ```bash

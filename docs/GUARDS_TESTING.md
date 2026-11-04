@@ -238,6 +238,15 @@ W projekcie z lokalnym klonem tai (np. `cdue-elearning`, na gałęzi roboczej). 
       → pierwsza wiadomość pokazuje „Pobrano zmiany z template → … vendored: …” albo nic, bez błędu;
       bez `skills_check.py` sesja startuje normalnie (tylko bez sprawdzania skilli)
 
+### Scenariusz 13g — „przyjmij wersję z tai” dla skilla zmienionego lokalnie (#229)
+
+W kopii projektu, w której sync zgłasza skill jako „zmieniony lokalnie” (np. dopisz linię do `.claude/skills/a11y/A11Y.md`):
+
+- [ ] `python3 scripts/update-skills.py --sync --adopt a11y` → przy `a11y` „wersja z szablonu do przyjęcia”, lista „nadpisany: A11Y.md”; plik bez zmian
+- [ ] To samo z `--apply` → `A11Y.md` taki jak w tai, `a11y` nie ma już w „Pominięte (zmienione lokalnie)”
+- [ ] Inny skill zmieniony lokalnie, niewymieniony w `--adopt` → dalej „zmieniony lokalnie”, nietknięty
+- [ ] `--adopt nie-ma-takiego` → błąd „szablon nie ma skilli”; `--adopt a11y` bez `--sync` → błąd
+
 ### Scenariusz 13f — skille marketingowe w grupach; seo/social/sales na życzenie (#219)
 
 W kopii projektu bez wybranych grup (`skill_groups` brak w `skills-manifest.json`), z tai z tą zmianą:
