@@ -12,7 +12,7 @@ does not want and records the choice, so template sync does not bring them back.
 
 General skills (scope, adr, api, debug, deploy, git, retro) are not in any group and always stay.
 Changing your mind is running it again: a group you add back returns on the next template sync
-(`python3 scripts/update-skills.py --sync --apply`, then `--apply` for the vendored ones).
+(`python3 scripts/update-skills.py --sync --apply`, vendored ones included).
 
 The choice lives in skills-manifest.json: `skill_groups` (kept) and `excluded_skills` (names the
 sync must skip — honoured by .claude/hooks/session-context.py and update-skills.py --sync).
@@ -46,7 +46,7 @@ GROUPS: dict[str, dict] = {
     "typescript": {"label": "TypeScript / Next.js", "custom": [],
                    "vendored": ["mastering-typescript", "nextjs-app-router"]},
     "design": {"label": "Projektowanie wyglądu", "custom": [],
-               "vendored": ["design-taste-frontend", "redesign-existing-projects"]},
+               "vendored": ["design-taste-frontend"]},
     "ui": {"label": "UI i dostępność", "custom": [], "vendored": ["ui-ux-pro-max", "a11y", "web-quality-skills"]},
     "marketing": {"label": "Marketing i treści", "custom": [], "vendored": ["copywriting", "cro"]},
     "review": {"label": "Przegląd kodu i bezpieczeństwo", "custom": [], "vendored": ["code-review", "security"]},
@@ -209,7 +209,7 @@ def report(manifest: dict, removed: list[str]) -> None:
                  if name not in manifest.get("skills", {}) and name not in manifest.get("custom_skills", {})]
     if returning:
         notice(f"Do przywrócenia z szablonu: {', '.join(returning)}")
-        print("    python3 scripts/update-skills.py --sync --apply && python3 scripts/update-skills.py --apply")
+        print("    python3 scripts/update-skills.py --sync --apply")
     print(paint("  Zmiana wyboru: python3 scripts/select-skills.py", DIM))
 
 

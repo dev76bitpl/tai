@@ -1,10 +1,12 @@
 ---
+# SPDX-License-Identifier: CC-BY-SA-4.0
+# SPDX-FileCopyrightText: Netresearch DTT GmbH
 name: php-modernization
 description: "Use when modernizing PHP code: PHP 8.1-8.5 features, PSR/PHP-FIG/PER-CS compliance, PHPStan/Rector/PHP-CS-Fixer/PHPat tooling, DTOs/enums/readonly/property hooks, type safety. Triggers: PHP modernization, type safety, PHPStan, Rector, PHP-CS-Fixer, enum, DTO, readonly, strict_types, property hooks, PHP 8.4, PHP 8.5."
 license: "(MIT AND CC-BY-SA-4.0)"
-compatibility: "Requires php 8.1+, composer."
+compatibility: "Requires uv (runs the scripts on Python 3.11 or later), php 8.1+, composer."
 metadata:
-  version: "1.19.0"
+  version: "1.24.0"
   repository: "https://github.com/netresearch/php-modernization-skill"
   author: "Netresearch DTT GmbH"
 allowed-tools:
@@ -41,7 +43,7 @@ allowed-tools:
 | PHP-CS-Fixer deprecations | `references/php-cs-fixer-deprecations.md` |
 | DTOs / VOs / inputs | `references/type-safety.md`, `references/request-dtos.md` |
 | Adapter / registry | `references/adapter-registry-pattern.md` |
-| Multi-version compat | `references/multi-version-adapters.md` |
+| Multi-version compat | `references/multi-version-adapters.md`, `references/composer-package-metadata.md` |
 | Symfony patterns | `references/symfony-patterns.md` |
 | PSR-15 middleware | `references/psr15-middleware-architecture.md` |
 | Doctrine edges | `references/doctrine-modernization-edges.md` |
@@ -49,9 +51,12 @@ allowed-tools:
 | Immutability | `references/immutability-boundaries.md` |
 | Contracts & invariants | `references/contracts-and-invariants.md` |
 | Mutation testing | `references/mutation-testing.md` |
+| Lexing PHP as tokens, across versions | `references/lexing-php-across-versions.md` |
 | Migration planning | `references/migration-strategies.md` |
+| Public API inventory vs consumers | `references/public-api-inventory.md` |
 | PHPUnit 12→13, mock vs stub | `references/phpunit-modernization.md` |
 | Multi-agent dispatch hazards | `references/multi-agent-pitfalls.md` |
+| Reading a PHP config file without running it | `references/reading-php-config-safely.md` |
 
 ## Hard guardrails
 
