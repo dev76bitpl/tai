@@ -32,6 +32,26 @@ def test_should_leave_binaries_alone_and_keep_crlf_for_windows_scripts(path, exp
     assert result.stdout.strip().endswith(expected), result.stdout
 
 
+def _hook_exclude(hook_id: str) -> str:
+    """The exclude regex of a hook in .pre-commit-config.yaml (no YAML library in a bare project)."""
+    text = (ROOT / ".pre-commit-config.yaml").read_text(encoding="utf-8")
+    block = re.search(rf"- id: {re.escape(hook_id)}\n((?:        .*\n)*)", text).group(1)
+    found = re.search(r"^\s+exclude: (\S+)$", block, re.M)
+    return found.group(1) if found else "^$"
+
+
+def test_should_keep_mixed_line_ending_off_files_that_must_stay_crlf():
+    # --fix=lf rewrote the Windows scripts .gitattributes keeps CRLF: red CI in every project with one (#234)
+    exclude = re.compile(_hook_exclude("mixed-line-ending"))
+    crlf = [line.split()[0] for line in ATTRIBUTES.read_text(encoding="utf-8").splitlines()
+            if line.strip() and not line.startswith("#") and "eol=crlf" in line]
+    assert crlf, "expected CRLF patterns in .gitattributes"
+    for pattern in crlf:
+        sample = "tools/run" + pattern.lstrip("*")
+        assert exclude.search(sample), f"mixed-line-ending would rewrite {sample} ({pattern} is eol=crlf)"
+    assert not exclude.search("scripts/doctor.py")
+
+
 def test_should_not_keep_any_crlf_file_in_the_repository():
     # with the rule in place a CRLF file in the index would show as modified in every clone
     result = subprocess.run(["git", "ls-files", "--eol"], cwd=ROOT, capture_output=True, text=True)

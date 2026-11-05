@@ -130,6 +130,7 @@ Numery scenariuszy są stałe (odwołują się do nich zgłoszenia i log sesji),
 - [ ] `npm run doctor` → w „Repository state” `✓ Line endings: .gitattributes (eol=lf)`; po usunięciu pliku → ostrzeżenie „No .gitattributes rule for line endings”
 - [ ] Klon na Windows bez wcześniejszego `npm install`: `git status` czysty, commit pliku tekstowego nie jest odbijany przez `mixed-line-ending`
 - [ ] `git check-attr eol -- README.md` → `eol: lf`
+- [ ] Skrypt `.cmd` albo `.bat` z końcami CRLF: `pre-commit run mixed-line-ending --files <plik>` → „Skipped”, plik dalej CRLF (#234)
 
 ### Scenariusz 10e — wybór skilli
 
