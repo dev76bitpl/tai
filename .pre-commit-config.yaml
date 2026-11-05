@@ -46,6 +46,8 @@ repos:
         args: [--maxkb=1000]
       - id: mixed-line-ending
         args: [--fix=lf]
+        # Windows scripts keep CRLF (.gitattributes: eol=crlf); --fix=lf would rewrite them (#234).
+        exclude: \.(bat|cmd)$
       - id: no-commit-to-branch
         args: [--branch, main, --branch, master]
 

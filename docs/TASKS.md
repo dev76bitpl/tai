@@ -7,6 +7,9 @@ w GitHub Issues (`gh issue list`), nie tutaj. Fazy definiuje [docs/ROADMAP.md](R
 
 ## Stan sesji
 
+- 2026-11-05 **#234 CRLF w skryptach Windows** — `mixed-line-ending --fix=lf` przepisywał na LF pliki
+  `.cmd`/`.bat`, które `.gitattributes` trzyma jako `eol=crlf` (CI cdue-transcript#36 czerwone). Hook
+  pomija `\.(bat|cmd)$`; test pilnuje, że każdy wzorzec `eol=crlf` jest wykluczony z hooka.
 - 2026-11-05 **#212 start sesji widzi issues** — `session-context.py` dopisuje jedną linijkę z liczbą
   otwartych issues repo (`gh issue list`, limit 5 s, bez tytułów; cicho bez `gh`/sieci/remote).
   Decyzja właściciela 28.10: lekki sygnał, nie lista. PR #213 (sama notatka o luce) zamknięty bez merge'u.
