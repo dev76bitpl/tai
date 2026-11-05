@@ -7,6 +7,9 @@ w GitHub Issues (`gh issue list`), nie tutaj. Fazy definiuje [docs/ROADMAP.md](R
 
 ## Stan sesji
 
+- 2026-11-05 **#212 start sesji widzi issues** — `session-context.py` dopisuje jedną linijkę z liczbą
+  otwartych issues repo (`gh issue list`, limit 5 s, bez tytułów; cicho bez `gh`/sieci/remote).
+  Decyzja właściciela 28.10: lekki sygnał, nie lista. PR #213 (sama notatka o luce) zamknięty bez merge'u.
 - 2026-11-04 **#218 termin w issue** — linijka `termin: RRRR-MM-DD` w treści issue, tylko prawdziwy
   termin (decyzja właściciela 31.10, panel jarvis#124: box „Na dziś”). Reguła w `CLAUDE.md`, szczegóły
   w `RULES_REFERENCE.md` § Termin w issue, szablon `.github/ISSUE_TEMPLATE/sprawa.md` (idzie do

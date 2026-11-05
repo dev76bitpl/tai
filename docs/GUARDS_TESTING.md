@@ -238,6 +238,12 @@ W projekcie z lokalnym klonem tai (np. `cdue-elearning`, na gałęzi roboczej). 
       → pierwsza wiadomość pokazuje „Pobrano zmiany z template → … vendored: …” albo nic, bez błędu;
       bez `skills_check.py` sesja startuje normalnie (tylko bez sprawdzania skilli)
 
+### Scenariusz 13h — start sesji podaje liczbę otwartych issues (#212)
+
+- [ ] Nowa sesja w repo z otwartymi issues → w kontekście startu linijka „📋 Otwarte issues w repo: N — przejrzyj: `gh issue list`”, bez tytułów
+- [ ] Repo bez otwartych issues albo bez remote na GitHubie → linijki nie ma, start bez błędu
+- [ ] Bez `gh` w `PATH` (katalog z samym dowiązaniem do `git`) albo bez sieci → linijki nie ma, start bez błędu i nie dłuższy niż ok. 5 s
+
 ### Scenariusz 13g — „przyjmij wersję z tai” dla skilla zmienionego lokalnie (#229)
 
 W kopii projektu, w której sync zgłasza skill jako „zmieniony lokalnie” (np. dopisz linię do `.claude/skills/a11y/A11Y.md`):
