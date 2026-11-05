@@ -4,6 +4,7 @@ UserPromptSubmit hook: kontekst na start sesji.
 Na pierwszej wiadomości sesji:
 - czyta docs/TASKS.md z repozytoriów skonfigurowanych w config.json (klucz "repos")
 - mówi, czy szablon ma zmiany dla projektu (ADR-006; scripts/update-from-template.py)
+- podaje liczbę otwartych issues repo, bez tytułów (#212)
 Kolejne wiadomości tej samej sesji: hook nie odpala (marker w /tmp).
 
 config.json (wymagane pola):
@@ -12,6 +13,7 @@ config.json (wymagane pola):
 """
 import importlib.util
 import json
+import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -164,6 +166,31 @@ def check_template_path_configured(config: dict) -> str | None:
     )
 
 
+ISSUE_LIMIT = 200
+GH_TIMEOUT = 5  # seconds; a slow network must not hold up the first prompt
+
+
+def count_open_issues(root: Path = MONOREPO_ROOT) -> "int | None":
+    """Open issues in this repo on GitHub, or None when gh, a token, the network or a GitHub
+    remote is missing. Work lives in issues, and without this a session never sees one the
+    owner opened (#212). Only the count, no titles: the session start stays light."""
+    try:
+        done = subprocess.run(
+            ["gh", "issue", "list", "--state", "open", "--limit", str(ISSUE_LIMIT), "--json", "number"],
+            cwd=root, capture_output=True, text=True, timeout=GH_TIMEOUT,
+        )
+        return len(json.loads(done.stdout)) if done.returncode == 0 else None
+    except (OSError, subprocess.SubprocessError, ValueError, TypeError):
+        return None
+
+
+def issue_count_line(count: "int | None") -> "str | None":
+    if not count:
+        return None
+    shown = f"{count}+" if count >= ISSUE_LIMIT else str(count)
+    return f"📋 Otwarte issues w repo: {shown} — przejrzyj: `gh issue list`"
+
+
 def render(context: str, visible: str | None) -> str:
     """Plain stdout of UserPromptSubmit reaches only the model. A line the owner must see on
     screen (the template notice, ADR-006) goes out as JSON with systemMessage as well."""
@@ -192,8 +219,9 @@ def main():
     skills_sync_warning = skills_check.check_template_skills_sync(config) if skills_check else None
     skills_warning = skills_check.check_skills_staleness(config) if skills_check else None
     template_path_warning = check_template_path_configured(config)
+    issues_line = issue_count_line(count_open_issues())
 
-    if not tasks and not template_updates and not skills_sync_warning and not skills_warning and not template_path_warning:
+    if not any((tasks, template_updates, skills_sync_warning, skills_warning, template_path_warning, issues_line)):
         sys.exit(0)
 
     output = "[SESSION START]\n\n"
@@ -209,6 +237,9 @@ def main():
 
     if skills_warning:
         output += skills_warning + "\n\n---\n\n"
+
+    if issues_line:
+        output += issues_line + "\n\n---\n\n"
 
     if tasks:
         sections = [f"## {name} — docs/TASKS.md\n\n{content}" for name, content in tasks]
