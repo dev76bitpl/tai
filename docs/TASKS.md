@@ -7,6 +7,11 @@ w GitHub Issues (`gh issue list`), nie tutaj. Fazy definiuje [docs/ROADMAP.md](R
 
 ## Stan sesji
 
+- 2026-11-16 **#238 etykiety grupy przy starcie projektu** — start zakładał tylko `owner` i `idea`, więc
+  nowy projekt nie miał priorytetów, `feature`/`system` ani `jarvis` (76bit-crm: przeniesione issue
+  zgubiło `normal`). Jedna lista w `scripts/project_labels.py` (idzie do projektów przez `scripts/*.py`),
+  krok „Etykiety zgłoszeń” zakłada brakujące. Przegląd repo grupy (odczyt): komplet ma 6, reszcie
+  czegoś brakuje — uzupełnienie to osobna decyzja właściciela. Test właściciela: skrypt na 3 repo, 3/3.
 - 2026-11-16 **#243 Guard 6: `tai#N` albo `[skip-sync] <powód>`** — decyzja jarvisa D-014 (jedne drzwi
   do szablonu). Rozjazd z szablonem przechodzi tylko z odnośnikiem `tai#N` do istniejącego issue/PR
   (`gh api`; bez `gh`/sieci przepuszcza z ostrzeżeniem) albo z `[skip-sync]` i powodem w tej samej

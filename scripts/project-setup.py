@@ -32,12 +32,6 @@ sys.stderr.reconfigure(encoding="utf-8")
 ROOT = Path(__file__).resolve().parent.parent
 RESUME = "python3 scripts/project-setup.py"
 
-# Issue labels a project starts with: (name, colour, description).
-PROJECT_LABELS = [
-    ("owner", "D93F0B", "Sprawa czeka na właściciela projektu"),
-    ("idea", "FBCA04", "Pomysł: czeka na potwierdzenie, plan albo odrzucenie"),
-]
-
 # Look (colours, marks, progress bar) is shared with new-project.py.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from start_ui import (  # noqa: E402
@@ -45,6 +39,7 @@ from start_ui import (  # noqa: E402
     banner, mark, notice, paint, progress, question_line, steps_list, summary,
 )
 from start_prompts import SCOPE_PROMPT, design_prompt, help_prompt  # noqa: E402
+import project_labels  # noqa: E402
 import repo_settings  # noqa: E402
 import start_checks  # noqa: E402
 from repo_settings import classify_repo_answer  # noqa: E402
@@ -193,9 +188,9 @@ def step_labels() -> tuple[str, str]:
     if code != 0:
         return SKIPPED, "pominięte — podpięte repo nie jest na GitHubie albo `gh` nie ma do niego dostępu"
     existing = set(must(["gh", "label", "list", "--limit", "200", "--json", "name", "--jq", ".[].name"]).split("\n"))
-    missing = [label for label in PROJECT_LABELS if label[0] not in existing]
+    missing = project_labels.missing(existing)
     if not missing:
-        return DONE, "etykiety są: " + ", ".join(name for name, _, _ in PROJECT_LABELS)
+        return DONE, "etykiety są: " + ", ".join(project_labels.NAMES)
     names = ", ".join(name for name, _, _ in missing)
     if not confirm(f"Założyć etykiety zgłoszeń: {names}?"):
         return SKIPPED, "pominięte"
@@ -299,8 +294,8 @@ STEPS = [
      "Miejsce na kod, zgłoszenia i pull requesty. Nic nie jest wypychane.", step_remote),
     ("Ustawienia repo", "gh api …   # kasowanie gałęzi po scaleniu, uprawnienia automatów — docs/GUARDS.md",
      "Dwa ustawienia, bez których automat wydań pada, a gałęzie zostają po scaleniu.", step_repo_settings),
-    ("Etykiety zgłoszeń", "gh label create owner / idea",
-     "Dwie etykiety, po których widać sprawy czekające na właściciela i pomysły.", step_labels),
+    ("Etykiety zgłoszeń", "gh label create …   # lista: scripts/project_labels.py",
+     "Etykiety grupy: sprawy właściciela, pomysły, rodzaj pracy, priorytety i zlecenia jarvisa.", step_labels),
     ("Kontrola środowiska", "python3 scripts/doctor.py",
      "Sprawdzenie, czy narzędzia i strażnicy naprawdę działają na tej maszynie.", step_doctor),
     ("Brief projektu", "claude   # napisz: scope — wywiad ustawi też strażników pod Twój stos",

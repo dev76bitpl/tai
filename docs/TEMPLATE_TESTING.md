@@ -13,7 +13,7 @@ Na świeżej kopii szablonu **poza** repo szablonu (w samym szablonie tylko `--d
 - [ ] `python3 scripts/new-project.py --init` w terminalu → baner „Przygotowanie projektu”, sprzątanie z nagłówkami, potem baner „Start projektu” i osiem kroków z paskiem postępu: Git, repo, ustawienia repo, etykiety, kontrola środowiska, brief, skille, szablon graficzny
 - [ ] `git branch --show-current` → `main`, także na maszynie bez `init.defaultBranch`
 - [ ] Krok „Repo na GitHubie”: Enter → pominięty; adres → `git remote -v` pokazuje `origin`; `wlasciciel/nazwa` → repo powstaje na GitHubie, nic nie jest wypychane
-- [ ] Krok „Etykiety zgłoszeń”: bez repo → pominięty z wyjaśnieniem; z repo podpiętym przez alias SSH (adres bez `github.com`) → proponuje założenie `owner` i `idea`
+- [ ] Krok „Etykiety zgłoszeń”: bez repo → pominięty z wyjaśnieniem; z repo podpiętym przez alias SSH (adres bez `github.com`) → proponuje założenie brakujących etykiet z `scripts/project_labels.py` (10 na pustym repo, `bug` zwykle już jest)
 - [ ] Krok „Kontrola środowiska” → raport `doctor`; przy czerwonym raporcie pytanie „Poprosić Claude o pomoc z tym krokiem?”, a po powrocie „Ponowić ten krok teraz?”
 - [ ] Krok „Brief projektu”: „tak” → Claude Code startuje i prowadzi wywiad po jednym pytaniu; po `/exit` wracasz do kroków i widzisz trzy `✓` (brief, stos, ADR-001)
 - [ ] Wyjście z Claude Code w połowie wywiadu → `✗` przy brakujących punktach i pytanie „Wrócić do Claude Code i dokończyć?”
