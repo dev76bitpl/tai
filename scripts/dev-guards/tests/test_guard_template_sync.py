@@ -85,8 +85,8 @@ class TestMain:
             g.main(["guard", "/tmp/msg"])
 
     # ── passes ──
-    def test_skip_sync_passes(self):
-        self._run(msg="docs: x\n\n[skip-sync]")  # must not raise
+    def test_skip_sync_with_reason_passes(self):
+        self._run(msg="docs: x\n\n[skip-sync] rule only matters here")  # must not raise
 
     def test_claude_not_staged_passes(self):
         self._run(staged=["docs/README.md"])
@@ -110,6 +110,20 @@ class TestMain:
     def test_missing_dir_blocks_acknowledge(self, tmp_path):
         with pytest.raises(SystemExit):
             self._run(config={"ai_template_path": str(tmp_path / "nope")})
+
+    def test_bare_skip_sync_blocks(self, capsys):
+        # tai#243: the flag alone is no decision; it needs a reason on its line.
+        with pytest.raises(SystemExit):
+            self._run(msg="docs: x\n\n[skip-sync]")
+        assert "bez powodu" in capsys.readouterr().err
+
+    def test_missing_shared_module_blocks_with_a_hint(self, tmp_path, monkeypatch, capsys):
+        monkeypatch.setattr(g, "HOOKS_DIR", tmp_path)
+        monkeypatch.setattr(sys, "path", [p for p in sys.path if not p.endswith("/.claude/hooks")])
+        monkeypatch.delitem(sys.modules, "sync_ack", raising=False)
+        with pytest.raises(SystemExit):
+            self._run(msg="docs: x\n\n[skip-sync] rule only matters here")
+        assert "sync_ack.py is missing" in capsys.readouterr().err
 
     def test_local_template_untouched_blocks(self, tmp_path):
         clone = _template_clone(tmp_path)
@@ -159,7 +173,7 @@ class TestEndToEnd:
 
     def test_should_pass_when_skip_sync_flag_is_in_message(self, repo):
         stage(repo, "CLAUDE.md")
-        assert run_guard(self.GUARD, repo, "docs: project rule\n\n[skip-sync] project only\n").returncode == 0
+        assert run_guard(self.GUARD, repo, "docs: project rule\n\n[skip-sync] rule is project only\n").returncode == 0
 
     def test_should_pass_when_claude_md_is_not_staged(self, repo):
         stage(repo, "docs/SETUP.md")
@@ -177,3 +191,14 @@ class TestEndToEnd:
         result = run_guard(self.GUARD, repo, message=None)
         assert result.returncode == BLOCKED
         assert "guard_template_sync: no commit message file given" in result.stderr
+
+
+class TestEndToEndAcknowledgment:
+    GUARD = "guard_template_sync"
+
+    def test_should_block_bare_skip_sync(self, repo):
+        stage(repo, "CLAUDE.md")
+        result = run_guard(self.GUARD, repo, "docs: project rule\n\n[skip-sync]\n")
+        assert result.returncode == BLOCKED, result.stderr
+        assert "bez powodu" in result.stderr
+        assert "Traceback" not in result.stderr

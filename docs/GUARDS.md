@@ -90,7 +90,10 @@ naprawcze ([ADR-006](adr/ADR-006-updating-projects-from-template.md)).
 - `[skip-docs]` — pomiń sprawdzanie TASKS.md i testów
 - `[no-adr]` — zmiana architektoniczna bez ADR (świadoma decyzja)
 - `[skip-test-check]` — commit bez `[user-tested]` (tylko docs/chore)
-- `[skip-sync]` — sekcja project-specific, nie idzie do AI template
+- `[skip-sync] <powód>` — rozjazd z szablonem tylko dla tego projektu; powód w tej samej linii,
+  min. 3 słowa (sama flaga blokuje). Zmiana, która idzie do szablonu, zamiast flagi niesie
+  odnośnik `tai#N` do issue/PR w repo szablonu — strażnik sprawdza w GitHubie, że istnieje
+  (bez `gh`/sieci przepuszcza z ostrzeżeniem). Wspólna reguła: `.claude/hooks/sync_ack.py` (tai#243)
 - `SKIP=guard-lint,guard-tests git commit ...` — env var, nie ląduje w historii
 
 **Język artefaktów (CLAUDE.md reguła 2) — angielski, egzekwowany na dwóch warstwach:**
