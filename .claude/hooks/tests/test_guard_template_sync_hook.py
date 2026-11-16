@@ -170,6 +170,16 @@ def project(tmp_path):
     (template / "scripts" / "dev-guards").mkdir(parents=True)
     (template / "NOTES.md").write_text("# Notes\n\n## Shared\n", encoding="utf-8")
     (template / "scripts" / "dev-guards" / "guard_x.py").write_text("X = 1\n", encoding="utf-8")
+    # What the template owns. README.md and docs/TASKS.md exist in the template but are not
+    # listed: a project fills them with its own sections (#237, #240).
+    (template / "template-files.json").write_text(json.dumps({
+        "copy": ["scripts/dev-guards/*.py", "docs/examples/*"],
+        "compare_sections": ["NOTES.md", "CLAUDE.md"],
+    }), encoding="utf-8")
+    (template / "docs" / "examples").mkdir(parents=True)
+    (template / "docs" / "examples" / "x.md").write_text("# X\n\n## Shared\n", encoding="utf-8")
+    (template / "README.md").write_text("# Template\n\n## Shared\n", encoding="utf-8")
+    (template / "docs" / "TASKS.md").write_text("# Tasks\n\n## Shared\n", encoding="utf-8")
 
     root = tmp_path / "project"
     hooks = root / ".claude" / "hooks"
@@ -181,6 +191,11 @@ def project(tmp_path):
     (root / "scripts" / "dev-guards").mkdir(parents=True)
     (root / "NOTES.md").write_text("# Notes\n\n## Shared\n", encoding="utf-8")
     (root / "scripts" / "dev-guards" / "guard_x.py").write_text("X = 1\n", encoding="utf-8")
+    # Project documents with their own sections, as after the scope wizard.
+    (root / "docs" / "examples").mkdir(parents=True)
+    (root / "docs" / "examples" / "x.md").write_text("# X\n\n## Shared\n", encoding="utf-8")
+    (root / "README.md").write_text("# CRM\n\n## Our product\n", encoding="utf-8")
+    (root / "docs" / "TASKS.md").write_text("# Tasks\n\n## 2026-11-16\n", encoding="utf-8")
     _git(root, "init", "-q")
     return root
 
@@ -231,3 +246,57 @@ class TestEndToEndWithClone:
     def test_should_exit_0_for_a_command_that_is_not_a_commit(self, project):
         result = run_hook(project, "ls -la")
         assert result.returncode == 0, result.stderr
+
+
+class TestOnlyStagedTemplateDocs:
+    """#237, #240: project documents and files outside the stage never block a commit."""
+
+    def test_should_ignore_unstaged_template_doc_with_own_section(self, project):
+        (project / "NOTES.md").write_text("# Notes\n\n## Only here\n", encoding="utf-8")
+        _git(project, "add", "docs/TASKS.md")
+        result = run_hook(project, 'git commit -m "docs: log"')
+        assert result.returncode == 0, result.stderr
+
+    def test_should_pass_staged_project_doc_with_own_sections(self, project):
+        _git(project, "add", "README.md", "docs/TASKS.md")
+        result = run_hook(project, 'git commit -m "docs: scope"')
+        assert result.returncode == 0, result.stderr
+
+    def test_should_still_block_staged_template_doc_next_to_project_docs(self, project):
+        (project / "NOTES.md").write_text("# Notes\n\n## Only here\n", encoding="utf-8")
+        _git(project, "add", "NOTES.md", "README.md")
+        result = run_hook(project, 'git commit -m "docs: x"')
+        assert result.returncode == 2, result.stderr
+        assert "NOTES.md" in result.stderr
+        assert "README.md" not in result.stderr
+
+    def test_should_block_doc_matched_by_a_copy_pattern(self, project):
+        (project / "docs" / "examples" / "x.md").write_text("# X\n\n## Mine\n", encoding="utf-8")
+        _git(project, "add", "docs/examples/x.md")
+        result = run_hook(project, 'git commit -m "docs: x"')
+        assert result.returncode == 2, result.stderr
+        assert "## Mine" in result.stderr
+
+    def test_should_say_the_whole_bash_command_was_blocked(self, project):
+        (project / "NOTES.md").write_text("# Notes\n\n## Only here\n", encoding="utf-8")
+        _git(project, "add", "NOTES.md")
+        result = run_hook(project, 'git commit -m "docs: x"')
+        assert "całe polecenie Bash" in result.stderr
+
+    def test_should_fall_back_to_claude_md_without_template_list(self, project):
+        (project.parent / "template" / "template-files.json").unlink()
+        (project / "NOTES.md").write_text("# Notes\n\n## Only here\n", encoding="utf-8")
+        _git(project, "add", "NOTES.md")
+        result = run_hook(project, 'git commit -m "docs: x"')
+        assert result.returncode == 0, result.stderr
+
+
+class TestTemplateMdFiles:
+    def test_star_does_not_cross_directories(self, tmp_path):
+        (tmp_path / "template-files.json").write_text(json.dumps({"copy": ["docs/*"]}), encoding="utf-8")
+        staged = ["docs/a.md", "docs/sub/b.md", "docs/c.py"]
+        assert h._template_md_files(staged, tmp_path) == ["docs/a.md"]
+
+    def test_broken_list_means_claude_md_only(self, tmp_path):
+        (tmp_path / "template-files.json").write_text("{nope", encoding="utf-8")
+        assert h._template_md_files(["CLAUDE.md", "README.md"], tmp_path) == ["CLAUDE.md"]

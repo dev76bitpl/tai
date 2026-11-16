@@ -7,6 +7,12 @@ w GitHub Issues (`gh issue list`), nie tutaj. Fazy definiuje [docs/ROADMAP.md](R
 
 ## Stan sesji
 
+- 2026-11-16 **#237 + #240 guard-template-sync tylko dla plików szablonu w stage** — gdy w stage był
+  jakikolwiek `*.md`, hook porównywał z szablonem wszystkie `*.md` w repo, więc README, PROJECT_SCOPE
+  i ROADMAP z własnymi sekcjami blokowały każdy commit (76bit-crm, 76bit.pl). Teraz porównuje tylko
+  `*.md` ze stage, które są w `template-files.json` szablonu (copy + compare_sections, ta sama reguła
+  `*` co `update-from-template.py`); bez czytelnej listy — tylko CLAUDE.md. Blokada mówi, że stanęło
+  całe polecenie Bash. Scenariusz 11d w `GUARDS_TESTING.md`; test właściciela na klonie 76bit-crm.
 - 2026-11-05 **#234 CRLF w skryptach Windows** — `mixed-line-ending --fix=lf` przepisywał na LF pliki
   `.cmd`/`.bat`, które `.gitattributes` trzyma jako `eol=crlf` (CI cdue-transcript#36 czerwone). Hook
   pomija `\.(bat|cmd)$`; test pilnuje, że każdy wzorzec `eol=crlf` jest wykluczony z hooka.
