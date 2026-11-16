@@ -264,7 +264,10 @@ def test_should_create_the_group_labels_of_issue_238(mod):
     fake = Fake(mod, answers=[""], results={**GITHUB, "gh label list": (0, "bug\n")})
     mod.step_labels()
     created = {c.split()[3] for c in fake.commands() if c.startswith("gh label create")}
-    assert {"owner", "idea", "feature", "system", "urgent", "high", "normal", "low", "jarvis"} <= created
+    assert {"owner", "idea", "feature", "system", "urgent", "high", "normal", "low", "jarvis",
+            "krytyczne", "deferred"} <= created
+    colours = [c for _, c, _ in mod.project_labels.LABELS]
+    assert len({c.lower() for c in colours}) == len(colours)  # every label tells itself apart
     assert "bug" not in created
 
 

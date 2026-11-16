@@ -8,7 +8,7 @@ w GitHub Issues (`gh issue list`), nie tutaj. Fazy definiuje [docs/ROADMAP.md](R
 ## Stan sesji
 
 - 2026-11-16 **#238 etykiety grupy przy starcie projektu** — start zakładał tylko `owner` i `idea`, więc
-  nowy projekt nie miał priorytetów, `feature`/`system` ani `jarvis` (76bit-crm: przeniesione issue
+  nowy projekt nie miał priorytetów, `feature`/`system` ani etykiet jarvisa (`jarvis`, `krytyczne`, `deferred`) (76bit-crm: przeniesione issue
   zgubiło `normal`). Jedna lista w `scripts/project_labels.py` (idzie do projektów przez `scripts/*.py`),
   krok „Etykiety zgłoszeń” zakłada brakujące. Przegląd repo grupy (odczyt): komplet ma 6, reszcie
   czegoś brakuje — uzupełnienie to osobna decyzja właściciela. Test właściciela: skrypt na 3 repo, 3/3.
