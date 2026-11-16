@@ -273,7 +273,7 @@ przekazuje sterowanie do `scripts/project-setup.py`, który zostaje w projekcie:
 | Repozytorium Git | `git init -b main` | repozytorium już jest |
 | Repo na GitHubie | podpina podany adres albo zakłada `wlasciciel/nazwa` (`gh repo create`, bez `push`) | `origin` już podpięty; Enter |
 | Ustawienia repo | kasowanie gałęzi po scaleniu — zawsze; uprawnienia automatów GitHuba (zapis, zatwierdzanie PR) — tylko gdy projekt ma automat wydań (`.github/workflows/release-please*.yml`). Jedno pytanie, potem `gh api` | brak repo na GitHubie albo brak `gh`; ustawienia już są; GitHub odmawia → polecenia do ręcznego wykonania |
-| Etykiety zgłoszeń | zakłada `owner` i `idea` | brak repo na GitHubie albo brak `gh`; etykiety są |
+| Etykiety zgłoszeń | zakłada brakujące etykiety grupy z `scripts/project_labels.py` (sprawy właściciela, pomysły, rodzaj pracy, priorytety, etykiety jarvisa) | brak repo na GitHubie albo brak `gh`; etykiety są |
 | Kontrola środowiska | `python3 scripts/doctor.py`; czerwony raport = błąd kroku | — |
 | Brief projektu | uruchamia Claude Code z hasłem `scope` | brief, stos i ADR-001 już są |
 | Skille | wybór grup skilli, które zostają w projekcie (`scripts/select-skills.py`); bez pobierania nowszych wersji z sieci | brak `scripts/select-skills.py` |

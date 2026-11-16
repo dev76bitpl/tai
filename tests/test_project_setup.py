@@ -205,6 +205,11 @@ def test_should_fail_the_step_when_gh_is_missing(mod, tmp_path):
 
 # ── step: labels ─────────────────────────────────────────────────────────────
 
+_spec = importlib.util.spec_from_file_location("project_labels", ROOT / "scripts" / "project_labels.py")
+_labels = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_labels)
+ALL_LABELS = "\n".join(_labels.NAMES) + "\n"  # every group label already in the repository
+
 GITHUB = {"git remote get-url origin": (0, "git@github.com:acme/shop.git\n"),
           "gh repo view": (0, "acme/shop\n"),
           # repository settings already in place (longer prefix first: both start with gh api repos/acme/shop)
@@ -242,18 +247,32 @@ def test_should_create_labels_when_origin_uses_an_ssh_host_alias(mod):
         "gh repo view": (0, "acme/shop\n"), "gh label list": (0, ""),
     })
     assert mod.step_labels()[0] == mod.DONE
-    assert len([c for c in fake.commands() if c.startswith("gh label create")]) == 2
+    assert len([c for c in fake.commands() if c.startswith("gh label create")]) == len(mod.project_labels.LABELS)
 
 
 def test_should_create_only_missing_labels(mod):
-    fake = Fake(mod, answers=[""], results={**GITHUB, "gh label list": (0, "bug\nowner\n")})
+    have = "\n".join(n for n in mod.project_labels.NAMES if n != "normal") + "\n"
+    fake = Fake(mod, answers=[""], results={**GITHUB, "gh label list": (0, have)})
     assert mod.step_labels()[0] == mod.DONE
     created = [c for c in fake.commands() if c.startswith("gh label create")]
-    assert len(created) == 1 and created[0].startswith("gh label create idea ")
+    assert len(created) == 1 and created[0].startswith("gh label create normal ")
+
+
+def test_should_create_the_group_labels_of_issue_238(mod):
+    # Priorities, kind of work and jarvis: without them an issue moved in from jarvis lost its
+    # priority label in a new project (76bit-crm, 5.11.2026).
+    fake = Fake(mod, answers=[""], results={**GITHUB, "gh label list": (0, "bug\n")})
+    mod.step_labels()
+    created = {c.split()[3] for c in fake.commands() if c.startswith("gh label create")}
+    assert {"owner", "idea", "feature", "system", "urgent", "high", "normal", "low", "jarvis",
+            "krytyczne", "deferred"} <= created
+    colours = [c for _, c, _ in mod.project_labels.LABELS]
+    assert len({c.lower() for c in colours}) == len(colours)  # every label tells itself apart
+    assert "bug" not in created
 
 
 def test_should_not_ask_when_labels_exist(mod):
-    fake = Fake(mod, results={**GITHUB, "gh label list": (0, "owner\nidea\n")})
+    fake = Fake(mod, results={**GITHUB, "gh label list": (0, ALL_LABELS)})
     assert mod.step_labels()[0] == mod.DONE
     assert fake.asked == []
 
@@ -617,7 +636,7 @@ def test_should_walk_through_every_step_in_order_and_end_with_a_summary(mod, tmp
     _script(tmp_path, "doctor.py")
     _complete_interview(tmp_path)()
     _complete_design(tmp_path)()
-    Fake(mod, answers=[""], results={**GITHUB, "gh label list": (0, "owner\nidea\n"),
+    Fake(mod, answers=[""], results={**GITHUB, "gh label list": (0, ALL_LABELS),
                                      "git status --porcelain": (0, "?? docs/adr/ADR-001.md\n")})
     assert mod.main([]) == 0
     out = capsys.readouterr().out
@@ -641,7 +660,7 @@ def _failing_doctor(mod, tmp_path, answers, in_claude=None):
     _git_dir(tmp_path)
     _script(tmp_path, "doctor.py")
     fake = Fake(mod, answers=answers, in_claude=in_claude, results={
-        **GITHUB, "gh label list": (0, "owner\nidea\n"),
+        **GITHUB, "gh label list": (0, ALL_LABELS),
         f"{mod.sys.executable} scripts/doctor.py": DOCTOR_RED,
     })
     return fake
@@ -708,7 +727,7 @@ def test_should_print_plain_text_when_output_is_not_a_terminal(mod, tmp_path, ca
     _complete_interview(tmp_path)()
     _complete_design(tmp_path)()
     _git_dir(tmp_path)
-    Fake(mod, answers=[""], results={**GITHUB, "gh label list": (0, "owner\nidea\n")})
+    Fake(mod, answers=[""], results={**GITHUB, "gh label list": (0, ALL_LABELS)})
     mod.main([])
     assert "\033[" not in capsys.readouterr().out
 

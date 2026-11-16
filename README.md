@@ -22,7 +22,7 @@ python3 scripts/project-setup.py
 
 1. **Repo** — adres istniejącego albo `wlasciciel/nazwa` nowego do założenia na GitHubie (Enter = pomiń)
 2. **Ustawienia repo** — kasowanie gałęzi po scaleniu i, gdy projekt ma automat wydań, uprawnienia automatów GitHuba; jedno pytanie
-3. **Etykiety zgłoszeń** — `owner` i `idea`
+3. **Etykiety zgłoszeń** — etykiety grupy z `scripts/project_labels.py`: `owner`, `idea`, `bug`/`feature`/`system`, priorytety `urgent`/`high`/`normal`/`low`, `jarvis`, `krytyczne`, `deferred`
 4. **Kontrola środowiska** — raport `doctor`
 5. **Brief** — wywiad `scope` w Claude Code: zakres, dla kogo i stos; ze stosu `scripts/set-stack.py` ustawia strażników (katalogi kodu, wzorce ADR platformy — tabela w `docs/GUARDS.md`, sekcja „Konfiguracja strażników”). Projekt z gotowym briefem wywiad pomija
 6. **Skille** — wybór grup, które zostają w projekcie (stos podpowiada, które); niewybrane znikają i nie wracają przy synchronizacji. Zmiana później: `python3 scripts/select-skills.py`
