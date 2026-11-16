@@ -2,8 +2,12 @@
 """
 Guard 6: Synchronizacja z AI template repo.
 Blokuje (exit 2 + stderr) git commit jeśli:
-- plik *.md w projekcie ma sekcję (## lub ###) której brakuje w template, LUB
+- plik *.md w stage, należący do szablonu, ma sekcję (## lub ###) której brakuje w template, LUB
 - plik scripts/dev-guards/*.py w projekcie różni się zawartością od wersji w template.
+
+Do szablonu należą pliki z template-files.json klona (copy + compare_sections). Pozostałe
+*.md (README.md, docs/PROJECT_SCOPE.md, docs/TASKS.md...) projekt wypełnia własną treścią,
+więc nie są porównywane. Pliki *.md spoza stage też nie (#237, #240).
 
 Zasada: każdy uniwersalny wzorzec wymyślony w projekcie musi trafić do template.
 Sekcje project-specific i świadome odejścia od template zostają w projekcie —
@@ -18,16 +22,20 @@ NIE pomija się cicho — bramkuje na CLAUDE.md (sync reguł uniwersalnych, regu
 z prośbą o [skip-sync] albo przeniesienie do template. Bogate porównanie *.md/guardów
 odpala się tylko gdy klon istnieje (auto-weryfikacja dla maintainera).
 is_template: true → to repo JEST template'm, sync pomijany.
-Trigger: staged pliki zawierają *.md lub scripts/dev-guards/*.py.
+Trigger: staged pliki zawierają *.md szablonu lub scripts/dev-guards/*.py.
 Bypass: [skip-sync] w wiadomości commita.
 """
+import fnmatch
+import json
 import re
-import subprocess
 import sys
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from stack import chdir_to_project_root, get_commit_message, get_staged_files, is_foreign_repo, is_git_commit_command, load_config, read_command, resolve_template_path
+
+LIST_FILE = "template-files.json"
+FALLBACK_PATTERNS = ["CLAUDE.md"]
 
 
 def get_section_headers(text: str) -> set[str]:
@@ -51,6 +59,28 @@ def _local_template_root(template_path: str) -> Path | None:
     return root if root.is_dir() else None
 
 
+def _matches(path: str, pattern: str) -> bool:
+    """Same rule as matches() in scripts/update-from-template.py: '*' never crosses '/'."""
+    p, q = PurePosixPath(path), PurePosixPath(pattern)
+    return p.parent == q.parent and fnmatch.fnmatchcase(p.name, q.name)
+
+
+def _template_patterns(template_root: Path) -> list[str]:
+    """Paths the template owns, from its template-files.json. Unreadable list → CLAUDE.md only."""
+    try:
+        spec = json.loads((template_root / LIST_FILE).read_text(encoding="utf-8"))
+        patterns = list(spec.get("copy", [])) + list(spec.get("compare_sections", []))
+    except (OSError, ValueError, AttributeError, TypeError):
+        return FALLBACK_PATTERNS
+    return [p for p in patterns if isinstance(p, str)] or FALLBACK_PATTERNS
+
+
+def _template_md_files(staged: list[str], template_root: Path) -> list[str]:
+    """Staged *.md files that belong to the template — the only ones worth comparing."""
+    patterns = _template_patterns(template_root)
+    return sorted({f for f in staged if f.endswith(".md") and any(_matches(f, p) for p in patterns)})
+
+
 def _touches_claude(staged: list[str]) -> bool:
     return any(f == "CLAUDE.md" or f.endswith("/CLAUDE.md") for f in staged)
 
@@ -63,6 +93,47 @@ def _ack_message() -> str:
         "   (Brak lokalnego klona template do auto-weryfikacji — ustaw ai_template_path\n"
         "    w .claude/hooks/config.json, jeśli chcesz automatycznego sprawdzania.)"
     )
+
+
+def _md_issues(project_root: Path, template_root: Path, md_files: list[str]) -> list[str]:
+    issues = []
+    for rel in md_files:
+        project_file, template_file = project_root / rel, template_root / rel
+        if not project_file.is_file() or not template_file.is_file():
+            continue  # usunięty w projekcie albo jeszcze nieobecny w klonie szablonu
+        try:
+            project_headers = get_section_headers(project_file.read_text(encoding="utf-8"))
+            template_headers = get_section_headers(template_file.read_text(encoding="utf-8"))
+        except Exception as e:
+            issues.append(f"  ⚠️  Błąd odczytu {rel}: {e}")
+            continue
+        for h in sorted(project_headers - template_headers):
+            issues.append(f"  📝 {rel}: sekcja jest w projekcie, brakuje w template  →  {h}")
+    return issues
+
+
+def _guard_issues(project_root: Path, template_root: Path) -> list[str]:
+    issues = []
+    guards_dir = project_root / "scripts" / "dev-guards"
+    template_guards_dir = template_root / "scripts" / "dev-guards"
+    if not (guards_dir.is_dir() and template_guards_dir.is_dir()):
+        return issues
+    for project_file in sorted(guards_dir.glob("*.py")):
+        if project_file.name == "__init__.py":
+            continue
+        rel_path = project_file.relative_to(project_root)
+        template_file = template_guards_dir / project_file.name
+        if not template_file.exists():
+            issues.append(f"  🐍 {rel_path}: plik jest w projekcie, brakuje w template")
+            continue
+        try:
+            same = project_file.read_text(encoding="utf-8") == template_file.read_text(encoding="utf-8")
+        except Exception as e:
+            issues.append(f"  ⚠️  Błąd odczytu {rel_path}: {e}")
+            continue
+        if not same:
+            issues.append(f"  🐍 {rel_path}: zawartość różni się od wersji w template")
+    return issues
 
 
 def main():
@@ -98,65 +169,16 @@ def main():
             sys.exit(2)
         sys.exit(0)
 
-    has_md = any(f.endswith(".md") for f in staged)
+    md_files = _template_md_files(staged, template_root)
     has_py = any("scripts/dev-guards/" in f and f.endswith(".py") for f in staged)
 
-    if not has_md and not has_py:
+    if not md_files and not has_py:
         sys.exit(0)
 
     project_root = Path.cwd()
-    issues: list[str] = []
-
-    if has_md:
-        # Sprawdź nagłówki *.md które istnieją w obu repach
-        for project_file in sorted(project_root.rglob("*.md")):
-            if any(part.startswith(".") for part in project_file.parts[len(project_root.parts):]):
-                continue
-            if "node_modules" in project_file.parts:
-                continue
-
-            rel_path = project_file.relative_to(project_root)
-            template_file = template_root / rel_path
-
-            if not template_file.exists():
-                continue  # plik tylko w projekcie — OK, może być projektowy
-
-            try:
-                project_headers = get_section_headers(project_file.read_text(encoding="utf-8"))
-                template_headers = get_section_headers(template_file.read_text(encoding="utf-8"))
-            except Exception as e:
-                issues.append(f"  ⚠️  Błąd odczytu {rel_path}: {e}")
-                continue
-
-            missing = project_headers - template_headers
-            for h in sorted(missing):
-                issues.append(f"  📝 {rel_path}: sekcja jest w projekcie, brakuje w template  →  {h}")
-
+    issues = _md_issues(project_root, template_root, md_files)
     if has_py:
-        # Sprawdź zawartość scripts/dev-guards/*.py względem template
-        guards_dir = project_root / "scripts" / "dev-guards"
-        template_guards_dir = template_root / "scripts" / "dev-guards"
-
-        if guards_dir.is_dir() and template_guards_dir.is_dir():
-            for project_file in sorted(guards_dir.glob("*.py")):
-                if project_file.name == "__init__.py":
-                    continue
-                rel_path = project_file.relative_to(project_root)
-                template_file = template_guards_dir / project_file.name
-
-                if not template_file.exists():
-                    issues.append(f"  🐍 {rel_path}: plik jest w projekcie, brakuje w template")
-                    continue
-
-                try:
-                    project_content = project_file.read_text(encoding="utf-8")
-                    template_content = template_file.read_text(encoding="utf-8")
-                except Exception as e:
-                    issues.append(f"  ⚠️  Błąd odczytu {rel_path}: {e}")
-                    continue
-
-                if project_content != template_content:
-                    issues.append(f"  🐍 {rel_path}: zawartość różni się od wersji w template")
+        issues += _guard_issues(project_root, template_root)
 
     if issues:
         msg = "❌ [BLOCK] Desync z AI template repo:\n\n"
@@ -164,6 +186,8 @@ def main():
         msg += "\n\n  Opcje:"
         msg += f"\n  1. Universal? → zsynchronizuj zmiany do template ({template_root}), commit z [template-done]"
         msg += "\n  2. Project-specific / świadome odejście? → bypass [skip-sync] w commicie (z notą w body — co i dlaczego)"
+        msg += "\n\n  Zablokowane zostało całe polecenie Bash, także kroki przed `git commit`"
+        msg += "\n  (np. zapis pliku z wiadomością) — sprawdź, czy się wykonały."
         print(msg, file=sys.stderr)
         sys.exit(2)
 

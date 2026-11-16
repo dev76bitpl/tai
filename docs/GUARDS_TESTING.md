@@ -206,11 +206,22 @@ Po każdym poleceniu `echo $?` pokazuje kod wyjścia (blokuje wyłącznie kod **
 
 Wymaga projektu postawionego z szablonu, z lokalnym klonem szablonu (`ai_template_path` albo klon obok).
 
-- [ ] W projekcie dopisz do dowolnego `*.md` istniejącego też w szablonie nagłówek `## Tylko tutaj`, `git add` tego pliku
+- [ ] W projekcie dopisz do `*.md` należącego do szablonu (z `template-files.json`, np. `CLAUDE.md`, `docs/GUARDS.md`) nagłówek `## Tylko tutaj`, `git add` tego pliku
 - [ ] `echo '{"tool_input":{"command":"git commit -m \"docs: x\""}}' | python3 .claude/hooks/guard-template-sync.py; echo $?`
       → `❌ [BLOCK] Desync z AI template repo` z nazwą pliku, nagłówkiem i ścieżką klona szablonu; kod `2`, bez `Traceback`
 - [ ] To samo z `[skip-sync]` w wiadomości → nic nie wypisuje, kod `0`
 - [ ] Cofnij zmianę (`git restore --staged <plik>` i usuń nagłówek)
+
+### Scenariusz 11d — dokumenty projektu nie blokują commita (#237, #240)
+
+Ten sam projekt co w 11c, po kreatorze scope (`README.md`, `docs/PROJECT_SCOPE.md` z własnymi sekcjami).
+
+- [ ] Dopisz linię do `docs/TASKS.md`, `git add docs/TASKS.md`, ten sam `echo ... | python3 .claude/hooks/guard-template-sync.py; echo $?`
+      → nic nie wypisuje, kod `0` (README i PROJECT_SCOPE nie są w stage ani w `template-files.json`)
+- [ ] `git add README.md` z własną sekcją → dalej kod `0`
+- [ ] Do tego `CLAUDE.md` z `## Tylko tutaj` w stage → kod `2`, w komunikacie tylko `CLAUDE.md`, bez `README.md`,
+      na końcu zdanie, że zablokowane zostało całe polecenie Bash
+- [ ] Cofnij zmiany (`git restore --staged .` i usuń dopiski)
 
 ---
 
