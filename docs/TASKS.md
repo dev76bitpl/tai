@@ -7,6 +7,12 @@ w GitHub Issues (`gh issue list`), nie tutaj. Fazy definiuje [docs/ROADMAP.md](R
 
 ## Stan sesji
 
+- 2026-11-16 **#243 Guard 6: `tai#N` albo `[skip-sync] <powód>`** — decyzja jarvisa D-014 (jedne drzwi
+  do szablonu). Rozjazd z szablonem przechodzi tylko z odnośnikiem `tai#N` do istniejącego issue/PR
+  (`gh api`; bez `gh`/sieci przepuszcza z ostrzeżeniem) albo z `[skip-sync]` i powodem w tej samej
+  linii (min. 3 słowa). Jedna reguła w `.claude/hooks/sync_ack.py` dla hooka Claude i strażnika
+  pre-commit; GitHub pytany tylko przy realnym rozjeździe. Etykiety `from-project` nie wymuszamy
+  (D-014). Aktualizacja ADR-002, scenariusz 11e. Test właściciela: skrypt na klonie 76bit-crm, 7/7.
 - 2026-11-16 **#237 + #240 guard-template-sync tylko dla plików szablonu w stage** — gdy w stage był
   jakikolwiek `*.md`, hook porównywał z szablonem wszystkie `*.md` w repo, więc README, PROJECT_SCOPE
   i ROADMAP z własnymi sekcjami blokowały każdy commit (76bit-crm, 76bit.pl). Teraz porównuje tylko

@@ -45,6 +45,10 @@ def make_repo(root: Path, branch: str = "main", config: dict | None = None) -> P
     dest.mkdir(parents=True)
     for src in GUARDS.glob("*.py"):
         shutil.copy(src, dest / src.name)
+    # guard_template_sync shares its rule with the Claude Code hook (tai#243), as in a project.
+    hooks = root / ".claude" / "hooks"
+    hooks.mkdir(parents=True, exist_ok=True)
+    shutil.copy(GUARDS.parents[1] / ".claude" / "hooks" / "sync_ack.py", hooks / "sync_ack.py")
     if config is not None:
         write_config(root, config)
     return root

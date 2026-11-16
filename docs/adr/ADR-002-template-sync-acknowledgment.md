@@ -145,3 +145,18 @@ start".
   ADR-ów wzorca nie trzeba już pamiętać o `TEMPLATE_META`.
 - Każdy guard, który tu powstanie/zmieni się, wchodzi z testem dowodzącym: (1) blokuje gdy
   ma blokować, (2) przepuszcza resztę.
+
+## Aktualizacja 2026-11-16 — potwierdzenie z odnośnikiem albo powodem (tai#243)
+
+Decyzja jarvisa D-014 (jarvis#174): zmiany do szablonu wchodzą jednymi drzwiami — zgłoszeniem
+w repo szablonu. Samo `[skip-sync]` przestało być świadomą decyzją, bo dało się je wpisać
+bez śladu. Potwierdzenie rozjazdu ma teraz dwie formy:
+
+- **do szablonu** → odnośnik `tai#N` w wiadomości commita; oba strażniki sprawdzają
+  (`gh api`), że issue/PR istnieje. Brak `gh`, tokenu albo sieci → przepuszczają z
+  ostrzeżeniem, co nie zostało sprawdzone (nie blokujemy na ślepo).
+- **tylko nasze** → `[skip-sync] <powód>` w jednej linii, min. 3 słowa.
+
+Reguła żyje w jednym module `.claude/hooks/sync_ack.py`, który importują oba strażniki.
+GitHub jest pytany tylko wtedy, gdy strażnik i tak by blokował. Etykiety `from-project:<projekt>`
+na zgłoszeniu strażnik nie wymusza (D-014: wymuszanie byłoby kruche).

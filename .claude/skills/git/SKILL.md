@@ -102,7 +102,7 @@ PR musi zawierać:
 | `[skip-docs]` | vendored code, brak potrzeby aktualizacji docs/TASKS.md |
 | `[skip-test-check]` | zmiana czysto dokumentacyjna |
 | `[no-adr]` | decyzja niewymagająca ADR |
-| `[skip-sync]` | świadoma różnica z template |
+| `[skip-sync] <powód>` | świadoma różnica z template; powód w tej samej linii, min. 3 słowa. Zmiana do szablonu → `tai#N` zamiast flagi |
 
 ## Częste sytuacje
 

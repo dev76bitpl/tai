@@ -122,11 +122,18 @@ class TestSkipSyncBypass:
 
     def test_inline_skip_sync_passes(self):
         with pytest.raises(SystemExit) as exc:
-            self._run('git commit -m "docs: x [skip-sync]"', staged=["CLAUDE.md"])
+            self._run('git commit -m "docs: x [skip-sync] rule is CRM-only"', staged=["CLAUDE.md"])
         assert exc.value.code == 0
 
+    def test_bare_skip_sync_blocks(self, capsys):
+        # tai#243: [skip-sync] alone is no longer a decision — it needs a reason.
+        with pytest.raises(SystemExit) as exc:
+            self._run('git commit -m "docs: x [skip-sync]"', staged=["CLAUDE.md"])
+        assert exc.value.code == 2
+        assert "bez powodu" in capsys.readouterr().err
+
     def test_heredoc_skip_sync_passes(self):
-        cmd = "git commit -F - <<'EOF'\ndocs: x\n\n[skip-sync] reason\nEOF"
+        cmd = "git commit -F - <<'EOF'\ndocs: x\n\n[skip-sync] only this project uses it\nEOF"
         with pytest.raises(SystemExit) as exc:
             self._run(cmd, staged=["CLAUDE.md"])
         assert exc.value.code == 0
@@ -134,7 +141,7 @@ class TestSkipSyncBypass:
     def test_file_skip_sync_passes(self, tmp_path):
         # THE FIX: flag lives in the -F file, not in the command string.
         msg = tmp_path / "COMMIT_EDITMSG"
-        msg.write_text("docs: x\n\n[skip-sync] reason\n", encoding="utf-8")
+        msg.write_text("docs: x\n\n[skip-sync] only this project uses it\n", encoding="utf-8")
         with pytest.raises(SystemExit) as exc:
             self._run(f"git commit -F {msg}", staged=["CLAUDE.md"])
         assert exc.value.code == 0
@@ -184,7 +191,7 @@ def project(tmp_path):
     root = tmp_path / "project"
     hooks = root / ".claude" / "hooks"
     hooks.mkdir(parents=True)
-    for name in ("guard-template-sync.py", "stack.py"):
+    for name in ("guard-template-sync.py", "stack.py", "sync_ack.py"):
         shutil.copy(HOOKS / name, hooks / name)
     (hooks / "config.json").write_text(
         json.dumps({"ai_template_path": str(template)}), encoding="utf-8")
@@ -200,8 +207,10 @@ def project(tmp_path):
     return root
 
 
-def run_hook(root, command):
+def run_hook(root, command, fake_bin=None):
     env = {k: v for k, v in os.environ.items() if k != "AI_TEMPLATE_PATH"}
+    if fake_bin:
+        env["PATH"] = f"{fake_bin}{os.pathsep}{env.get('PATH', '')}"
     return subprocess.run(
         [sys.executable, str(root / ".claude" / "hooks" / "guard-template-sync.py")],
         input=json.dumps({"tool_name": "Bash", "tool_input": {"command": command}}),
@@ -240,7 +249,7 @@ class TestEndToEndWithClone:
     def test_should_exit_0_when_skip_sync_flag_is_present(self, project):
         (project / "NOTES.md").write_text("# Notes\n\n## Only here\n", encoding="utf-8")
         _git(project, "add", "NOTES.md")
-        result = run_hook(project, 'git commit -m "docs: x [skip-sync]"')
+        result = run_hook(project, 'git commit -m "docs: x [skip-sync] notes are ours only"')
         assert result.returncode == 0, result.stderr
 
     def test_should_exit_0_for_a_command_that_is_not_a_commit(self, project):
@@ -282,6 +291,7 @@ class TestOnlyStagedTemplateDocs:
         _git(project, "add", "NOTES.md")
         result = run_hook(project, 'git commit -m "docs: x"')
         assert "całe polecenie Bash" in result.stderr
+        assert "tai#123" in result.stderr and "[skip-sync]" in result.stderr
 
     def test_should_fall_back_to_claude_md_without_template_list(self, project):
         (project.parent / "template" / "template-files.json").unlink()
@@ -300,3 +310,67 @@ class TestTemplateMdFiles:
     def test_broken_list_means_claude_md_only(self, tmp_path):
         (tmp_path / "template-files.json").write_text("{nope", encoding="utf-8")
         assert h._template_md_files(["CLAUDE.md", "README.md"], tmp_path) == ["CLAUDE.md"]
+
+
+# ── tai#243: "to the template" needs a tai#N that exists on GitHub ─────────────
+# A fake `gh` on PATH stands in for GitHub: issue 7 exists, 404 for anything else, and
+# "offline" mode fails the way a missing network does.
+
+FAKE_GH = """#!/bin/sh
+case "$2" in
+  */issues/7) echo 7; exit 0 ;;
+esac
+if [ -n "$FAKE_GH_OFFLINE" ]; then echo "error connecting to api.github.com" >&2; exit 1; fi
+echo "gh: Not Found (HTTP 404)" >&2; exit 1
+"""
+
+
+@pytest.fixture
+def fake_bin(tmp_path):
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    gh = bin_dir / "gh"
+    gh.write_text(FAKE_GH, encoding="utf-8")
+    gh.chmod(0o755)
+    return bin_dir
+
+
+@pytest.fixture
+def desync(project):
+    (project / "NOTES.md").write_text("# Notes\n\n## Only here\n", encoding="utf-8")
+    _git(project, "add", "NOTES.md")
+    return project
+
+
+class TestTaiReference:
+    def test_should_pass_with_an_existing_tai_reference(self, desync, fake_bin):
+        result = run_hook(desync, 'git commit -m "docs: notes, reported in tai#7"', fake_bin)
+        assert result.returncode == 0, result.stderr
+        assert result.stdout == ""
+
+    def test_should_block_a_reference_that_does_not_exist(self, desync, fake_bin):
+        result = run_hook(desync, 'git commit -m "docs: notes, tai#99999"', fake_bin)
+        assert result.returncode == 2, result.stderr
+        assert "tai#99999" in result.stderr and "nie ma takiego" in result.stderr
+
+    def test_should_pass_with_a_warning_when_github_cannot_be_reached(self, desync, fake_bin, monkeypatch):
+        monkeypatch.setenv("FAKE_GH_OFFLINE", "1")
+        result = run_hook(desync, 'git commit -m "docs: notes, tai#42"', fake_bin)
+        assert result.returncode == 0, result.stderr
+        assert "nie sprawdziłem tai#42" in json.loads(result.stdout)["systemMessage"]
+
+    def test_should_not_ask_github_when_nothing_is_out_of_sync(self, project, fake_bin, monkeypatch):
+        # gh that would fail loudly: an in-sync commit must never reach it.
+        (fake_bin / "gh").write_text("#!/bin/sh\nexit 99\n", encoding="utf-8")
+        _git(project, "add", "NOTES.md")
+        result = run_hook(project, 'git commit -m "docs: tai#99999"', fake_bin)
+        assert result.returncode == 0, result.stderr
+
+    def test_should_block_bare_skip_sync(self, desync):
+        result = run_hook(desync, 'git commit -m "docs: notes [skip-sync]"')
+        assert result.returncode == 2, result.stderr
+        assert "bez powodu" in result.stderr
+
+    def test_should_block_a_two_word_reason(self, desync):
+        result = run_hook(desync, 'git commit -m "docs: notes [skip-sync] CRM only"')
+        assert result.returncode == 2, result.stderr

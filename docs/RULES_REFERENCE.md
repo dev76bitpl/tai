@@ -59,7 +59,8 @@ type(scope): short description
 - file-or-component: what changed and why
 - impact if non-obvious
 
-[user-tested] [skip-sync]   ← flagi ZAWSZE w body, nigdy w subject
+[user-tested]   ← flagi ZAWSZE w body, nigdy w subject
+[skip-sync] pricing section is CRM-only   ← ta flaga z powodem w tej samej linii
 ```
 
 Dla małych zmian – sam subject, bez body. Dla dużych – body obowiązkowe.

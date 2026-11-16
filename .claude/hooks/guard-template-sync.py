@@ -10,8 +10,10 @@ Do szablonu należą pliki z template-files.json klona (copy + compare_sections)
 więc nie są porównywane. Pliki *.md spoza stage też nie (#237, #240).
 
 Zasada: każdy uniwersalny wzorzec wymyślony w projekcie musi trafić do template.
-Sekcje project-specific i świadome odejścia od template zostają w projekcie —
-przy commicie świadoma decyzja przez bypass [skip-sync].
+Rozjazd przechodzi tylko z potwierdzeniem w wiadomości commita (sync_ack.py, tai#243, D-014):
+- „do tai” → odnośnik `tai#N` do istniejącego issue/PR w repo szablonu (sprawdzane w GitHubie;
+  bez gh/sieci przepuszcza z ostrzeżeniem na ekranie),
+- „tylko nasze” → `[skip-sync] <powód>` w jednej linii, min. 3 słowa.
 
 Ścieżkę template rozstrzyga stack.resolve_template_source():
 $AI_TEMPLATE_PATH > config.local.json > config.json > autodetekcja klona obok > URL.
@@ -23,7 +25,6 @@ z prośbą o [skip-sync] albo przeniesienie do template. Bogate porównanie *.md
 odpala się tylko gdy klon istnieje (auto-weryfikacja dla maintainera).
 is_template: true → to repo JEST template'm, sync pomijany.
 Trigger: staged pliki zawierają *.md szablonu lub scripts/dev-guards/*.py.
-Bypass: [skip-sync] w wiadomości commita.
 """
 import fnmatch
 import json
@@ -32,6 +33,7 @@ import sys
 from pathlib import Path, PurePosixPath
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import sync_ack
 from stack import chdir_to_project_root, get_commit_message, get_staged_files, is_foreign_repo, is_git_commit_command, load_config, read_command, resolve_template_path
 
 LIST_FILE = "template-files.json"
@@ -85,14 +87,23 @@ def _touches_claude(staged: list[str]) -> bool:
     return any(f == "CLAUDE.md" or f.endswith("/CLAUDE.md") for f in staged)
 
 
-def _ack_message() -> str:
-    return (
-        "❌ [BLOCK] CLAUDE.md zmieniony — potwierdź gdzie ta zmiana należy (reguła 13a).\n\n"
-        "   Uniwersalna reguła → przenieś ją też do CLAUDE.md w repo template.\n"
-        "   Projektowa / już zsynchronizowana → dodaj [skip-sync] do wiadomości commita.\n\n"
-        "   (Brak lokalnego klona template do auto-weryfikacji — ustaw ai_template_path\n"
-        "    w .claude/hooks/config.json, jeśli chcesz automatycznego sprawdzania.)"
-    )
+NO_CLONE_ISSUE = (
+    "  📝 CLAUDE.md zmieniony — potwierdź, gdzie ta zmiana należy (reguła 13a).\n"
+    "     (Brak lokalnego klona szablonu do porównania — ustaw ai_template_path\n"
+    "      w .claude/hooks/config.json, jeśli chcesz automatycznego sprawdzania.)"
+)
+
+
+def _block_message(issues: list[str], repo: str, note: str = "", template_root: "Path | None" = None) -> str:
+    msg = "❌ [BLOCK] Desync z AI template repo:\n\n" + "\n".join(issues)
+    if note:
+        msg += f"\n\n  ⛔ {note}"
+    msg += "\n\n  Opcje:\n" + sync_ack.options_text(repo)
+    if template_root is not None:
+        msg += f"\n     (lokalny klon szablonu: {template_root})"
+    msg += "\n\n  Zablokowane zostało całe polecenie Bash, także kroki przed `git commit`"
+    msg += "\n  (np. zapis pliku z wiadomością) — sprawdź, czy się wykonały."
+    return msg
 
 
 def _md_issues(project_root: Path, template_root: Path, md_files: list[str]) -> list[str]:
@@ -146,16 +157,12 @@ def main():
     if is_foreign_repo(command):
         sys.exit(0)
 
-    # Bypass flag may live inline (command) OR inside a -F <file> message.
-    haystack = command + "\n" + (get_commit_message(command) or "")
-    if "[skip-sync]" in haystack:
-        sys.exit(0)
-
     config = load_config()
     if config.get("is_template"):
         sys.exit(0)  # to repo JEST template'm — nie ma czego synchronizować wyżej (ADR-002)
 
-    template_root = _local_template_root(resolve_template_path(config))
+    template_source = resolve_template_path(config)
+    template_root = _local_template_root(template_source)
     staged = get_staged_files(command)
 
     if template_root is None:
@@ -164,34 +171,30 @@ def main():
         # Nie pomijaj po cichu (ADR-002): bramkuj na CLAUDE.md (sync reguł uniwersalnych,
         # reguła 13a). Sync pozostałych *.md zostaje bonusem przy klonie, nie bramką,
         # żeby nie blokować każdego commita z docs.
-        if _touches_claude(staged):
-            print(_ack_message(), file=sys.stderr)
-            sys.exit(2)
+        issues = [NO_CLONE_ISSUE] if _touches_claude(staged) else []
+    else:
+        project_root = Path.cwd()
+        issues = _md_issues(project_root, template_root, _template_md_files(staged, template_root))
+        if any("scripts/dev-guards/" in f and f.endswith(".py") for f in staged):
+            issues += _guard_issues(project_root, template_root)
+
+    if not issues:
         sys.exit(0)
 
-    md_files = _template_md_files(staged, template_root)
-    has_py = any("scripts/dev-guards/" in f and f.endswith(".py") for f in staged)
-
-    if not md_files and not has_py:
+    # The acknowledgment may live inline (command) OR inside a -F <file> message.
+    # Checked only for a real desync, so ordinary commits never wait on GitHub.
+    message = command + "\n" + (get_commit_message(command) or "")
+    repo = sync_ack.repo_slug(template_source)
+    ack = sync_ack.acknowledge(message, repo)
+    if ack.status == sync_ack.PASS:
+        if ack.note:
+            # Exit 0 with JSON: the owner sees the warning on screen, the commit goes ahead.
+            print(json.dumps({"systemMessage": f"⚠️ guard-template-sync: {ack.note} — przepuszczam."},
+                             ensure_ascii=False))
         sys.exit(0)
 
-    project_root = Path.cwd()
-    issues = _md_issues(project_root, template_root, md_files)
-    if has_py:
-        issues += _guard_issues(project_root, template_root)
-
-    if issues:
-        msg = "❌ [BLOCK] Desync z AI template repo:\n\n"
-        msg += "\n".join(issues)
-        msg += "\n\n  Opcje:"
-        msg += f"\n  1. Universal? → zsynchronizuj zmiany do template ({template_root}), commit z [template-done]"
-        msg += "\n  2. Project-specific / świadome odejście? → bypass [skip-sync] w commicie (z notą w body — co i dlaczego)"
-        msg += "\n\n  Zablokowane zostało całe polecenie Bash, także kroki przed `git commit`"
-        msg += "\n  (np. zapis pliku z wiadomością) — sprawdź, czy się wykonały."
-        print(msg, file=sys.stderr)
-        sys.exit(2)
-
-    sys.exit(0)
+    print(_block_message(issues, repo, ack.note, template_root), file=sys.stderr)
+    sys.exit(2)
 
 
 if __name__ == "__main__":

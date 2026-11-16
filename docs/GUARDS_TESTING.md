@@ -209,7 +209,7 @@ Wymaga projektu postawionego z szablonu, z lokalnym klonem szablonu (`ai_templat
 - [ ] W projekcie dopisz do `*.md` należącego do szablonu (z `template-files.json`, np. `CLAUDE.md`, `docs/GUARDS.md`) nagłówek `## Tylko tutaj`, `git add` tego pliku
 - [ ] `echo '{"tool_input":{"command":"git commit -m \"docs: x\""}}' | python3 .claude/hooks/guard-template-sync.py; echo $?`
       → `❌ [BLOCK] Desync z AI template repo` z nazwą pliku, nagłówkiem i ścieżką klona szablonu; kod `2`, bez `Traceback`
-- [ ] To samo z `[skip-sync]` w wiadomości → nic nie wypisuje, kod `0`
+- [ ] To samo z `[skip-sync] notes are ours only` w wiadomości → nic nie wypisuje, kod `0`
 - [ ] Cofnij zmianę (`git restore --staged <plik>` i usuń nagłówek)
 
 ### Scenariusz 11d — dokumenty projektu nie blokują commita (#237, #240)
@@ -222,6 +222,21 @@ Ten sam projekt co w 11c, po kreatorze scope (`README.md`, `docs/PROJECT_SCOPE.m
 - [ ] Do tego `CLAUDE.md` z `## Tylko tutaj` w stage → kod `2`, w komunikacie tylko `CLAUDE.md`, bez `README.md`,
       na końcu zdanie, że zablokowane zostało całe polecenie Bash
 - [ ] Cofnij zmiany (`git restore --staged .` i usuń dopiski)
+
+### Scenariusz 11e — rozjazd przechodzi tylko z `tai#N` albo `[skip-sync] <powód>` (#243)
+
+Ten sam projekt co w 11c, z `CLAUDE.md` z dopisanym `## Tylko tutaj` w stage. Za `<msg>` wstaw wiadomość:
+`echo '{"tool_input":{"command":"git commit -m \"<msg>\""}}' | python3 .claude/hooks/guard-template-sync.py; echo $?`
+
+- [ ] `docs: x [skip-sync]` → `⛔ [skip-sync] bez powodu`, kod `2`
+- [ ] `docs: x [skip-sync] CRM only` (2 słowa) → blokada, kod `2`
+- [ ] `docs: x [skip-sync] rule is CRM-only` → kod `0`
+- [ ] `docs: x tai#243` (istniejące issue) → kod `0`, nic nie wypisuje
+- [ ] `docs: x tai#99999` → `⛔ tai#99999: nie ma takiego zgłoszenia ani PR`, kod `2`
+- [ ] Bez sieci (np. `PATH` bez `gh`) i `docs: x tai#243` → kod `0` i JSON z `systemMessage`
+      „nie sprawdziłem tai#243 … przepuszczam”
+- [ ] Commit bez zmian w plikach szablonu z `tai#99999` → kod `0` (GitHub nie jest pytany)
+- [ ] Cofnij zmiany
 
 ---
 
