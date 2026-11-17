@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.1.20](https://github.com/dev76bitpl/tai/compare/v0.1.19...v0.1.20) (2026-11-17)
+
+
+### Bug Fixes
+
+* **doctor:** Describe template sync guards as they work [user-tested] ([#256](https://github.com/dev76bitpl/tai/issues/256)) ([edb3e7d](https://github.com/dev76bitpl/tai/commit/edb3e7d8974b571843badffbfad7c62f19ba6d6d)), closes [#151](https://github.com/dev76bitpl/tai/issues/151)
+* **guards:** CI secret scan test travels into new projects [user-tested] ([#252](https://github.com/dev76bitpl/tai/issues/252)) ([21e8f00](https://github.com/dev76bitpl/tai/commit/21e8f0082ea2f5ff61d6ce7f15d8acac15de2649)), closes [#176](https://github.com/dev76bitpl/tai/issues/176)
+* **guards:** Commit dry run also runs the Claude Code hooks ([#261](https://github.com/dev76bitpl/tai/issues/261)) ([83c9e6d](https://github.com/dev76bitpl/tai/commit/83c9e6dca4bd05b2d143c4e0e264e99f4c42f8c7)), closes [#135](https://github.com/dev76bitpl/tai/issues/135)
+* **guards:** One template-sync rule for hook and commit [user-tested] ([#254](https://github.com/dev76bitpl/tai/issues/254)) ([d53e516](https://github.com/dev76bitpl/tai/commit/d53e5164072401305550184c0c0e05bc48f69101)), closes [#166](https://github.com/dev76bitpl/tai/issues/166)
+* **guards:** Template package.json is not a node marker [user-tested] ([#249](https://github.com/dev76bitpl/tai/issues/249)) ([a68ceb0](https://github.com/dev76bitpl/tai/commit/a68ceb08d28d6e13665f355f00d89125dd7a08fb)), closes [#239](https://github.com/dev76bitpl/tai/issues/239)
+* **hooks:** A new worktree gets the Claude Code hooks wired ([#262](https://github.com/dev76bitpl/tai/issues/262)) ([28210ff](https://github.com/dev76bitpl/tai/commit/28210ffaa89c7fd17fbe7e3496f6b7f22e838951)), closes [#260](https://github.com/dev76bitpl/tai/issues/260)
+* **hooks:** Ai-template guard passes in the template repo [user-tested] ([#253](https://github.com/dev76bitpl/tai/issues/253)) ([b5a459b](https://github.com/dev76bitpl/tai/commit/b5a459ba83473b685f10a219cbd6b86b2a5b2bd6)), closes [#170](https://github.com/dev76bitpl/tai/issues/170)
+* **hooks:** Let read-only pgrep through the kill guard [user-tested] ([#259](https://github.com/dev76bitpl/tai/issues/259)) ([73d7979](https://github.com/dev76bitpl/tai/commit/73d797942e5f1d1e71e79eba738684514685e3e4)), closes [#138](https://github.com/dev76bitpl/tai/issues/138)
+* **hooks:** Template autodetection requires its origin [user-tested] ([#258](https://github.com/dev76bitpl/tai/issues/258)) ([74310ef](https://github.com/dev76bitpl/tai/commit/74310ef355f50bc2c5b9ba7628336c2399db2f0a)), closes [#144](https://github.com/dev76bitpl/tai/issues/144)
+* **skills:** Drop the unchecked script_integrity hash [user-tested] ([#257](https://github.com/dev76bitpl/tai/issues/257)) ([21cf2f2](https://github.com/dev76bitpl/tai/commit/21cf2f20921e31cefb4b4091ebd088c43fd78fd3)), closes [#154](https://github.com/dev76bitpl/tai/issues/154)
+* **skills:** Web quality skills visible and synced [user-tested] ([#251](https://github.com/dev76bitpl/tai/issues/251)) ([7131728](https://github.com/dev76bitpl/tai/commit/71317283c75e82361cdd1236c8df991ab83022fe)), closes [#228](https://github.com/dev76bitpl/tai/issues/228)
+
 ## [0.1.19](https://github.com/dev76bitpl/tai/compare/v0.1.18...v0.1.19) (2026-11-16)
 
 
