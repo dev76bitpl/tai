@@ -3,6 +3,7 @@
 Split out to keep doctor.py under the logic-file size limit. Each check gets the project root
 and doctor's own output functions (ok / fail / warn), so it prints exactly like the rest.
 """
+import importlib.util
 import json
 import os
 import re
@@ -107,8 +108,25 @@ def _load_hook_config(root: Path, warn) -> tuple[dict, str]:
     return merged, source
 
 
+ACK_MODE = ("without a local template clone the sync guards cannot compare documents and ask on every "
+            "CLAUDE.md change for tai#N or [skip-sync] <reason>")
+
+
+def _clone_next_to(root: Path) -> "Path | None":
+    """A template clone next to the project, found the way the guards find it (#151, #166):
+    autodetection in .claude/hooks/stack.py. None when that file or the function is missing."""
+    try:
+        spec = importlib.util.spec_from_file_location("doctor_hooks_stack", root / ".claude" / "hooks" / "stack.py")
+        hooks_stack = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(hooks_stack)
+        return hooks_stack._autodetect_template_root()
+    except (OSError, ImportError, AttributeError, SyntaxError):
+        return None
+
+
 def claude_template_path(root: Path, ok, warn) -> None:
-    """Where the template comes from: $AI_TEMPLATE_PATH > config.local.json > config.json."""
+    """Where the template comes from, in the guards' order:
+    $AI_TEMPLATE_PATH > config.local.json > config.json > a template clone next to the project."""
     config, source = _load_hook_config(root, warn)
     if config.get("is_template") is True:
         ok("This repo is the AI template — nothing to sync from")
@@ -120,18 +138,23 @@ def claude_template_path(root: Path, ok, warn) -> None:
     else:
         template = str(config.get("ai_template_path", "") or "").strip()
     if not template:
+        clone = _clone_next_to(root)
+        if clone is not None:
+            ok(f"AI template repo: {clone}  (template clone next to the project)")
+            return
         warn(
             "ai_template_path not set (optional)",
-            "Set $AI_TEMPLATE_PATH or put it in .claude/hooks/config.local.json — see docs/GUARDS.md, section \"Konfiguracja strażników\".",
+            f"{ACK_MODE[0].upper()}{ACK_MODE[1:]}. For automatic verification set $AI_TEMPLATE_PATH or put it in "
+            ".claude/hooks/config.local.json — see docs/GUARDS.md, section \"Konfiguracja strażników\".",
         )
         return
     if "://" in template or template.startswith("git@"):
-        ok(f"AI template repo: {template}  (remote, from {source})")
+        ok(f"AI template repo: {template}  (remote, from {source}) — {ACK_MODE}")
         return
     if not Path(template).expanduser().is_dir():
         warn(
             f"ai_template_path doesn't exist: {template}  (from {source})",
-            "AI template sync guard will skip silently.",
+            f"{ACK_MODE[0].upper()}{ACK_MODE[1:]}. Fix the path for automatic verification.",
         )
         return
     ok(f"AI template repo: {template}  (from {source})")
