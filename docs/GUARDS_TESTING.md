@@ -11,7 +11,7 @@ Numery scenariuszy są stałe (odwołują się do nich zgłoszenia i log sesji),
 
 ## Guard system — pre-commit framework
 
-**Setup**: `npm install` (auto-bootstrap) lub ręcznie: `pipx install pre-commit` (Ubuntu 24.04+ — PEP 668 blokuje `pip install --user`) / `pip install pre-commit` (inne systemy), następnie `pre-commit install --hook-type pre-commit --hook-type commit-msg`. Wymagany Python 3.9+.
+**Setup**: `npm install` (auto-bootstrap) lub ręcznie: `pipx install pre-commit` (Ubuntu 24.04+ — PEP 668 blokuje `pip install --user`) / `pip install pre-commit` (inne systemy), następnie `pre-commit install --hook-type pre-commit --hook-type commit-msg --hook-type post-checkout`. Wymagany Python 3.9+.
 
 ### Scenariusz 1 — installation works
 
@@ -84,6 +84,15 @@ Numery scenariuszy są stałe (odwołują się do nich zgłoszenia i log sesji),
 - [ ] Podmień `INTERPRETER` na `python3` / `py`, `npm run doctor` → „Claude Code hooks wired (N guard hook(s))”
 - [ ] Usuń z pliku wpis jednego strażnika, `npm run doctor` → ostrzeżenie z jego nazwą; przywróć wpis
 - [ ] Bez `pytest` na maszynie: ostrzeżenie z poleceniem instalacji, raport nadal kończy się sukcesem
+
+### Scenariusz 10m — nowy worktree ma podpięte hooki Claude Code (#260)
+
+- [ ] `pre-commit install --hook-type pre-commit --hook-type commit-msg --hook-type post-checkout`, potem `git worktree add ../<repo>-test -b test` → w wyjściu `[claude-settings] created .claude/settings.local.json (interpreter: python3)`; w nowym katalogu plik jest, bez `INTERPRETER`
+- [ ] Sesja Claude Code w nowym worktree → hooki działają (np. kontekst na starcie sesji)
+- [ ] Ponowny `git checkout` w katalogu z istniejącym plikiem → plik bez zmian
+- [ ] `npm run doctor` w worktree → `✓ Git hooks installed (pre-commit + commit-msg + post-checkout)` (wcześniej fałszywe „not installed”, bo `.git` jest tam plikiem)
+- [ ] Instalacja bez `post-checkout` → doctor: `⚠ git hook post-checkout not installed` z komendą
+- [ ] Sprzątanie: `git worktree remove ../<repo>-test`, `git branch -D test`
 
 ### Scenariusz 10k — dołączenie do projektu zaczyna się od doctora
 

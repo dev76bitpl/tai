@@ -56,7 +56,7 @@ pipx ensurepath
 
 ```bash
 pip install pre-commit
-pre-commit install --hook-type pre-commit --hook-type commit-msg
+pre-commit install --hook-type pre-commit --hook-type commit-msg --hook-type post-checkout
 ```
 
 > ⚠️ Guard hooki wymagają `python3` w PATH. Na Windows domyślnie jest tylko `python`.
@@ -72,7 +72,7 @@ pre-commit install --hook-type pre-commit --hook-type commit-msg
 
 ```bash
 pip install --user pre-commit
-pre-commit install --hook-type pre-commit --hook-type commit-msg
+pre-commit install --hook-type pre-commit --hook-type commit-msg --hook-type post-checkout
 ```
 
 Weryfikacja:
@@ -81,6 +81,12 @@ Weryfikacja:
 npm run doctor
 pre-commit run --all-files
 ```
+
+**Worktree dostaje hooki Claude Code sam.** Hooki Claude Code są podpięte w `.claude/settings.local.json`
+(polecenie Pythona tej maszyny, plik poza gitem). Hook gita `post-checkout` (instalowany razem z resztą,
+`--hook-type post-checkout`) tworzy go z `.example` po każdym checkoucie, także po `git worktree add`;
+istniejącego pliku nie rusza. Bez tego w worktree nie działał żaden hook Claude Code (#260). Starsza
+instalacja bez tego hooka → doctor pokazuje komendę.
 
 Ktoś dołącza do projektu (nowa osoba, nowy komputer)? Pierwszy krok to `python3 scripts/doctor.py` —
 README projektu mówi o tym w sekcji „Po sklonowaniu”, a raport przy każdym braku podaje polecenie
