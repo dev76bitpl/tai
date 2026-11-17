@@ -338,9 +338,11 @@ do repo. Resolver dokłada warstwy i autodetekcję po markerze.
 
 ### Scenariusz 13 — autodetekcja nie zależy od nazwy
 
-- [ ] Zmień nazwę katalogu klona template (np. `tai` → `szablon`) → autodetekcja nadal go znajduje (marker `is_template` w jego `config.json`)
+- [ ] Zmień nazwę katalogu klona template (np. `tai` → `szablon`) → autodetekcja nadal go znajduje (marker `is_template` w jego `config.json` + `origin` wskazujący repo szablonu)
 - [ ] Katalog obok bez `is_template: true` (zwykły projekt z template'a) → **nie** jest brany za template
 - [ ] Projekt, który sam jest template'm (`is_template: true`) → nie wskazuje sam na siebie
+- [ ] Katalog obok ze **skopiowaną** flagą `is_template: true` i `skills-manifest.json`, ale z `origin` innym niż repo szablonu (albo bez gita) → **nie** jest brany za template (#144)
+- [ ] `npm run doctor` w projekcie, który ma skopiowane `is_template: true` → `⚠ is_template is set, but this repo's git origin is not the AI template`; w samym szablonie → `✓ This repo is the AI template` (#144)
 
 ### Scenariusz 13a — config.local.json widzą też strażnicy commita i doctor
 

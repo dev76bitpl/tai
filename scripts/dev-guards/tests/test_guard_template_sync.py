@@ -224,6 +224,7 @@ class TestEndToEndTemplateLayers:
     def test_should_find_a_template_clone_next_to_the_project(self, repo, clone):
         write_config(clone, {"is_template": True})
         (clone / "skills-manifest.json").write_text("{}", encoding="utf-8")
+        git(clone, "remote", "add", "origin", "https://github.com/dev76bitpl/tai.git")  # the proof (#144)
         self._has_rule(clone)
         stage(repo, "CLAUDE.md", NEW_RULE)
         assert run_guard(self.GUARD, repo).returncode == 0

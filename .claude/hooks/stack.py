@@ -241,12 +241,36 @@ def is_template_url(value: str) -> bool:
     return value.startswith(_TEMPLATE_URL_PREFIXES)
 
 
+_REPO_IN_URL = re.compile(r"[:/]([^/:]+/[^/]+?)(?:\.git)?/?$")
+
+
+def repo_of(url: str) -> str:
+    """owner/name from a git URL (https, ssh, an ssh host alias), lowercase; '' when none."""
+    found = _REPO_IN_URL.search(url.strip())
+    return found.group(1).lower() if found else ""
+
+
+def is_template_repo(path: Path) -> bool:
+    """True when the directory's git origin is the template's repository (#144).
+
+    is_template and skills-manifest.json can be copied by hand into any project; a git
+    remote cannot. The flag alone only says "this repo is the template, do nothing".
+    """
+    try:
+        done = subprocess.run(["git", "-C", str(path), "remote", "get-url", "origin"],
+                              capture_output=True, text=True, timeout=5)
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return done.returncode == 0 and repo_of(done.stdout) == repo_of(DEFAULT_TEMPLATE_URL)
+
+
 def _is_template_root(path: Path) -> bool:
     """Klon template rozpoznawany po zawartosci, nie po nazwie.
 
     Repo bylo juz przemianowane (ai -> tai), a katalog na dysku moze nazywac sie
     dowolnie — dopasowanie po nazwie rozwala sie przy kazdej takiej zmianie.
-    Markerem jest is_template: true w jego wlasnym configu + skills-manifest.json.
+    Markerem jest is_template: true w jego wlasnym configu + skills-manifest.json
+    + origin wskazujacy repo szablonu (flage i manifest da sie skopiowac recznie, #144).
     """
     try:
         if not (path / "skills-manifest.json").is_file():
@@ -257,7 +281,7 @@ def _is_template_root(path: Path) -> bool:
         data = json.loads(config_path.read_text(encoding="utf-8"))
     except Exception:
         return False
-    return isinstance(data, dict) and data.get("is_template") is True
+    return isinstance(data, dict) and data.get("is_template") is True and is_template_repo(path)
 
 
 def _autodetect_template_root() -> Path | None:

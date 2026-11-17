@@ -112,15 +112,31 @@ ACK_MODE = ("without a local template clone the sync guards cannot compare docum
             "CLAUDE.md change for tai#N or [skip-sync] <reason>")
 
 
-def _clone_next_to(root: Path) -> "Path | None":
-    """A template clone next to the project, found the way the guards find it (#151, #166):
-    autodetection in .claude/hooks/stack.py. None when that file or the function is missing."""
+def _hooks_stack(root: Path):
+    """The project's .claude/hooks/stack.py — the guards' own rules; None when it cannot load."""
     try:
         spec = importlib.util.spec_from_file_location("doctor_hooks_stack", root / ".claude" / "hooks" / "stack.py")
         hooks_stack = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(hooks_stack)
-        return hooks_stack._autodetect_template_root()
-    except (OSError, ImportError, AttributeError, SyntaxError):
+        return hooks_stack
+    except (OSError, ImportError, SyntaxError):
+        return None
+
+
+def _clone_next_to(root: Path) -> "Path | None":
+    """A template clone next to the project, found the way the guards find it (#151, #166):
+    autodetection in .claude/hooks/stack.py. None when that file or the function is missing."""
+    try:
+        return _hooks_stack(root)._autodetect_template_root()
+    except AttributeError:
+        return None
+
+
+def _is_template_repo(root: Path) -> "bool | None":
+    """Whether root's git origin is the template repository (#144); None when it cannot tell."""
+    try:
+        return _hooks_stack(root).is_template_repo(root)
+    except AttributeError:
         return None
 
 
@@ -129,6 +145,13 @@ def claude_template_path(root: Path, ok, warn) -> None:
     $AI_TEMPLATE_PATH > config.local.json > config.json > a template clone next to the project."""
     config, source = _load_hook_config(root, warn)
     if config.get("is_template") is True:
+        if _is_template_repo(root) is False:
+            warn(
+                "is_template is set, but this repo's git origin is not the AI template",
+                "A flag copied from the template switches the sync guards off here and is ignored by "
+                "autodetection elsewhere (#144). Remove \"is_template\" from .claude/hooks/config.json.",
+            )
+            return
         ok("This repo is the AI template — nothing to sync from")
         return
 
