@@ -193,6 +193,10 @@ Po każdym poleceniu `echo $?` pokazuje kod wyjścia (blokuje wyłącznie kod **
       → blokada `kill by process NAME or PATTERN`, kod `2` (wejście bez `tool_name` też jest czytane)
 - [ ] `echo '{"tool_input":{"command":"kill 12345"}}' | python3 .claude/hooks/guard-process-kill.py; echo $?`
       → nic nie wypisuje, kod `0`
+- [ ] `echo '{"tool_input":{"command":"pgrep -af node"}}' | python3 .claude/hooks/guard-process-kill.py; echo $?`
+      → nic nie wypisuje, kod `0` — samo listowanie (#138)
+- [ ] `echo '{"tool_input":{"command":"pgrep -f node | xargs kill"}}' | python3 .claude/hooks/guard-process-kill.py; echo $?`
+      → blokada `kill fed by pgrep`, kod `2`
 - [ ] `python3 -m pytest -q` z katalogu głównego → wszystkie testy zielone, w tym te z `.claude/hooks/tests/`
 
 ### Scenariusz 11d — strażnik commita blokuje, gdy nie może sprawdzić

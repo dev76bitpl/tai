@@ -55,6 +55,22 @@ def test_should_honour_configured_user_ports(guard):
     assert guard.verdict("fuser -k 3000/tcp", [8000]) is None
 
 
+@pytest.mark.parametrize("cmd", ["pgrep -af node", "pgrep -c -u 1000 node", "pgrep -af claude | grep -v grep"])
+def test_should_allow_pgrep_that_only_lists(guard, cmd):
+    # #138: listing processes kills nothing; a false alarm teaches people to work around the guard
+    assert guard.verdict(cmd, [3000]) is None
+
+
+@pytest.mark.parametrize("cmd", [
+    "kill $(pgrep -f 'next dev')",
+    "pgrep -f 'next dev' | xargs kill",
+    'pgrep node | while read p; do kill "$p"; done',  # nothing "unresolved" left once quotes are data
+    "for p in $(pgrep node); do kill -9 $p; done",
+])
+def test_should_block_pgrep_that_feeds_a_kill(guard, cmd):
+    assert "pgrep" in guard.verdict(cmd, [3000])
+
+
 def test_should_block_kill_with_unresolved_target(guard):
     assert guard.verdict("ps aux | grep next | awk '{print $2}' | xargs kill", [3000]) is not None
 
@@ -120,6 +136,8 @@ def run_hook(command: str, tool_name: str | None = "Bash") -> subprocess.Complet
     'pkill -f "next dev"',
     "ps aux | grep next | awk '{print $2}' | xargs kill",
     'echo "zażółć gęślą jaźń" && killall node',
+    "pgrep -f 'next dev' | xargs kill",
+    'pgrep node | while read p; do kill "$p"; done',
 ])
 def test_should_exit_2_and_explain_when_kill_is_blocked(cmd):
     result = run_hook(cmd)
@@ -133,6 +151,7 @@ def test_should_exit_2_and_explain_when_kill_is_blocked(cmd):
     "npm run dev:ai",
     'git commit -m "docs: forbid pkill -f and taskkill /IM"',
     'echo "zażółć gęślą jaźń"',
+    "pgrep -af node",  # only lists processes (#138)
 ])
 def test_should_exit_0_silently_when_command_is_allowed(cmd):
     result = run_hook(cmd)

@@ -7,6 +7,11 @@ w GitHub Issues (`gh issue list`), nie tutaj. Fazy definiuje [docs/ROADMAP.md](R
 
 ## Stan sesji
 
+- 2026-11-17 **#138 `guard-process-kill` przepuszcza samo `pgrep`** — `pgrep` było w jednej grupie z `pkill`
+  i `killall`, więc samo listowanie procesów kończyło się blokadą (cdue-ai-dev-course#4); fałszywy alarm
+  uczy obchodzenia strażnika. Teraz `pgrep` blokuje tylko razem z czasownikiem ubijania w tym samym
+  poleceniu — łapie też `pgrep … | while read p; do kill "$p"`, którego reguła nierozwiązanego celu nie
+  widzi. SELF_TEST 37/37, scenariusz 11b; test właściciela 10/10.
 - 2026-11-17 **#144 autodetekcja szablonu wymaga dowodu, nie samej flagi** — klon obok był rozpoznawany
   po `is_template` + `skills-manifest.json`, a oba da się skopiować do projektu; projekt mógł udawać
   szablon. Dowód: `origin` wskazujący repo szablonu (`is_template_repo` w `.claude/hooks/stack.py`,
