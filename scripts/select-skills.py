@@ -47,7 +47,8 @@ GROUPS: dict[str, dict] = {
                    "vendored": ["mastering-typescript", "nextjs-app-router"]},
     "design": {"label": "Projektowanie wyglądu", "custom": [],
                "vendored": ["design-taste-frontend"]},
-    "ui": {"label": "UI i dostępność", "custom": [], "vendored": ["ui-ux-pro-max", "a11y", "web-quality-skills"]},
+    "ui": {"label": "UI i dostępność", "custom": [], "vendored": ["ui-ux-pro-max", "a11y", "performance", "core-web-vitals",
+                                                                     "best-practices", "seo", "web-quality-audit"]},
     "marketing": {"label": "Marketing: tekst i konwersja", "custom": [], "vendored": [
         "product-marketing", "copywriting", "copy-editing", "marketing-psychology", "cro", "ab-testing"]},
     "review": {"label": "Przegląd kodu i bezpieczeństwo", "custom": [], "vendored": ["code-review", "security"]},

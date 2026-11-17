@@ -47,7 +47,7 @@ Gdy krok się nie uda, skrypt proponuje uruchomienie Claude Code z opisem błęd
 | `git` | Branch strategy, commit format, PR |
 | `security review` | OWASP Top 10:2025, ASVS 5.0 |
 | `a11y` | Audit dostępności WCAG 2.2 AA |
-| `perf` | Core Web Vitals, Lighthouse |
+| `performance`, `core-web-vitals`, `best-practices`, `seo`, `web-quality-audit` | Wydajność i jakość web: Core Web Vitals, Lighthouse |
 | `review` | Code review PR |
 | `ui design` | Design intelligence — style, kolory, typografia |
 | `wp plugin` | Architektura pluginu WP, hooks, CPT, WordPress.org |

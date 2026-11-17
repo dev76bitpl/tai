@@ -266,6 +266,12 @@ W projekcie z lokalnym klonem tai (np. `cdue-elearning`, na gałęzi roboczej). 
       → pierwsza wiadomość pokazuje „Pobrano zmiany z template → … vendored: …” albo nic, bez błędu;
       bez `skills_check.py` sesja startuje normalnie (tylko bez sprawdzania skilli)
 
+### Scenariusz 13i — skille wydajności widoczne i aktualizowane ze źródła (#228)
+
+- [ ] W szablonie: `ls .claude/skills/perf` → nie ma; `performance`, `core-web-vitals`, `best-practices`, `seo`, `web-quality-audit` leżą bezpośrednio w `.claude/skills/` i każdy ma wpis w `skills-manifest.json`
+- [ ] W projekcie z wszystkimi grupami: `python3 scripts/update-skills.py --sync` → `perf` „wycofany w szablonie — do usunięcia”, 5 skilli „zmieniony”, żaden „zmieniony lokalnie”; po `--apply` katalogu `perf/` nie ma
+- [ ] W projekcie bez grupy „UI i dostępność” → te 5 skilli nie przychodzi
+
 ### Scenariusz 13h — start sesji podaje liczbę otwartych issues (#212)
 
 - [ ] Nowa sesja w repo z otwartymi issues → w kontekście startu linijka „📋 Otwarte issues w repo: N — przejrzyj: `gh issue list`”, bez tytułów

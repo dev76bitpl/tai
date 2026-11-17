@@ -36,7 +36,7 @@ def project(tmp_path, monkeypatch):
     for name in manifest["custom_skills"]:
         (skills / name).mkdir(parents=True, exist_ok=True)
         (skills / name / "SKILL.md").write_text("# skill", encoding="utf-8")
-    (skills / "seo").mkdir()  # a skill directory the manifest does not know about
+    (skills / "own-notes").mkdir()  # a skill directory the manifest does not know about
     monkeypatch.setattr(mod, "ROOT", tmp_path)
     monkeypatch.setattr(mod, "MANIFEST_PATH", tmp_path / "skills-manifest.json")
     monkeypatch.setattr(mod, "CONFIG_PATH", tmp_path / ".claude" / "hooks" / "config.json")
@@ -104,17 +104,17 @@ def test_should_never_touch_general_skills_or_unknown_directories(project):
     mod.apply_selection(manifest, [])
     mod.save_manifest(manifest)
     assert GENERAL <= _dirs(root)
-    assert "seo" in _dirs(root)
+    assert "own-notes" in _dirs(root)
     assert set(_manifest(root)["custom_skills"]) == GENERAL
 
 
 def test_should_remove_skill_by_its_manifest_directory_not_by_its_name(project):
-    # code-review lives in .claude/skills/review, web-quality-skills in .claude/skills/perf
+    # code-review lives in .claude/skills/review, not .claude/skills/code-review
     mod, root = project
     manifest = mod.load_manifest()
     removed = mod.apply_selection(manifest, ["php"])
-    assert "code-review" in removed and "web-quality-skills" in removed
-    assert "review" not in _dirs(root) and "perf" not in _dirs(root)
+    assert "code-review" in removed and "performance" in removed
+    assert "review" not in _dirs(root) and "performance" not in _dirs(root)
 
 
 def test_should_keep_everything_when_all_groups_are_chosen(project):

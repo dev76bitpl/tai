@@ -7,6 +7,13 @@ w GitHub Issues (`gh issue list`), nie tutaj. Fazy definiuje [docs/ROADMAP.md](R
 
 ## Stan sesji
 
+- 2026-11-17 **#228 skille wydajności widoczne i aktualizowane ze źródła** — `web-quality-skills` leżał
+  w `.claude/skills/perf/`, gdzie Claude Code go nie widzi; widoczne kopie obok (#52) były poza manifestem,
+  więc aktualizacja i sync ich nie ruszały i zostały w starej wersji. Teraz 5 wpisów manifestu
+  (`performance`, `core-web-vitals`, `best-practices`, `seo`, `web-quality-audit`), jak skille marketingowe;
+  `perf/` usunięty (sync w projektach usuwa go jako wycofany), `accessibility` pominięty (jest `a11y` i `audyt`).
+  Test: każdy widoczny skill jest w manifeście i odwrotnie. 76bit-crm (bez grupy ui) ma stare kopie poza
+  manifestem — sync ich nie rusza. Scenariusz 13i; test właściciela 6/6.
 - 2026-11-17 **#239 `package.json` szablonu nie robi z projektu „node”** — strażnicy czytają `stack`
   od #195, ale przy `"stack": "inny"` zgadują po plikach, a każdy projekt ma z szablonu `package.json`
   z samymi `doctor`/`prepare` → `npm run lint` w projekcie bez npm (76bit-crm, 5.11). Taki plik nie jest
