@@ -157,19 +157,34 @@ def check_pre_commit() -> bool:
     return True
 
 
+def git_hooks_dir() -> Path:
+    """Where git looks for hooks. In a worktree .git is a file and the hooks live in the main
+    repository's git directory (shared by every worktree), so .git/hooks is the wrong place."""
+    try:
+        done = subprocess.run(["git", "-C", str(REPO_ROOT), "rev-parse", "--git-path", "hooks"],
+                              capture_output=True, text=True, timeout=10)
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        done = None
+    if done is None or done.returncode != 0 or not done.stdout.strip():
+        return REPO_ROOT / ".git" / "hooks"
+    path = Path(done.stdout.strip())
+    return path if path.is_absolute() else REPO_ROOT / path
+
+
 def check_hooks_installed() -> bool:
-    pre_commit_hook = REPO_ROOT / ".git" / "hooks" / "pre-commit"
-    commit_msg_hook = REPO_ROOT / ".git" / "hooks" / "commit-msg"
+    hooks = git_hooks_dir()
+    pre_commit_hook = hooks / "pre-commit"
+    commit_msg_hook = hooks / "commit-msg"
     if not pre_commit_hook.is_file():
         fail(
             ".git/hooks/pre-commit not installed",
-            "Run: pre-commit install --hook-type pre-commit --hook-type commit-msg",
+            "Run: pre-commit install --hook-type pre-commit --hook-type commit-msg --hook-type post-checkout",
         )
         return False
     if not commit_msg_hook.is_file():
         fail(
             ".git/hooks/commit-msg not installed",
-            "Run: pre-commit install --hook-type commit-msg",
+            "Run: pre-commit install --hook-type pre-commit --hook-type commit-msg --hook-type post-checkout",
         )
         return False
     # Sanity check: pre-commit framework writes a marker line in its hook scripts.
@@ -180,7 +195,14 @@ def check_hooks_installed() -> bool:
             "May be a stale hook — reinstall with: pre-commit install",
         )
         return False
-    ok("Git hooks installed (pre-commit + commit-msg)")
+    if not (hooks / "post-checkout").is_file():
+        # not a guard, so not a failure: without it a new worktree has no Claude Code hooks (#260)
+        warn(
+            "git hook post-checkout not installed — a new worktree starts without Claude Code hooks",
+            "Run: pre-commit install --hook-type pre-commit --hook-type commit-msg --hook-type post-checkout",
+        )
+        return True
+    ok("Git hooks installed (pre-commit + commit-msg + post-checkout)")
     return True
 
 

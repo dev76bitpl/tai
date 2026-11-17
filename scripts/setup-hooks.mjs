@@ -126,7 +126,7 @@ function installHooks() {
   log("Installing git hooks (pre-commit + commit-msg)…");
   const result = spawnSync(
     invocation.cmd,
-    [...invocation.prefix, "install", "--hook-type", "pre-commit", "--hook-type", "commit-msg"],
+    [...invocation.prefix, "install", "--hook-type", "pre-commit", "--hook-type", "commit-msg", "--hook-type", "post-checkout"],
     { stdio: "inherit", shell: process.platform === "win32" },
   );
   if (result.status !== 0) {
@@ -141,7 +141,7 @@ if (!resolvePreCommitInvocation()) {
     warn("Could not auto-install pre-commit.");
     warn('Install manually (see docs/GUARDS.md, section "Strażnicy commita"):');
     warn("    python -m pip install --user pre-commit");
-    warn("    python -m pre_commit install --hook-type pre-commit --hook-type commit-msg");
+    warn("    python -m pre_commit install --hook-type pre-commit --hook-type commit-msg --hook-type post-checkout");
     warn("Skipping hook install — commits will not be guarded locally.");
     warn("CI will still enforce all guards server-side.");
     process.exit(0);

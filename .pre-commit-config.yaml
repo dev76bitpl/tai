@@ -3,7 +3,7 @@
 # Install (once per clone):
 #   pipx install pre-commit          # Ubuntu 24.04+ / macOS
 #   pip install pre-commit           # other systems
-#   pre-commit install --hook-type pre-commit --hook-type commit-msg
+#   pre-commit install --hook-type pre-commit --hook-type commit-msg --hook-type post-checkout
 #
 # Requires python3 in PATH. Windows: create alias if needed — see docs/SETUP.md.
 #
@@ -22,7 +22,8 @@
 # Bypass entire system (forbidden by CLAUDE.md unless emergency):
 #   git commit --no-verify
 
-default_install_hook_types: [pre-commit, commit-msg]
+# post-checkout: a new checkout or `git worktree add` gets .claude/settings.local.json (#260)
+default_install_hook_types: [pre-commit, commit-msg, post-checkout]
 default_stages: [pre-commit]
 fail_fast: false
 
@@ -65,6 +66,19 @@ repos:
       - id: gitleaks
 
   # ── Stack-aware lint & tests (pre-commit stage — fail fast) ──────────────
+  - repo: local
+    hooks:
+      # Not a guard: a fresh checkout (git worktree add included) gets the file that wires the
+      # Claude Code hooks; without it no hook runs there (#260). Never fails a checkout.
+      - id: claude-settings
+        name: "Claude Code hooks wired in this checkout (.claude/settings.local.json)"
+        entry: python3 scripts/claude_settings.py
+        language: system
+        stages: [post-checkout]
+        always_run: true
+        pass_filenames: false
+        verbose: true
+
   - repo: local
     hooks:
       # verbose: the guard's own lines are shown also when it passes — otherwise its warning

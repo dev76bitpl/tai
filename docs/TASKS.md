@@ -7,6 +7,12 @@ w GitHub Issues (`gh issue list`), nie tutaj. Fazy definiuje [docs/ROADMAP.md](R
 
 ## Stan sesji
 
+- 2026-11-17 **#260 nowy worktree ma podpięte hooki Claude Code** — hooki są tylko w `.claude/settings.local.json`
+  (per katalog, poza gitem), który tworzył wyłącznie start projektu; w każdym worktree nie działał żaden hook
+  Claude Code. Hook gita `post-checkout` (pre-commit, domyślne typy instalacji) tworzy plik z `.example`
+  (`scripts/claude_settings.py`, wspólne z `new-project.py`), istniejącego nie rusza. Doctor szuka hooków przez
+  `git rev-parse --git-path hooks` (w worktree `.git` to plik) i ostrzega bez `post-checkout`. Decyzja
+  właściciela: robimy w tai, potem info do jarvisa. Scenariusz 10m; test właściciela 7/7.
 - 2026-11-17 **#135 próba przed commitem widzi hooki Claude Code** — dry-run (pre-commit, etap commit-msg)
   był zielony, a `git commit` blokował hook PreToolUse (`guard-ai-template`), którego w `.pre-commit-config.yaml`
   nie ma. `scripts/commit-dry-run.py <plik>`: hooki z `.claude/settings.local.json` z wejściem jak przy

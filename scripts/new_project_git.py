@@ -100,11 +100,11 @@ def install_guards(root: Path, dry_run: bool) -> None:
         warn(
             "pre-commit not found — guards not installed. Install later with:\n"
             "    npm install   (or: pre-commit install "
-            "--hook-type pre-commit --hook-type commit-msg)"
+            "--hook-type pre-commit --hook-type commit-msg --hook-type post-checkout)"
         )
         return
     result = subprocess.run(
-        [*invocation, "install", "--hook-type", "pre-commit", "--hook-type", "commit-msg"],
+        [*invocation, "install", "--hook-type", "pre-commit", "--hook-type", "commit-msg", "--hook-type", "post-checkout"],
         cwd=str(root), capture_output=True, text=True,
     )
     if result.returncode != 0:

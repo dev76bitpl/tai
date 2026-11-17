@@ -32,6 +32,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 # Sibling modules (data and git steps) — importable also when this file is loaded by path.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import claude_settings  # noqa: E402
 from new_project_data import (  # noqa: E402
     INIT_SKELETONS, README_SCAFFOLD, SCAFFOLD_DOCS, TEMPLATE_META, TEMPLATE_ONLY_SCRIPTS,
 )
@@ -110,11 +111,11 @@ def create_settings_local(dest: Path, template_root: Path, dry_run: bool) -> Non
     example_src = template_root / ".claude" / "settings.local.json.example"
     if not example_src.exists():
         return
-    interpreter = "py" if sys.platform == "win32" else "python3"
-    log("auto-config", f".claude/settings.local.json  (interpreter: {interpreter})", dry_run)
+    log("auto-config", f".claude/settings.local.json  (interpreter: {claude_settings.interpreter()})", dry_run)
     if dry_run:
         return
-    content = example_src.read_text(encoding="utf-8").replace("INTERPRETER", interpreter)
+    # the same rule the git hook post-checkout uses for every later checkout and worktree (#260)
+    content = claude_settings.settings_from_example(example_src.read_text(encoding="utf-8"))
     out = dest / ".claude" / "settings.local.json"
     out.write_text(content, encoding="utf-8")
 
@@ -226,7 +227,7 @@ def init_in_place(root: Path, dry_run: bool, do_git: bool = True,
     if not do_git:
         notice("Historia Git szablonu została (--no-git). Nową założysz tak:")
         print("    rm -rf .git && git init -b main")
-        print("    pre-commit install --hook-type pre-commit --hook-type commit-msg\n")
+        print("    pre-commit install --hook-type pre-commit --hook-type commit-msg --hook-type post-checkout\n")
     hand_over_to_setup(root)
 
 
