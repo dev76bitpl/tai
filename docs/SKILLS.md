@@ -18,7 +18,7 @@ krótkie słowo które wpisujesz świadomie. Nie używaj składni `/command` (to
 | `git` | git | Branch strategy, commit format, PR |
 | `security review` | security | OWASP Top 10, ASVS 5.0 |
 | `a11y` | a11y | Audit dostępności WCAG 2.2 AA |
-| `perf` | perf | Core Web Vitals, Lighthouse |
+| `perf` | performance, core-web-vitals, best-practices, seo, web-quality-audit | Core Web Vitals, Lighthouse |
 | `review` | review | Code review PR |
 | `ui design` | ui-ux-pro-max | Design intelligence |
 | `wp plugin` | wp-plugin-development | Architektura pluginu WP, hooks, CPT |
@@ -48,7 +48,7 @@ krótkie słowo które wpisujesz świadomie. Nie używaj składni `/command` (to
 | `ui-ux-pro-max` | [nextlevelbuilder/ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) | Design intelligence: 50+ stylów, 161 palet, 57 zestawień fontów, 99 wytycznych UX na 10 stackach |
 | `security` | [agamm/claude-code-owasp](https://github.com/agamm/claude-code-owasp) | OWASP Top 10:2025, ASVS 5.0, LLM Top 10 — przegląd bezpieczeństwa i threat modeling |
 | `a11y` | [fecarrico/A11Y.md](https://github.com/fecarrico/A11Y.md) | Audit dostępności (WCAG 2.2 AA): nawigacja klawiaturą, screen reader, kontrast, ARIA |
-| `perf` | [addyosmani/web-quality-skills](https://github.com/addyosmani/web-quality-skills) | Wydajność web: Core Web Vitals (LCP/INP/CLS), budżety, optymalizacja Lighthouse |
+| `performance`, `core-web-vitals`, `best-practices`, `seo`, `web-quality-audit` | [addyosmani/web-quality-skills](https://github.com/addyosmani/web-quality-skills) | Wydajność i jakość web: Core Web Vitals (LCP/INP/CLS), budżety, Lighthouse. Każdy podskill ma własny wpis w manifeście i leży bezpośrednio w `.claude/skills/` — tylko tam Claude Code go widzi (#228). Podskill `accessibility` pomijamy: dostępność obsługują `a11y` i `audyt` |
 | `review` | [awesome-skills/code-review-skill](https://github.com/awesome-skills/code-review-skill) | Code review dla 15+ języków: React, Vue, Go, Python, Rust, TypeScript i innych |
 | `wp-plugin-development` | [jorgerosal/wordpress-skills](https://github.com/jorgerosal/wordpress-skills) | Architektura pluginów WP: hooks, CPT, Settings API, i18n, WordPress.org compliance |
 | `wp-theme-development` | [jorgerosal/wordpress-skills](https://github.com/jorgerosal/wordpress-skills) | Motywy WP: template hierarchy, FSE, theme.json, classic-to-block migration |
@@ -126,7 +126,7 @@ naraz — zamiast wymagać czterech osobnych zmian w czterech kopiach.
 
 **Instalacja:** `claude-setup/install.sh` — raz na maszynę, nie per projekt.
 
-**Nie myl z `a11y` i `perf`:** tamte to skille **doradcze** (co sprawdzić, jakie kryterium WCAG,
+**Nie myl z `a11y` i skillami wydajności (`performance`, `core-web-vitals`):** tamte to skille **doradcze** (co sprawdzić, jakie kryterium WCAG,
 jak czytać Lighthouse). `audyt` niczego nie doradza — **mierzy** i zwraca liczby z konkretnych
 tras. Reguła 15 w `CLAUDE.md` żąda pomiaru przed napisaniem „zrobione"; to jest to narzędzie.
 

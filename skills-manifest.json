@@ -92,10 +92,42 @@
       ],
       "group": "ui"
     },
-    "web-quality-skills": {
+    "performance": {
       "repo": "https://github.com/addyosmani/web-quality-skills",
-      "local_path": ".claude/skills/perf",
-      "remote_path": "skills",
+      "local_path": ".claude/skills/performance",
+      "remote_path": "skills/performance",
+      "commit": "afa8da942115f2961fdbfa80807ea0b232ff6c00",
+      "checked": "2026-11-04",
+      "group": "ui"
+    },
+    "core-web-vitals": {
+      "repo": "https://github.com/addyosmani/web-quality-skills",
+      "local_path": ".claude/skills/core-web-vitals",
+      "remote_path": "skills/core-web-vitals",
+      "commit": "afa8da942115f2961fdbfa80807ea0b232ff6c00",
+      "checked": "2026-11-04",
+      "group": "ui"
+    },
+    "best-practices": {
+      "repo": "https://github.com/addyosmani/web-quality-skills",
+      "local_path": ".claude/skills/best-practices",
+      "remote_path": "skills/best-practices",
+      "commit": "afa8da942115f2961fdbfa80807ea0b232ff6c00",
+      "checked": "2026-11-04",
+      "group": "ui"
+    },
+    "seo": {
+      "repo": "https://github.com/addyosmani/web-quality-skills",
+      "local_path": ".claude/skills/seo",
+      "remote_path": "skills/seo",
+      "commit": "afa8da942115f2961fdbfa80807ea0b232ff6c00",
+      "checked": "2026-11-04",
+      "group": "ui"
+    },
+    "web-quality-audit": {
+      "repo": "https://github.com/addyosmani/web-quality-skills",
+      "local_path": ".claude/skills/web-quality-audit",
+      "remote_path": "skills/web-quality-audit",
       "commit": "afa8da942115f2961fdbfa80807ea0b232ff6c00",
       "checked": "2026-11-04",
       "group": "ui"
