@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.21](https://github.com/dev76bitpl/tai/compare/v0.1.20...v0.1.21) (2026-11-17)
+
+
+### Features
+
+* **skills:** Release rule reaches projects through the skills ([#263](https://github.com/dev76bitpl/tai/issues/263)) ([6925806](https://github.com/dev76bitpl/tai/commit/6925806a54b5e6fb342ccbda315a2abcdea69faa)), closes [#248](https://github.com/dev76bitpl/tai/issues/248)
+
 ## [0.1.20](https://github.com/dev76bitpl/tai/compare/v0.1.19...v0.1.20) (2026-11-17)
 
 
