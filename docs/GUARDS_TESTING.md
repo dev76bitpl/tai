@@ -239,6 +239,11 @@ Ten sam projekt co w 11c, z `CLAUDE.md` z dopisanym `## Tylko tutaj` w stage. Za
 - [ ] Commit bez zmian w plikach szablonu z `tai#99999` → kod `0` (GitHub nie jest pytany)
 - [ ] Cofnij zmiany
 
+### Scenariusz 11f — `guard-ai-template` milczy w samym szablonie (#170)
+
+- [ ] W szablonie (`is_template: true` w `.claude/hooks/config.json`): commit `fix: …` ze zmianą w `scripts/` bez `[no-template]` → przechodzi, hook nic nie wypisuje
+- [ ] W projekcie z szablonu (bez `is_template`): ten sam commit → `[BLOCK] Ocena AI template repo`, pytanie o `[template-done]` / `[no-template]`
+
 ---
 
 ### Scenariusz 13b — skille z lokalnego klona szablonu tylko ze scalonego `main`

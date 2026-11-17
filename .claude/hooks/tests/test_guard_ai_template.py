@@ -107,3 +107,20 @@ def test_should_pass_commit_aimed_at_another_repository(project, tmp_path):
     other = tmp_path / "other"
     other.mkdir()
     assert run_hook(HOOK, project, f'git -C {other} commit -m "feat: x"').returncode == 0
+
+
+# ── in the template itself there is nowhere to sync to (#170) ──────────────────────────
+
+@pytest.mark.parametrize("command", ['git commit -m "chore: tweak"', 'git commit -m "feat: new guard"'])
+def test_should_pass_in_the_template_itself(tmp_path, command):
+    template = make_project(tmp_path / "tai", config={"is_template": True})
+    stage(template, "scripts/dev-guards/guard_x.py")
+    result = run_hook(HOOK, template, command)
+    assert result.returncode == 0, stderr(result)
+    assert result.stderr == b""
+
+
+def test_should_still_block_a_project_without_the_template_flag(tmp_path):
+    project = make_project(tmp_path / "project", config={"is_template": False})
+    stage(project, "scripts/dev-guards/guard_x.py")
+    assert run_hook(HOOK, project, 'git commit -m "chore: tweak"').returncode == BLOCKED
