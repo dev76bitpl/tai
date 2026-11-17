@@ -87,6 +87,9 @@ pre-commit run --all-files
 `--hook-type post-checkout`) tworzy go z `.example` po każdym checkoucie, także po `git worktree add`;
 istniejącego pliku nie rusza. Bez tego w worktree nie działał żaden hook Claude Code (#260). Starsza
 instalacja bez tego hooka → doctor pokazuje komendę.
+**Kolejność przy aktualizacji z szablonu:** najpierw zacommituj aktualizację (`update-from-template.py --apply`),
+dopiero potem `git worktree add` — przy niezacommitowanym `.pre-commit-config.yaml` pre-commit przerywa
+`post-checkout` („configuration is unstaged”) i nowy worktree zostaje bez hooków.
 
 Ktoś dołącza do projektu (nowa osoba, nowy komputer)? Pierwszy krok to `python3 scripts/doctor.py` —
 README projektu mówi o tym w sekcji „Po sklonowaniu”, a raport przy każdym braku podaje polecenie

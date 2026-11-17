@@ -7,6 +7,8 @@ w GitHub Issues (`gh issue list`), nie tutaj. Fazy definiuje [docs/ROADMAP.md](R
 
 ## Stan sesji
 
+- 2026-11-17 **`GUARDS.md`: kolejność przy aktualizacji** — najpierw commit aktualizacji szablonu, potem `git worktree add`
+  (inaczej `post-checkout` przerywa się na niezacommitowanym configu). Uwaga z odbioru jarvisa (jarvis#200).
 - 2026-11-17 **#248 reguła wydań (jarvis D-019) w kodeksie, który dociera do projektów** — release-please to
   kronika, nie blokada; wersja, gdy zmianę zauważy odbiorca (`feat`/`fix`/łamiące). Reguła w skillach `git`
   (po scaleniu PR: sprawdź PR wydania, zaproponuj scalenie, potwierdź tag) i `deploy` (krok 6a), bo tylko skille
