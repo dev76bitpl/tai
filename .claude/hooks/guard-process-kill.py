@@ -8,13 +8,15 @@ build cache corrupts, and the session derails into phantom 404s. Seen repeatedly
 did not stop it, so the command is blocked before it runs.
 
 Blocked (exit 2 + stderr):
-  - name/pattern kills: pkill, killall, pgrep, taskkill /IM, Stop-Process -Name, Get-Process <name> | Stop-Process
+  - name/pattern kills: pkill, killall, taskkill /IM, Stop-Process -Name, Get-Process <name> | Stop-Process
+  - pgrep in the same command as a kill: kill $(pgrep x), pgrep x | xargs kill, pgrep x | while read p; do kill $p; done
   - port-based kills aimed at a user port (config.json "dev_user_ports", default [3000]):
     fuser -k 3000/tcp, lsof -ti:3000 | xargs kill, kill-port 3000, Get-NetTCPConnection -LocalPort 3000
   - kill with an unresolved target (command substitution / xargs that is not a .pid file)
 
 Allowed:
   - kill <numeric pid>, kill $(cat something.pid), Stop-Process -Id <pid>
+  - pgrep on its own: it only lists processes (#138)
   - port-based kills on any port that is NOT a user port (i.e. the AI's own port)
   - docker kill/stop (containers, not dev processes)
 
@@ -36,12 +38,14 @@ from stack import load_config, read_command
 DEFAULT_USER_PORTS = [3000]
 
 NAME_KILL = re.compile(
-    r"(?<![\w-])(pkill|killall|pgrep)\b"
+    r"(?<![\w-])(pkill|killall)\b"
     r"|taskkill\b[^\n|;&]*?/IM\b"
     r"|Stop-Process\b[^\n|;&]*?-Name\b"
     r"|Get-Process\s+(?!-Id\b)[^\n|;&]*\|\s*Stop-Process",
     re.IGNORECASE,
 )
+# pgrep only lists; it is a name kill only when the same command also kills (#138).
+PGREP = re.compile(r"(?<![\w-])pgrep\b", re.IGNORECASE)
 KILL_VERB = re.compile(
     r"(?<![\w-])(kill|fuser\s+-k|kill-port|taskkill|Stop-Process)\b"
     r"|Get-NetTCPConnection\b",
@@ -85,6 +89,8 @@ def verdict(command: str, ports: list[int] | None = None) -> str | None:
         return None
     if NAME_KILL.search(stripped):
         return "kill by process NAME or PATTERN — hits the user's instance as well as yours"
+    if PGREP.search(stripped) and KILL_VERB.search(stripped):
+        return "kill fed by pgrep (process NAME or PATTERN) — hits the user's instance as well as yours"
     referenced = [int(p) for m in PORT_REFS.finditer(stripped) for p in m.groups() if p]
     if referenced:
         hit = [p for p in referenced if p in ports]
@@ -121,6 +127,12 @@ SELF_TEST: list[tuple[str, bool]] = [
     ('pkill -f "next dev" -u 1000', True),
     ("killall node", True),
     ("kill $(pgrep -f 'next dev')", True),
+    ("pgrep -f 'next dev' | xargs kill", True),
+    ("pgrep node | while read p; do kill \"$p\"; done", True),
+    ("for p in $(pgrep node); do kill -9 $p; done", True),
+    ("pgrep -af node", False),
+    ("pgrep -c -u 1000 node", False),
+    ("pgrep -af claude | grep -v grep", False),
     ("taskkill /F /IM node.exe", True),
     ("Stop-Process -Name node -Force", True),
     ("Get-Process node | Stop-Process -Force", True),
