@@ -57,10 +57,9 @@ type(scope): krótki opis po angielsku  ← max 72 znaki
 # 1. Sprawdź co jest staged
 git status
 
-# 2. Dry-run guardów
-echo "subject\n\nbody" > /tmp/COMMIT_EDITMSG
-COMMIT_EDITMSG=/tmp/COMMIT_EDITMSG pre-commit run --hook-stage commit-msg \
-  --commit-msg-filename /tmp/COMMIT_EDITMSG
+# 2. Dry-run: hooki Claude Code na `git commit` + guardy commit-msg, jedna komenda
+printf 'subject\n\nbody\n' > /tmp/COMMIT_EDITMSG
+python3 scripts/commit-dry-run.py /tmp/COMMIT_EDITMSG
 
 # 3. Jeśli wszystkie exit 0 → commit
 git commit -m "$(cat <<'EOF'
