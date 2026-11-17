@@ -141,13 +141,41 @@ def configured_stack() -> str | None:
     return CONFIGURED_STACKS.get(str(load_config().get("stack", "")))
 
 
+# Scripts the template itself puts into package.json (scripts/doctor.mjs, scripts/setup-hooks.mjs).
+TEMPLATE_NODE_SCRIPTS = frozenset({"doctor", "prepare"})
+
+
+def is_template_package_json(path: Path) -> bool:
+    """True when package.json holds nothing but the template's own tooling scripts.
+
+    Every project starts with that file, so counting it as a node marker would call a PHP,
+    Python or not-yet-decided ("inny") project "node" and run npm commands it does not have.
+    Anything beyond those scripts (a name, dependencies, a lint script) makes it a real one.
+    """
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False
+    if not isinstance(data, dict) or set(data) - {"scripts"}:
+        return False
+    scripts = data.get("scripts")
+    return isinstance(scripts, dict) and bool(scripts) and set(scripts) <= TEMPLATE_NODE_SCRIPTS
+
+
+def _is_marker(root: Path, marker: str) -> bool:
+    path = root / marker
+    if not path.is_file():
+        return False
+    return not (marker == "package.json" and is_template_package_json(path))
+
+
 def detect_stack() -> str:
     configured = configured_stack()
     if configured:
         return configured
     root = get_project_root()
     for name, cfg in STACKS.items():
-        if any((root / m).is_file() for m in cfg["markers"]):
+        if any(_is_marker(root, m) for m in cfg["markers"]):
             return name
     return "unknown"
 
