@@ -7,6 +7,12 @@ w GitHub Issues (`gh issue list`), nie tutaj. Fazy definiuje [docs/ROADMAP.md](R
 
 ## Stan sesji
 
+- 2026-11-17 **#239 `package.json` szablonu nie robi z projektu „node”** — strażnicy czytają `stack`
+  od #195, ale przy `"stack": "inny"` zgadują po plikach, a każdy projekt ma z szablonu `package.json`
+  z samymi `doctor`/`prepare` → `npm run lint` w projekcie bez npm (76bit-crm, 5.11). Taki plik nie jest
+  już markerem node; wychodzi „unknown stack” z głośnym ostrzeżeniem, prawdziwe markery (`composer.json`,
+  `package.json` z `name`/zależnościami) nadal wygrywają. Kopie `detect_stack` w `.claude/hooks/stack.py`
+  martwe w szablonie (woła je tylko stary hook ragsql) — nieruszone. Scenariusz 10h; test właściciela 5/5.
 - 2026-11-16 **#238 etykiety grupy przy starcie projektu** — start zakładał tylko `owner` i `idea`, więc
   nowy projekt nie miał priorytetów, `feature`/`system` ani etykiet jarvisa (`jarvis`, `krytyczne`, `deferred`) (76bit-crm: przeniesione issue
   zgubiło `normal`). Jedna lista w `scripts/project_labels.py` (idzie do projektów przez `scripts/*.py`),

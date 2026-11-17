@@ -38,8 +38,32 @@ def test_should_mark_command_from_config_as_explicit(repo):
     assert _inspect(repo)["lint"] == [["python3", "-m", "compileall", "-q", "."], True]
 
 
+TEMPLATE_PACKAGE_JSON = '{"scripts": {"doctor": "node scripts/doctor.mjs", "prepare": "node scripts/setup-hooks.mjs"}}\n'
+
+
+def test_should_not_take_the_templates_own_package_json_for_a_node_project(repo):
+    stage(repo, "package.json", TEMPLATE_PACKAGE_JSON)
+    data = _inspect(repo)
+    assert data["lint"] == [None, False] and data["test"] == [None, False]
+    assert data["doctor"][0][1] == "Lint guard checks nothing — unknown stack"
+
+
+def test_should_not_guess_node_when_the_scope_interview_left_the_stack_open(repo):
+    # 76bit-crm, 5.11.2026: "stack": "inny" + template package.json → guards ran npm commands
+    stage(repo, "package.json", TEMPLATE_PACKAGE_JSON)
+    write_config(repo, {"stack": "inny"})
+    assert _inspect(repo)["lint"] == [None, False]
+
+
+def test_should_still_autodetect_a_real_stack_when_the_interview_left_it_open(repo):
+    stage(repo, "package.json", TEMPLATE_PACKAGE_JSON)
+    stage(repo, "composer.json", '{"scripts": {"lint": "x", "test": "y"}}\n')
+    write_config(repo, {"stack": "inny"})
+    assert _inspect(repo)["lint"] == [["composer", "lint"], False]
+
+
 def test_should_tell_doctor_that_a_fresh_node_project_checks_nothing(repo):
-    stage(repo, "package.json", '{"scripts": {"doctor": "node x.mjs"}}\n')
+    stage(repo, "package.json", '{"name": "app", "scripts": {"doctor": "node x.mjs"}}\n')
     lines = _inspect(repo)["doctor"]
     assert [fine for fine, _, _ in lines] == [False, False]
     assert "Lint guard checks nothing: npm run lint --silent (autodetected: node)" in lines[0][1]

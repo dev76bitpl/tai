@@ -73,7 +73,7 @@ def test_should_not_block_docs_only_commit_even_when_test_command_cannot_run(rep
 def test_should_pass_with_a_warning_when_autodetected_stack_has_no_test_script_yet(repo):
     # a fresh node project: package.json is there, tests are not set up — the first commits
     # must go through, but not silently
-    stage(repo, "package.json", '{"scripts": {"doctor": "node x.mjs"}}\n')
+    stage(repo, "package.json", '{"name": "app", "scripts": {"doctor": "node x.mjs"}}\n')
     stage(repo, "src/price.js")
     result = run_guard(GUARD, repo, message=None)
     assert result.returncode == 0, result.stderr

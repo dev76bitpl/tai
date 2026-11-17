@@ -52,7 +52,7 @@ def test_should_block_when_the_project_own_lint_command_cannot_run(repo):
 
 
 def test_should_pass_with_a_warning_when_autodetected_stack_has_no_lint_script_yet(repo):
-    stage(repo, "package.json", '{"scripts": {"doctor": "node x.mjs"}}\n')
+    stage(repo, "package.json", '{"name": "app", "scripts": {"doctor": "node x.mjs"}}\n')
     result = run_guard(GUARD, repo, message=None)
     assert result.returncode == 0, result.stderr
     assert "[WARN] Lint guard checks NOTHING: npm run lint --silent" in result.stdout

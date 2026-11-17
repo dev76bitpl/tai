@@ -118,9 +118,10 @@ Numery scenariuszy są stałe (odwołują się do nich zgłoszenia i log sesji),
 ### Scenariusz 10h — strażnicy lintu i testów w świeżym projekcie
 
 - [ ] Po `--init`: `grep '"lint"\|"test"' .claude/hooks/config.json` → nic (żadnych odziedziczonych poleceń)
-- [ ] Na gałęzi roboczej, z plikiem w `src/` w indeksie: `pre-commit run guard-lint` (bez `--verbose`) → „Passed” i pod spodem `[WARN] Lint guard checks NOTHING: npm run lint --silent — package.json has no "lint" script`
-- [ ] `npm run doctor` → w „Guard system” `⚠ Lint guard checks nothing: …` i `⚠ Test guard checks nothing: …`
-- [ ] Dodaj do `package.json` skrypt `lint`, który kończy się błędem → commit zablokowany „Lint failed”; skrypt przechodzący → `✅ Lint [node] OK`, a doctor pokazuje `✓ Lint guard runs: …`
+- [ ] Na gałęzi roboczej, z plikiem w `src/` w indeksie: `pre-commit run guard-lint` (bez `--verbose`) → „Passed” i pod spodem `[WARN] Lint guard checks NOTHING: unknown stack …` — `package.json` szablonu (same `doctor`/`prepare`) nie robi z projektu „node” (#239)
+- [ ] To samo przy `"stack": "inny"` z kreatora → nadal `unknown stack`, nie `npm run lint`
+- [ ] `npm run doctor` → w „Guard system” `⚠ Lint guard checks nothing — unknown stack` i `⚠ Test guard checks nothing — unknown stack`
+- [ ] Dodaj do `package.json` pole `name` i skrypt `lint`, który kończy się błędem → commit zablokowany „Lint failed”; skrypt przechodzący → `✅ Lint [node] OK`, a doctor pokazuje `✓ Lint guard runs: …`
 - [ ] `python3 scripts/set-stack.py python` → `npm run doctor` pokazuje `ruff check .` i `pytest …` z dopiskiem `(stack: python)`, a nie `npm run lint` (`autodetected: node`)
 - [ ] Wpisz w `.claude/hooks/config.json` `"lint": "nie-ma-takiego-polecenia"` → commit zablokowany „Lint command from .claude/hooks/config.json cannot run”, doctor: `⚠ Lint guard BLOCKS every commit: …`
 
