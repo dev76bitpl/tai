@@ -93,6 +93,28 @@ PR musi zawierać:
 - tytuł = subject commita (lub krótsze podsumowanie)
 - body: co zmieniono + checklist testów
 
+## Po scaleniu PR: wydanie (release-please)
+
+Reguła grupy (jarvis D-019): **release-please to kronika zmian (wersja + CHANGELOG), nie blokada.**
+Nikt nie startuje od tagu, ale wydanie, które nikt nie scala, przestaje cokolwiek mówić.
+
+- **Nowa wersja, gdy zmianę zauważy odbiorca:** w aplikacji — użytkownik produkcji; w szablonie
+  (`is_template` w `.claude/hooks/config.json`) — projekty grupy. Liczą się `feat`, `fix` i zmiany
+  łamiące; same `docs`, `chore`, `test`, `refactor` — nie.
+- **Kto i kiedy scala PR wydania:** sesja projektu, po „tak” właściciela.
+  - aplikacja → przy wdrożeniu na produkcję (skill `deploy`, krok „Wydanie”)
+  - szablon → zaraz po scaleniu zmiany odczuwalnej dla projektów
+
+Po scaleniu PR typu `feat` / `fix` / łamiącego sprawdź, czy wisi PR wydania:
+
+```bash
+gh pr list --state open --search "chore: release in:title" --json number,title,createdAt
+```
+
+Jest, a zmiana jest odczuwalna dla odbiorcy (patrz wyżej) → zaproponuj scalenie jednym zdaniem
+(numer PR, wersja z jego opisu). Po scaleniu sprawdź, że tag powstał: `gh release list --limit 1`.
+Same `docs`/`chore` → zostaw, PR wydania poczeka na następną zmianę.
+
 ## Flagi bypass (używaj z uzasadnieniem w body)
 
 | Flaga | Kiedy |
