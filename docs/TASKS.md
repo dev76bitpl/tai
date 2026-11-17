@@ -7,6 +7,11 @@ w GitHub Issues (`gh issue list`), nie tutaj. Fazy definiuje [docs/ROADMAP.md](R
 
 ## Stan sesji
 
+- 2026-11-17 **#135 próba przed commitem widzi hooki Claude Code** — dry-run (pre-commit, etap commit-msg)
+  był zielony, a `git commit` blokował hook PreToolUse (`guard-ai-template`), którego w `.pre-commit-config.yaml`
+  nie ma. `scripts/commit-dry-run.py <plik>`: hooki z `.claude/settings.local.json` z wejściem jak przy
+  `git commit -F <plik>` + etap commit-msg, jeden werdykt. Protokół w RULES_REFERENCE §3 i skillu git,
+  scenariusz 11g; test właściciela 5/5. Wyszło przy tym #260 (worktree bez hooków Claude Code).
 - 2026-11-17 **#138 `guard-process-kill` przepuszcza samo `pgrep`** — `pgrep` było w jednej grupie z `pkill`
   i `killall`, więc samo listowanie procesów kończyło się blokadą (cdue-ai-dev-course#4); fałszywy alarm
   uczy obchodzenia strażnika. Teraz `pgrep` blokuje tylko razem z czasownikiem ubijania w tym samym

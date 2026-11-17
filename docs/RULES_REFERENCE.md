@@ -71,7 +71,7 @@ Dla małych zmian – sam subject, bez body. Dla dużych – body obowiązkowe.
 
 1. `git status` → ustal co jest staged
 2. Skomponuj wiadomość commita ZANIM uruchomisz `git commit` (subject ≤72 zn, body ≤100 zn/linia, flagi w body)
-3. Dry-run guardów z tą wiadomością — jeden command, wszystkie guardy commit-msg naraz (komendy niżej)
+3. Dry-run z tą wiadomością — jedna komenda: hooki Claude Code reagujące na `git commit` + guardy commit-msg (komendy niżej)
 4. Jeśli wszystkie `exit: 0` → jeden `git commit`, bez iteracji
 
 **Zakaz**: `git commit` bez wcześniejszego dry-runu guardów.
@@ -87,15 +87,24 @@ Po commicie zamykającym branch AI proponuje PR (tytuł + summary + test plan). 
 ```bash
 # Windows (PowerShell) — [IO.File] unika BOM który łamie gitlint:
 [IO.File]::WriteAllText("$env:TEMP\COMMIT_EDITMSG", $msg)
-python3 -m pre_commit run --hook-stage commit-msg --commit-msg-filename "$env:TEMP\COMMIT_EDITMSG"
+python3 scripts/commit-dry-run.py "$env:TEMP\COMMIT_EDITMSG"
 
 # Linux/macOS:
-echo "subject\n\nbody flags" > /tmp/COMMIT_EDITMSG
-COMMIT_EDITMSG=/tmp/COMMIT_EDITMSG pre-commit run --hook-stage commit-msg --commit-msg-filename /tmp/COMMIT_EDITMSG
+printf 'subject\n\nbody flags\n' > /tmp/COMMIT_EDITMSG
+python3 scripts/commit-dry-run.py /tmp/COMMIT_EDITMSG
 ```
 
-**Nie używaj ręcznej listy guardów** — lista w `.pre-commit-config.yaml` jest source of truth; ręczna
-lista w CLAUDE.md będzie zawsze niepełna.
+Commit zatrzymują **dwie warstwy** i próba sprawdza obie (#135):
+
+1. **hooki Claude Code** (PreToolUse na Bash/PowerShell, podpięte w `.claude/settings.local.json`) —
+   `guard-ai-template`, `guard-template-sync`… odpalają się na samo polecenie `git commit`, więc nie ma
+   ich w `.pre-commit-config.yaml`. Skrypt podaje każdemu to samo wejście co Claude Code przy
+   `git commit -F <plik>`;
+2. **pre-commit, etap commit-msg** — gitlint, język, flagi.
+
+Etapu pre-commit (lint, testy, sekrety) próba nie powtarza — commit i tak go uruchamia.
+**Nie używaj ręcznej listy guardów** — listy są w `.claude/settings.local.json` i
+`.pre-commit-config.yaml`; ręczna lista w CLAUDE.md będzie zawsze niepełna.
 
 ### Ekonomia PR/CI — uzasadnienie
 
