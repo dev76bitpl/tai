@@ -226,7 +226,7 @@ klon szablonu wskaż jednym z dwóch sposobów (kolejność: pierwszy znaleziony
 2. `{"ai_template_path": "/sciezka/do/klona"}` w `.claude/hooks/config.local.json`
 3. `ai_template_path` w `config.json` — tylko adres wspólny dla wszystkich (publiczny URL szablonu)
 
-Bez żadnego z nich działa autodetekcja klona obok projektu, a potem publiczny URL. `npm run doctor`
+Bez żadnego z nich działa autodetekcja klona obok projektu (katalog z `is_template: true`, `skills-manifest.json` i `origin` wskazującym repo szablonu — samej skopiowanej flagi nie wystarczy, #144), a potem publiczny URL. `npm run doctor`
 pokazuje w sekcji „Optional integrations”, skąd wziął ścieżkę (`from $AI_TEMPLATE_PATH` /
 `from config.local.json` / `from config.json` / `template clone next to the project`). Bez lokalnego
 klona (URL, brak, zła ścieżka) strażnicy nie porównują dokumentów, tylko przy każdej zmianie

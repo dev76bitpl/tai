@@ -9,6 +9,7 @@ przemianowane na tai) i publiczny URL jako ostatnia deska ratunku.
 import importlib.util
 import json
 import shutil
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -38,12 +39,19 @@ def _write_config(project_root: Path, name: str, data: dict) -> None:
     path.write_text(json.dumps(data), encoding="utf-8")
 
 
-def _make_template_clone(path: Path, *, is_template: bool = True, manifest: bool = True) -> Path:
-    """Klon template rozpoznawany po zawartości. Nazwa katalogu dowolna."""
+TEMPLATE_ORIGIN = "https://github.com/dev76bitpl/tai.git"
+
+
+def _make_template_clone(path: Path, *, is_template: bool = True, manifest: bool = True,
+                         origin: "str | None" = TEMPLATE_ORIGIN) -> Path:
+    """Klon template rozpoznawany po zawartości i po origin (#144). Nazwa katalogu dowolna."""
     (path / ".claude" / "hooks").mkdir(parents=True, exist_ok=True)
     _write_config(path, "config.json", {"is_template": is_template} if is_template else {})
     if manifest:
         (path / "skills-manifest.json").write_text("{}", encoding="utf-8")
+    if origin is not None:
+        subprocess.run(["git", "init", "-q", str(path)], check=True)
+        subprocess.run(["git", "-C", str(path), "remote", "add", "origin", origin], check=True)
     return path
 
 
@@ -113,6 +121,13 @@ class TestAutodetect:
         _make_template_clone(project.parent / "pol-template", manifest=False)
         assert mod.resolve_template_path() == mod.DEFAULT_TEMPLATE_URL
 
+    def test_ignores_sibling_with_a_hand_copied_flag(self, project):
+        """#144: flaga i manifest skopiowane do projektu — bez origin szablonu to nie szablon."""
+        mod = _load_at(project)
+        _make_template_clone(project.parent / "projekt-z-kopia", origin=None)
+        _make_template_clone(project.parent / "inny-z-kopia", origin="git@github.com:someone/crm.git")
+        assert mod.resolve_template_path() == mod.DEFAULT_TEMPLATE_URL
+
     def test_does_not_detect_itself(self, project):
         """Projekt będący template'm nie może wskazywać sam na siebie."""
         mod = _load_at(project)
@@ -133,6 +148,20 @@ class TestIsTemplateRoot:
         mod = _load_at(project)
         clone = _make_template_clone(project.parent / "x")
         assert mod._is_template_root(clone) is True
+
+    @pytest.mark.parametrize("origin", [
+        "git@github.com:dev76bitpl/tai.git", "git@github-76bit:dev76bitpl/tai.git",
+        "https://github.com/dev76bitpl/tai", "https://github.com/Dev76bitPL/tai.git/",
+    ])
+    def test_accepts_every_form_of_the_template_origin(self, project, origin):
+        mod = _load_at(project)
+        assert mod._is_template_root(_make_template_clone(project.parent / "x", origin=origin)) is True
+
+    @pytest.mark.parametrize("origin", [None, "https://github.com/dev76bitpl/tai-fork.git",
+                                        "git@github.com:other/tai.git"])
+    def test_rejects_a_marked_directory_without_the_template_origin(self, project, origin):
+        mod = _load_at(project)
+        assert mod._is_template_root(_make_template_clone(project.parent / "x", origin=origin)) is False
 
     def test_rejects_missing_directory(self, project):
         mod = _load_at(project)

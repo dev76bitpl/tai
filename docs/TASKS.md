@@ -7,6 +7,11 @@ w GitHub Issues (`gh issue list`), nie tutaj. Fazy definiuje [docs/ROADMAP.md](R
 
 ## Stan sesji
 
+- 2026-11-17 **#144 autodetekcja szablonu wymaga dowodu, nie samej flagi** — klon obok był rozpoznawany
+  po `is_template` + `skills-manifest.json`, a oba da się skopiować do projektu; projekt mógł udawać
+  szablon. Dowód: `origin` wskazujący repo szablonu (`is_template_repo` w `.claude/hooks/stack.py`,
+  każda forma adresu, także alias ssh). Flaga zostaje przełącznikiem „nic nie rób”; doctor ostrzega repo,
+  które ją ma, a szablonem nie jest. Dług: `stack.py` 468 → 492 linii (limit 400). Test właściciela 5/5.
 - 2026-11-17 **#154 bez martwego `script_integrity`** — hash `update-skills.py` w manifeście był nieaktualny
   od PR #57 i nic go nie sprawdzało; leżąc w tym samym repo co skrypt i tak niczego by nie chronił
   (podmiana skryptu = podmiana hasha). Ochronę dają historia gita i sync skryptu z tai. Pole usunięte;

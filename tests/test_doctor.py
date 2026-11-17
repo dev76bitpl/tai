@@ -8,6 +8,7 @@ Each case builds a throwaway repo layout in tmp_path and points doctor at it.
 """
 import importlib.util
 import json
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -202,16 +203,30 @@ def test_should_warn_when_no_source_is_set(doctor, tmp_path, capsys, no_template
     assert "tai#N or [skip-sync] <reason>" in out
 
 
-def _project_next_to_template(tmp_path: Path, marked: bool = True) -> Path:
-    """tmp/project with the real .claude/hooks/stack.py, and tmp/tai beside it."""
-    project = tmp_path / "project"
-    (project / ".claude" / "hooks").mkdir(parents=True)
+TEMPLATE_ORIGIN = "https://github.com/dev76bitpl/tai.git"
+
+
+def _with_origin(path: Path, origin: str) -> None:
+    subprocess.run(["git", "init", "-q", str(path)], check=True)
+    subprocess.run(["git", "-C", str(path), "remote", "add", "origin", origin], check=True)
+
+
+def _with_hooks_stack(project: Path) -> Path:
+    (project / ".claude" / "hooks").mkdir(parents=True, exist_ok=True)
     (project / ".claude" / "hooks" / "stack.py").write_text(
         (ROOT / ".claude" / "hooks" / "stack.py").read_text(encoding="utf-8"), encoding="utf-8")
+    return project
+
+
+def _project_next_to_template(tmp_path: Path, marked: bool = True, origin: "str | None" = TEMPLATE_ORIGIN) -> Path:
+    """tmp/project with the real .claude/hooks/stack.py, and tmp/tai beside it."""
+    project = _with_hooks_stack(tmp_path / "project")
     template = tmp_path / "tai"
     (template / ".claude" / "hooks").mkdir(parents=True)
     (template / "skills-manifest.json").write_text("{}", encoding="utf-8")
     (template / ".claude" / "hooks" / "config.json").write_text(json.dumps({"is_template": marked}), encoding="utf-8")
+    if origin:
+        _with_origin(template, origin)
     return project
 
 
@@ -232,6 +247,25 @@ def test_should_not_take_an_unmarked_neighbour_for_the_template(doctor, tmp_path
     project = _project_next_to_template(tmp_path, marked=False)
     [line] = _messages(doctor, project)
     assert line.startswith("⚠ ai_template_path not set")
+
+
+def test_should_not_take_a_neighbour_with_a_copied_flag_for_the_template(doctor, tmp_path, no_template_env):
+    # #144: is_template + manifest copied by hand into another project, origin is not the template
+    project = _project_next_to_template(tmp_path, origin="git@github.com:someone/crm.git")
+    [line] = _messages(doctor, project)
+    assert line.startswith("⚠ ai_template_path not set")
+
+
+@pytest.mark.parametrize("origin,fine", [(TEMPLATE_ORIGIN, True), ("git@github.com:someone/crm.git", False)])
+def test_should_warn_when_a_project_carries_the_template_flag(doctor, tmp_path, no_template_env, origin, fine):
+    repo = _with_hooks_stack(tmp_path / "repo")
+    (repo / ".claude" / "hooks" / "config.json").write_text(json.dumps({"is_template": True}), encoding="utf-8")
+    _with_origin(repo, origin)
+    [line] = _messages(doctor, repo)
+    if fine:
+        assert line == "✓ This repo is the AI template — nothing to sync from"
+    else:
+        assert line.startswith("⚠ is_template is set, but this repo's git origin is not the AI template")
 
 
 def test_should_say_repo_is_template_when_marked(doctor, tmp_path, capsys, no_template_env):
