@@ -6,12 +6,23 @@ empty index, so the step was green whatever the tree contained.
 
 The workflow must scan the working tree in a step of its own, with the same gitleaks version the
 local hook uses, and must not count the staged-only hook as coverage.
+
+It lives next to the guards so it travels into every new project (#176): the workflow does, and
+a project can bump the hook or rework the workflow and lose the scan with CI still green.
+A project without GitHub Actions (no .github/ at all) skips it; once .github/ exists, a missing
+guards.yml or scan step is a failure.
 """
 import re
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
-GUARDS = (ROOT / ".github" / "workflows" / "guards.yml").read_text(encoding="utf-8")
+import pytest
+
+ROOT = Path(__file__).resolve().parents[3]  # scripts/dev-guards/tests -> repository root
+if not (ROOT / ".github").is_dir():
+    pytest.skip("no .github/ — this project does not use GitHub Actions", allow_module_level=True)
+GUARDS_YML = ROOT / ".github" / "workflows" / "guards.yml"
+assert GUARDS_YML.is_file(), ".github/ exists but .github/workflows/guards.yml with the secret scan is missing"
+GUARDS = GUARDS_YML.read_text(encoding="utf-8")
 PRE_COMMIT = (ROOT / ".pre-commit-config.yaml").read_text(encoding="utf-8")
 
 

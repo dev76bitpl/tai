@@ -75,7 +75,7 @@ Numery scenariuszy są stałe (odwołują się do nich zgłoszenia i log sesji),
 
 - [ ] Otwórz PR → w zadaniu `Checks` jest krok `Scan working tree for secrets (gitleaks)` i jest zielony
 - [ ] Na gałęzi próbnej dodaj plik z fałszywym kluczem (jak w scenariuszu 7), wypchnij z `--no-verify` → krok czerwony, w logu nazwa pliku i reguły, wartość zamaskowana; gałąź próbną usuń
-- [ ] Lokalnie: `python3 -m pytest -q tests/test_ci_secret_scan.py` → 5 zielonych (wersja obrazu = `rev` hooka `gitleaks`)
+- [ ] Lokalnie: `python3 -m pytest -q scripts/dev-guards/tests/test_ci_secret_scan.py` → 5 zielonych (wersja obrazu = `rev` hooka `gitleaks`)
 
 ### Scenariusz 10b — doctor widzi niepodpięte hooki Claude Code
 
