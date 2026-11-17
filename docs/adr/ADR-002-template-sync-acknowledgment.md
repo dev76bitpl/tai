@@ -160,3 +160,22 @@ bez śladu. Potwierdzenie rozjazdu ma teraz dwie formy:
 Reguła żyje w jednym module `.claude/hooks/sync_ack.py`, który importują oba strażniki.
 GitHub jest pytany tylko wtedy, gdy strażnik i tak by blokował. Etykiety `from-project:<projekt>`
 na zgłoszeniu strażnik nie wymusza (D-014: wymuszanie byłoby kruche).
+
+## Aktualizacja 2026-11-17 — jedna reguła „kiedy pytać” dla obu strażników (tai#166)
+
+Decyzja 2 opisywała auto-weryfikację strażnika commita przez `git diff`: przepuszczał, gdy
+`CLAUDE.md` w klonie szablonu miał jakąkolwiek niezacommitowaną zmianę. To dawało oba błędy
+naraz — przepuszczał przy niezwiązanej edycji w klonie i blokował, gdy sekcja była już
+w szablonie, ale zacommitowana. Hook Claude Code porównywał w tym czasie sekcje.
+
+Teraz oba strażniki:
+
+- **znajdują klon tak samo** — `resolve_template_source()` z `.claude/hooks/stack.py`:
+  `$AI_TEMPLATE_PATH` > `config.local.json` > `config.json` > klon szablonu obok projektu;
+- **pytają z tego samego powodu** — `.claude/hooks/template_sections.py`: dokument w stage,
+  który należy do szablonu (`template-files.json` klona), ma sekcję `##`/`###`, której
+  szablon nie ma. Bez klona — pytanie przy każdym `CLAUDE.md` w stage (decyzja 1 bez zmian).
+
+Różnica, która zostaje: hook dodatkowo porównuje treść `scripts/dev-guards/*.py`, strażnik
+commita nie — ręczny commit w strażnikach nie zaczyna się blokować z nowego powodu.
+Zmiana tekstu wewnątrz istniejącej sekcji nie jest rozjazdem dla żadnego z nich.
