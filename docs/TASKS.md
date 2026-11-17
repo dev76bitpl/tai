@@ -7,6 +7,13 @@ w GitHub Issues (`gh issue list`), nie tutaj. Fazy definiuje [docs/ROADMAP.md](R
 
 ## Stan sesji
 
+- 2026-11-17 **#166 jedna reguła dla obu strażników synchronizacji z szablonem** — strażnik commita
+  szukał klona tylko w configu (hook: zmienna, `config.local.json`, config, klon obok) i przepuszczał,
+  gdy `CLAUDE.md` w klonie miał jakąkolwiek zmianę: przepuszczał niezwiązaną edycję, blokował sekcję
+  już zacommitowaną w szablonie. Teraz oba znajdują klon przez `resolve_template_source()` i pytają
+  z tego samego powodu: brakująca w szablonie sekcja dokumentu z `template-files.json`
+  (`.claude/hooks/template_sections.py`). `scripts/dev-guards/*.py` porównuje tylko hook. Rozszerzenie
+  (opcja 1) wybrał właściciel. Aktualizacja ADR-002, scenariusz 13j; test właściciela 8/8.
 - 2026-11-17 **#170 `guard-ai-template` milczy w samym szablonie** — hook nie czytał `is_template`, więc
   w tai pytał przy prawie każdym commicie „czy do template?” i wymuszał `[no-template]`, który przez to
   nic nie znaczył. Teraz przepuszcza przy `is_template`, jak `guard-template-sync` (ADR-002, decyzja 5);

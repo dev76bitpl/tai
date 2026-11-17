@@ -25,11 +25,6 @@ def _load():
 g = _load()
 
 
-def _template_clone(tmp_path: Path) -> Path:
-    """A local template clone with a CLAUDE.md."""
-    (tmp_path / "CLAUDE.md").write_text("# template\n", encoding="utf-8")
-    return tmp_path
-
 
 # ── _staged_touches_claude ────────────────────────────────────────────────────
 
@@ -47,44 +42,34 @@ class TestStagedTouchesClaude:
         assert g._staged_touches_claude([]) is False
 
 
-# ── _local_template_claude ────────────────────────────────────────────────────
+# ── _local_template_root ──────────────────────────────────────────────────────
 
-class TestLocalTemplateClaude:
+class TestLocalTemplateRoot:
     def test_empty_path_is_none(self):
-        assert g._local_template_claude("") is None
+        assert g._local_template_root("") is None
 
     def test_url_is_none(self):
-        assert g._local_template_claude("https://github.com/x/tai.git") is None
-        assert g._local_template_claude("git@github.com:x/tai.git") is None
+        assert g._local_template_root("https://github.com/x/tai.git") is None
+        assert g._local_template_root("git@github.com:x/tai.git") is None
 
-    def test_dir_without_claude_is_none(self, tmp_path):
-        assert g._local_template_claude(str(tmp_path)) is None
+    def test_missing_dir_is_none(self, tmp_path):
+        assert g._local_template_root(str(tmp_path / "nope")) is None
 
-    def test_valid_clone_returns_claude_path(self, tmp_path):
-        clone = _template_clone(tmp_path)
-        result = g._local_template_claude(str(clone))
-        assert result == clone / "CLAUDE.md"
+    def test_existing_dir_is_the_root(self, tmp_path):
+        assert g._local_template_root(str(tmp_path)) == tmp_path
 
 
-# ── main() decision matrix ────────────────────────────────────────────────────
+# ── main() without a local clone: acknowledgment whenever CLAUDE.md is staged ──
 
-class TestMain:
-    def _patch(self, msg="subject\n\nbody", staged=None, config=None, touched=False):
+class TestMainWithoutClone:
+    def _run(self, msg="docs: x\n\nbody", staged=None, config=None, source=""):
         staged = staged if staged is not None else ["CLAUDE.md"]
-        config = config if config is not None else {}
-        return (
-            mock.patch.object(g, "read_commit_msg", return_value=msg),
-            mock.patch.object(g, "get_staged_files", return_value=staged),
-            mock.patch.object(g, "load_config", return_value=config),
-            mock.patch.object(g, "_template_claude_touched", return_value=touched),
-        )
-
-    def _run(self, **kw):
-        patches = self._patch(**kw)
-        with patches[0], patches[1], patches[2], patches[3]:
+        with mock.patch.object(g, "read_commit_msg", return_value=msg), \
+             mock.patch.object(g, "get_staged_files", return_value=staged), \
+             mock.patch.object(g, "load_config", return_value=config or {}), \
+             mock.patch.object(g, "_template_source", return_value=source):
             g.main(["guard", "/tmp/msg"])
 
-    # ── passes ──
     def test_skip_sync_with_reason_passes(self):
         self._run(msg="docs: x\n\n[skip-sync] rule only matters here")  # must not raise
 
@@ -94,22 +79,17 @@ class TestMain:
     def test_is_template_passes(self):
         self._run(config={"is_template": True})
 
-    def test_local_template_touched_passes(self, tmp_path):
-        clone = _template_clone(tmp_path)
-        self._run(config={"ai_template_path": str(clone)}, touched=True)
-
-    # ── blocks ──
-    def test_no_path_blocks_acknowledge(self):
+    def test_no_path_blocks(self):
         with pytest.raises(SystemExit):
-            self._run(config={})
+            self._run()
 
-    def test_url_path_blocks_acknowledge(self):
+    def test_url_blocks(self):
         with pytest.raises(SystemExit):
-            self._run(config={"ai_template_path": "https://github.com/x/tai.git"})
+            self._run(source="https://github.com/x/tai.git")
 
-    def test_missing_dir_blocks_acknowledge(self, tmp_path):
+    def test_missing_dir_blocks(self, tmp_path):
         with pytest.raises(SystemExit):
-            self._run(config={"ai_template_path": str(tmp_path / "nope")})
+            self._run(source=str(tmp_path / "nope"))
 
     def test_bare_skip_sync_blocks(self, capsys):
         # tai#243: the flag alone is no decision; it needs a reason on its line.
@@ -125,24 +105,22 @@ class TestMain:
             self._run(msg="docs: x\n\n[skip-sync] rule only matters here")
         assert "sync_ack.py is missing" in capsys.readouterr().err
 
-    def test_local_template_untouched_blocks(self, tmp_path):
-        clone = _template_clone(tmp_path)
-        with pytest.raises(SystemExit):
-            self._run(config={"ai_template_path": str(clone)}, touched=False)
-
 
 # ── end to end: the guard as a separate process, exit code checked ───────────
-# Everything above mocks the inputs and only asserts "SystemExit was raised". These run the
+# The unit tests above mock the inputs and only assert "SystemExit was raised". These run the
 # real script in a real repository and assert the exit code pre-commit acts on.
 
 from harness import BLOCKED, commit, git, make_repo, run_guard, stage, write_config  # noqa: E402
+
+RULES = "# rules\n\n## Old rule\n"
+NEW_RULE = RULES + "\n## New rule\n"
 
 
 @pytest.fixture
 def clone(tmp_path):
     """A local template clone: its own repository with a committed CLAUDE.md."""
     root = make_repo(tmp_path / "template")
-    stage(root, "CLAUDE.md", "# template rules\n")
+    stage(root, "CLAUDE.md", RULES)
     commit(root)
     return root
 
@@ -154,29 +132,59 @@ class TestEndToEnd:
         stage(repo, "CLAUDE.md")
         result = run_guard(self.GUARD, repo)
         assert result.returncode == BLOCKED
-        assert "[BLOCK] CLAUDE.md staged — confirm where this change belongs" in result.stderr
+        assert "[BLOCK] Template documents staged — confirm where this change belongs" in result.stderr
+        assert "No local template clone found" in result.stderr
 
-    def test_should_block_when_template_clone_has_no_matching_change(self, repo, clone):
+    def test_should_block_and_name_the_section_the_template_lacks(self, repo, clone):
         write_config(repo, {"ai_template_path": str(clone)})
-        stage(repo, "CLAUDE.md")
+        stage(repo, "CLAUDE.md", NEW_RULE)
         result = run_guard(self.GUARD, repo)
         assert result.returncode == BLOCKED
-        assert "the template's CLAUDE.md has no matching changes" in result.stderr
-        assert str(clone / "CLAUDE.md") in result.stderr
+        assert "CLAUDE.md: sekcja jest w projekcie, brakuje w template  →  ## New rule" in result.stderr
+        assert f"Template clone: {clone}" in result.stderr
 
-    def test_should_pass_when_template_clone_was_changed_too(self, repo, clone):
+    def test_should_pass_when_the_template_has_every_section(self, repo, clone):
         write_config(repo, {"ai_template_path": str(clone)})
-        (clone / "CLAUDE.md").write_text("# template rules\n\n## New rule\n", encoding="utf-8")
-        stage(repo, "CLAUDE.md")
+        stage(repo, "CLAUDE.md", RULES + "\nproject text inside an existing section\n")
         result = run_guard(self.GUARD, repo)
         assert result.returncode == 0, result.stderr
+
+    def test_should_pass_when_the_section_is_already_committed_in_the_template(self, repo, clone):
+        # the old rule ("is the clone's CLAUDE.md dirty?") blocked this: a clean clone that has it
+        stage(clone, "CLAUDE.md", NEW_RULE)
+        commit(clone)
+        write_config(repo, {"ai_template_path": str(clone)})
+        stage(repo, "CLAUDE.md", NEW_RULE)
+        assert run_guard(self.GUARD, repo).returncode == 0
+
+    def test_should_block_when_the_clone_only_has_an_unrelated_change(self, repo, clone):
+        # the old rule let this through: any uncommitted edit in the clone counted as "synced"
+        (clone / "CLAUDE.md").write_text(RULES + "\n## Something else\n", encoding="utf-8")
+        write_config(repo, {"ai_template_path": str(clone)})
+        stage(repo, "CLAUDE.md", NEW_RULE)
+        assert run_guard(self.GUARD, repo).returncode == BLOCKED
+
+    def test_should_compare_other_documents_the_template_owns(self, repo, clone):
+        (clone / "template-files.json").write_text('{"copy": ["CLAUDE.md", "docs/RULES.md"]}', encoding="utf-8")
+        stage(clone, "docs/RULES.md", "# r\n")
+        commit(clone)
+        write_config(repo, {"ai_template_path": str(clone)})
+        stage(repo, "docs/RULES.md", "# r\n\n## Project rule\n")
+        result = run_guard(self.GUARD, repo)
+        assert result.returncode == BLOCKED
+        assert "docs/RULES.md: sekcja jest w projekcie" in result.stderr
+
+    def test_should_not_compare_the_projects_own_documents(self, repo, clone):
+        write_config(repo, {"ai_template_path": str(clone)})
+        stage(repo, "docs/PROJECT_SCOPE.md", "# scope\n\n## Only ours\n")
+        assert run_guard(self.GUARD, repo).returncode == 0
 
     def test_should_pass_when_skip_sync_flag_is_in_message(self, repo):
         stage(repo, "CLAUDE.md")
         assert run_guard(self.GUARD, repo, "docs: project rule\n\n[skip-sync] rule is project only\n").returncode == 0
 
-    def test_should_pass_when_claude_md_is_not_staged(self, repo):
-        stage(repo, "docs/SETUP.md")
+    def test_should_pass_when_no_document_is_staged(self, repo):
+        stage(repo, "src/app.py")
         result = run_guard(self.GUARD, repo)
         assert result.returncode == 0, result.stderr
         assert result.stderr == ""
@@ -191,6 +199,53 @@ class TestEndToEnd:
         result = run_guard(self.GUARD, repo, message=None)
         assert result.returncode == BLOCKED
         assert "guard_template_sync: no commit message file given" in result.stderr
+
+
+class TestEndToEndTemplateLayers:
+    """The commit guard finds the template clone the way the Claude Code hook does (#166).
+    The project adds "## New rule"; a clone that has it lets the commit through."""
+    GUARD = "guard_template_sync"
+
+    @staticmethod
+    def _has_rule(clone):
+        (clone / "CLAUDE.md").write_text(NEW_RULE, encoding="utf-8")
+
+    def test_should_find_the_clone_through_ai_template_path(self, repo, clone):
+        self._has_rule(clone)
+        stage(repo, "CLAUDE.md", NEW_RULE)
+        assert run_guard(self.GUARD, repo, AI_TEMPLATE_PATH=str(clone)).returncode == 0
+
+    def test_should_find_the_clone_through_config_local_json(self, repo, clone):
+        self._has_rule(clone)
+        write_config(repo, {"ai_template_path": str(clone)}, name="config.local.json")
+        stage(repo, "CLAUDE.md", NEW_RULE)
+        assert run_guard(self.GUARD, repo).returncode == 0
+
+    def test_should_find_a_template_clone_next_to_the_project(self, repo, clone):
+        write_config(clone, {"is_template": True})
+        (clone / "skills-manifest.json").write_text("{}", encoding="utf-8")
+        self._has_rule(clone)
+        stage(repo, "CLAUDE.md", NEW_RULE)
+        assert run_guard(self.GUARD, repo).returncode == 0
+
+    def test_should_prefer_ai_template_path_over_config(self, repo, clone, tmp_path):
+        other = make_repo(tmp_path / "other")
+        stage(other, "CLAUDE.md", RULES)
+        commit(other)
+        write_config(repo, {"ai_template_path": str(clone)})
+        self._has_rule(clone)
+        stage(repo, "CLAUDE.md", NEW_RULE)
+        result = run_guard(self.GUARD, repo, AI_TEMPLATE_PATH=str(other))
+        assert result.returncode == BLOCKED
+        assert f"Template clone: {other}" in result.stderr
+
+    def test_should_fall_back_to_config_when_the_hooks_stack_is_missing(self, repo, clone):
+        # a project with an older .claude/hooks copy must not crash on every commit
+        (repo / ".claude" / "hooks" / "stack.py").unlink()
+        write_config(repo, {"ai_template_path": str(clone)})
+        self._has_rule(clone)
+        stage(repo, "CLAUDE.md", NEW_RULE)
+        assert run_guard(self.GUARD, repo).returncode == 0
 
 
 class TestEndToEndAcknowledgment:

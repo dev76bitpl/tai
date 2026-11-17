@@ -191,7 +191,7 @@ def project(tmp_path):
     root = tmp_path / "project"
     hooks = root / ".claude" / "hooks"
     hooks.mkdir(parents=True)
-    for name in ("guard-template-sync.py", "stack.py", "sync_ack.py"):
+    for name in ("guard-template-sync.py", "stack.py", "sync_ack.py", "template_sections.py"):
         shutil.copy(HOOKS / name, hooks / name)
     (hooks / "config.json").write_text(
         json.dumps({"ai_template_path": str(template)}), encoding="utf-8")

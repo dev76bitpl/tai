@@ -26,29 +26,19 @@ odpala się tylko gdy klon istnieje (auto-weryfikacja dla maintainera).
 is_template: true → to repo JEST template'm, sync pomijany.
 Trigger: staged pliki zawierają *.md szablonu lub scripts/dev-guards/*.py.
 """
-import fnmatch
 import json
-import re
 import sys
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import sync_ack
+import template_sections
 from stack import chdir_to_project_root, get_commit_message, get_staged_files, is_foreign_repo, is_git_commit_command, load_config, read_command, resolve_template_path
 
-LIST_FILE = "template-files.json"
-FALLBACK_PATTERNS = ["CLAUDE.md"]
-
-
-def get_section_headers(text: str) -> set[str]:
-    """Zwraca wszystkie nagłówki ## i ### z tekstu."""
-    headers = set()
-    for line in text.splitlines():
-        stripped = line.strip()
-        if re.match(r"^#{2,3}\s+.+", stripped):
-            headers.add(stripped)
-    return headers
-
+# The section rule is shared with the commit guard (template_sections.py, #166).
+get_section_headers = template_sections.get_section_headers
+_template_md_files = template_sections.template_md_files
+_md_issues = template_sections.md_issues
 
 _URL_PREFIXES = ("http://", "https://", "git@", "ssh://")
 
@@ -59,28 +49,6 @@ def _local_template_root(template_path: str) -> Path | None:
         return None
     root = Path(template_path)
     return root if root.is_dir() else None
-
-
-def _matches(path: str, pattern: str) -> bool:
-    """Same rule as matches() in scripts/update-from-template.py: '*' never crosses '/'."""
-    p, q = PurePosixPath(path), PurePosixPath(pattern)
-    return p.parent == q.parent and fnmatch.fnmatchcase(p.name, q.name)
-
-
-def _template_patterns(template_root: Path) -> list[str]:
-    """Paths the template owns, from its template-files.json. Unreadable list → CLAUDE.md only."""
-    try:
-        spec = json.loads((template_root / LIST_FILE).read_text(encoding="utf-8"))
-        patterns = list(spec.get("copy", [])) + list(spec.get("compare_sections", []))
-    except (OSError, ValueError, AttributeError, TypeError):
-        return FALLBACK_PATTERNS
-    return [p for p in patterns if isinstance(p, str)] or FALLBACK_PATTERNS
-
-
-def _template_md_files(staged: list[str], template_root: Path) -> list[str]:
-    """Staged *.md files that belong to the template — the only ones worth comparing."""
-    patterns = _template_patterns(template_root)
-    return sorted({f for f in staged if f.endswith(".md") and any(_matches(f, p) for p in patterns)})
 
 
 def _touches_claude(staged: list[str]) -> bool:
@@ -104,23 +72,6 @@ def _block_message(issues: list[str], repo: str, note: str = "", template_root: 
     msg += "\n\n  Zablokowane zostało całe polecenie Bash, także kroki przed `git commit`"
     msg += "\n  (np. zapis pliku z wiadomością) — sprawdź, czy się wykonały."
     return msg
-
-
-def _md_issues(project_root: Path, template_root: Path, md_files: list[str]) -> list[str]:
-    issues = []
-    for rel in md_files:
-        project_file, template_file = project_root / rel, template_root / rel
-        if not project_file.is_file() or not template_file.is_file():
-            continue  # usunięty w projekcie albo jeszcze nieobecny w klonie szablonu
-        try:
-            project_headers = get_section_headers(project_file.read_text(encoding="utf-8"))
-            template_headers = get_section_headers(template_file.read_text(encoding="utf-8"))
-        except Exception as e:
-            issues.append(f"  ⚠️  Błąd odczytu {rel}: {e}")
-            continue
-        for h in sorted(project_headers - template_headers):
-            issues.append(f"  📝 {rel}: sekcja jest w projekcie, brakuje w template  →  {h}")
-    return issues
 
 
 def _guard_issues(project_root: Path, template_root: Path) -> list[str]:

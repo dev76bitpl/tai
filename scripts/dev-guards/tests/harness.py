@@ -22,7 +22,9 @@ BLOCKED = 1  # pre-commit treats any non-zero code as a block; the guards use ex
 def clean_env(**extra: str) -> dict:
     """The environment without the variables git sets inside a hook — the suite itself runs
     from a pre-commit hook, and GIT_INDEX_FILE would point every temp repo at the real index."""
-    env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
+    # AI_TEMPLATE_PATH is the owner's per-machine pointer to the template clone (#166): a test
+    # that wants it passes it explicitly, otherwise results would depend on the machine.
+    env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_") and k != "AI_TEMPLATE_PATH"}
     env.update(extra)
     return env
 
@@ -48,7 +50,8 @@ def make_repo(root: Path, branch: str = "main", config: dict | None = None) -> P
     # guard_template_sync shares its rule with the Claude Code hook (tai#243), as in a project.
     hooks = root / ".claude" / "hooks"
     hooks.mkdir(parents=True, exist_ok=True)
-    shutil.copy(GUARDS.parents[1] / ".claude" / "hooks" / "sync_ack.py", hooks / "sync_ack.py")
+    for shared in ("sync_ack.py", "stack.py", "template_sections.py"):  # shared with the hook (#166)
+        shutil.copy(GUARDS.parents[1] / ".claude" / "hooks" / shared, hooks / shared)
     if config is not None:
         write_config(root, config)
     return root

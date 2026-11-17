@@ -346,6 +346,16 @@ W projekcie postawionym z szablonu (w samym szablonie doctor pokazuje tylko „T
 - [ ] `AI_TEMPLATE_PATH=<inny katalog> npm run doctor` → ta ścieżka i `(from $AI_TEMPLATE_PATH)`
 - [ ] Bez pliku lokalnego i zmiennej, z adresem URL w `config.json` → `(remote, from config.json)`, bez ostrzeżenia
 
+### Scenariusz 13j — strażnik commita pyta z tego samego powodu co hook (#166)
+
+W projekcie z szablonu, bez `ai_template_path` w `config.json`, dopisz do `CLAUDE.md` nową sekcję `## …` i zrób commit bez `tai#N` / `[skip-sync]`:
+
+- [ ] `AI_TEMPLATE_PATH` wskazuje klon szablonu, który tę sekcję ma (także zacommitowaną) → commit przechodzi; klon bez niej → blokada z `CLAUDE.md: sekcja jest w projekcie, brakuje w template  →  ## …` i `Template clone: <ścieżka>`
+- [ ] Klon ma tylko niezwiązaną zmianę w `CLAUDE.md` → nadal blokada
+- [ ] Bez zmiennej, klon szablonu (`is_template: true`) w katalogu obok projektu → jak w pierwszym punkcie
+- [ ] Zmiana tekstu w istniejącej sekcji albo w `docs/PROJECT_SCOPE.md` → przechodzi
+- [ ] Bez zmiennej i bez klona obok → blokada z „No local template clone found”
+
 ### Scenariusz 14 — config.local.json nie trafia do repo
 
 - [ ] Utwórz `.claude/hooks/config.local.json`, `git status` → plik nie pojawia się jako untracked
