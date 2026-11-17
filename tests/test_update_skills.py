@@ -809,3 +809,21 @@ def test_should_use_the_project_sync_when_the_template_predates_adopt(tmp_path):
     assert "adopt" not in inspect.signature(template_sync.sync_from_template).parameters
     own_sync = mod.sync_module(tmp_path, own=True)
     assert "adopt" in inspect.signature(own_sync.sync_from_template).parameters
+
+
+# ── script_integrity: a hash nothing checked is dropped, not kept stale (#154) ───────────
+
+def test_should_not_carry_script_integrity_in_the_template_manifest():
+    assert "script_integrity" not in _json.loads((ROOT / "skills-manifest.json").read_text(encoding="utf-8"))
+
+
+@pytest.mark.parametrize("apply", [True, False])
+def test_should_drop_script_integrity_from_a_project_manifest_only_on_apply(tmp_path, monkeypatch, apply):
+    template = _retiring_template(tmp_path)
+    project = _project_with(tmp_path, monkeypatch, "redesign", "shipped\n")
+    path = project / "skills-manifest.json"
+    manifest = _json.loads(path.read_text(encoding="utf-8"))
+    manifest["script_integrity"] = {"update-skills.py": "stale"}
+    path.write_text(_json.dumps(manifest), encoding="utf-8")
+    sync.sync_from_template(template, apply=apply, history=sync.skill_history(template, "HEAD"))
+    assert ("script_integrity" in _json.loads(path.read_text(encoding="utf-8"))) is (not apply)

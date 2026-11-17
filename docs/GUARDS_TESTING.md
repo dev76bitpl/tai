@@ -277,6 +277,11 @@ W projekcie z lokalnym klonem tai (np. `cdue-elearning`, na gałęzi roboczej). 
 - [ ] W projekcie z wszystkimi grupami: `python3 scripts/update-skills.py --sync` → `perf` „wycofany w szablonie — do usunięcia”, 5 skilli „zmieniony”, żaden „zmieniony lokalnie”; po `--apply` katalogu `perf/` nie ma
 - [ ] W projekcie bez grupy „UI i dostępność” → te 5 skilli nie przychodzi
 
+### Scenariusz 13k — bez martwego `script_integrity` w manifeście (#154)
+
+- [ ] W szablonie: `grep script_integrity skills-manifest.json` → nic
+- [ ] W projekcie, którego manifest ma `script_integrity`: `python3 scripts/update-skills.py --sync` → pole zostaje; po `--apply` pola nie ma, reszta manifestu bez zmian
+
 ### Scenariusz 13h — start sesji podaje liczbę otwartych issues (#212)
 
 - [ ] Nowa sesja w repo z otwartymi issues → w kontekście startu linijka „📋 Otwarte issues w repo: N — przejrzyj: `gh issue list`”, bez tytułów
