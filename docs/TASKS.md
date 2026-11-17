@@ -7,6 +7,10 @@ w GitHub Issues (`gh issue list`), nie tutaj. Fazy definiuje [docs/ROADMAP.md](R
 
 ## Stan sesji
 
+- 2026-11-17 **#170 `guard-ai-template` milczy w samym szablonie** — hook nie czytał `is_template`, więc
+  w tai pytał przy prawie każdym commicie „czy do template?” i wymuszał `[no-template]`, który przez to
+  nic nie znaczył. Teraz przepuszcza przy `is_template`, jak `guard-template-sync` (ADR-002, decyzja 5);
+  w projektach bez zmian. Scenariusz 11f; test właściciela 4/4.
 - 2026-11-17 **#176 test skanu sekretów w CI jedzie do projektów** — `tests/test_ci_secret_scan.py` (#136)
   leżał wśród testów narzędzi szablonu, a `--init` usuwa `tests/`; projekt dostawał skan bez testu, więc
   podbity gitleaks albo przerobiony workflow gubił skan przy zielonym CI. Test przeniesiony do

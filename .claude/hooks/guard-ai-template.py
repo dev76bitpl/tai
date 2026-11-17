@@ -11,6 +11,9 @@ parsowany tylko z -m, więc -F dawał exit 0 = cichy bypass).
 
 Bypass: [no-template] lub [template-done] w wiadomości commita
 (wykrywane w -m, heredoc oraz w pliku -F).
+
+is_template: true w config.json → to repo JEST szablonem, nie ma dokąd synchronizować;
+guard przepuszcza, tak jak guard-template-sync (ADR-002, decyzja 5; #170).
 """
 import re
 import sys
@@ -60,6 +63,8 @@ def main():
         sys.exit(0)
 
     config = load_config()
+    if config.get("is_template"):
+        sys.exit(0)
     template_path = config.get("ai_template_path", "<ai_template_path not set in .claude/hooks/config.json>")
 
     # FAIL-CLOSED: cannot read the message → do not silently pass.
