@@ -78,6 +78,13 @@ narzędzie kończy wypis.
 > zadziałało ani razu od dnia wdrożenia — właśnie z tego powodu. Poprawka, której
 > nikt nie uruchomił na ścieżce sukcesu, jest hipotezą, nie poprawką.
 
+### 6a. Wydanie (release-please, jarvis D-019)
+- [ ] Wdrożenie na produkcję niesie `feat` / `fix` / zmianę łamiącą → scal PR wydania
+      (`gh pr list --state open --search "chore: release in:title"`) po „tak” właściciela i sprawdź tag:
+      `gh release list --limit 1`. Wersja w repo ma odpowiadać temu, co widzi użytkownik produkcji
+- [ ] Same `docs` / `chore` / `test` / `refactor` → bez wydania; PR wydania czeka
+- [ ] release-please to kronika, nie bramka — brak scalonego wydania nie wstrzymuje wdrożenia
+
 ### 7. Odporność samego deployu
 - [ ] Deploy przeżywa zerwanie połączenia — uruchamiany w `tmux`/`screen` albo
       ignorujący `SIGHUP`; inaczej rozłączenie zostawia produkcję w połowie operacji

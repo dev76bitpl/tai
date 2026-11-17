@@ -78,6 +78,12 @@ Dla małych zmian – sam subject, bez body. Dla dużych – body obowiązkowe.
 
 Po commicie zamykającym branch AI proponuje PR (tytuł + summary + test plan). Po utworzeniu PR AI sugeruje merge i **nie przechodzi do kolejnego zadania** dopóki user nie potwierdzi merge'a. Merge należy wyłącznie do usera.
 
+**Wydania (release-please, jarvis D-019, tai#248).** Kronika zmian, nie blokada. Nowa wersja, gdy zmianę
+zauważy odbiorca (aplikacja: użytkownik produkcji; szablon: projekty grupy) — `feat`, `fix`, łamiące;
+same `docs`/`chore`/`test`/`refactor` nie. PR wydania scala sesja po „tak” właściciela: w aplikacji przy
+wdrożeniu na produkcję (skill `deploy`, krok 6a), w szablonie po zmianie odczuwalnej dla projektów
+(skill `git`, „Po scaleniu PR: wydanie”). Reguła żyje w skillach, bo tylko one docierają do projektów same.
+
 **Ekonomia PR/CI.** AI **batchuje** commity i proponuje **jeden PR per temat/sesja**. Push/PR proponuje gdy domknięta jest cała paczka albo user mówi wprost „wypychamy".
 
 **Sprzątanie po merge'u (obowiązkowe).** Po merge: `git checkout main` → `git pull origin main` → usunięcie brancha lokalnie (`-d`) i zdalnie. Kolejne zadanie startuje z czystego maina.

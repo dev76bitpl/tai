@@ -302,6 +302,12 @@ W projekcie z lokalnym klonem tai (np. `cdue-elearning`, na gałęzi roboczej). 
 - [ ] W szablonie: `grep script_integrity skills-manifest.json` → nic
 - [ ] W projekcie, którego manifest ma `script_integrity`: `python3 scripts/update-skills.py --sync` → pole zostaje; po `--apply` pola nie ma, reszta manifestu bez zmian
 
+### Scenariusz 13l — reguła wydań dociera do projektów w skillach (#248)
+
+- [ ] Po `python3 scripts/update-skills.py --sync --apply` w projekcie: `.claude/skills/git/SKILL.md` ma sekcję „Po scaleniu PR: wydanie (release-please)”, `.claude/skills/deploy/SKILL.md` krok „6a. Wydanie”
+- [ ] W sesji: scal PR `fix:` → sesja sama sprawdza `gh pr list --state open --search "chore: release in:title"` i proponuje scalenie PR wydania; po scaleniu pokazuje tag z `gh release list --limit 1`
+- [ ] Scal PR `docs:` → sesja nie proponuje wydania
+
 ### Scenariusz 13h — start sesji podaje liczbę otwartych issues (#212)
 
 - [ ] Nowa sesja w repo z otwartymi issues → w kontekście startu linijka „📋 Otwarte issues w repo: N — przejrzyj: `gh issue list`”, bez tytułów
