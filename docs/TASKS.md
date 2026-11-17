@@ -7,6 +7,11 @@ w GitHub Issues (`gh issue list`), nie tutaj. Fazy definiuje [docs/ROADMAP.md](R
 
 ## Stan sesji
 
+- 2026-11-17 **#176 test skanu sekretów w CI jedzie do projektów** — `tests/test_ci_secret_scan.py` (#136)
+  leżał wśród testów narzędzi szablonu, a `--init` usuwa `tests/`; projekt dostawał skan bez testu, więc
+  podbity gitleaks albo przerobiony workflow gubił skan przy zielonym CI. Test przeniesiony do
+  `scripts/dev-guards/tests/`; pomija się tylko bez `.github/`, brak `guards.yml` przy `.github/` = czerwony.
+  Scenariusz 10a; test właściciela 6/6.
 - 2026-11-17 **#228 skille wydajności widoczne i aktualizowane ze źródła** — `web-quality-skills` leżał
   w `.claude/skills/perf/`, gdzie Claude Code go nie widzi; widoczne kopie obok (#52) były poza manifestem,
   więc aktualizacja i sync ich nie ruszały i zostały w starej wersji. Teraz 5 wpisów manifestu
