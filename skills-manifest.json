@@ -7,9 +7,6 @@
     "social",
     "sales"
   ],
-  "script_integrity": {
-    "update-skills.py": "3ae6c680bdcbc102dcdb5798a1a9b7f73ea10b510e461d8144e41a03a5ebe5f7"
-  },
   "custom_skills": {
     "git": {
       "reviewed": "2026-05-24"

@@ -310,6 +310,8 @@ def sync_from_template(template_root: Path, apply: bool, history: "dict[str, set
     if apply:
         project_manifest["custom_skills"] = project_custom
         project_manifest["skills"] = project_vendored
+        # A stale hash nothing checked: it promised protection git history and the script sync give (#154).
+        project_manifest.pop("script_integrity", None)
         save_manifest(project_manifest)
 
     print(f"\n{'═' * 50}")

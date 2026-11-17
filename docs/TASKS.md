@@ -7,6 +7,10 @@ w GitHub Issues (`gh issue list`), nie tutaj. Fazy definiuje [docs/ROADMAP.md](R
 
 ## Stan sesji
 
+- 2026-11-17 **#154 bez martwego `script_integrity`** — hash `update-skills.py` w manifeście był nieaktualny
+  od PR #57 i nic go nie sprawdzało; leżąc w tym samym repo co skrypt i tak niczego by nie chronił
+  (podmiana skryptu = podmiana hasha). Ochronę dają historia gita i sync skryptu z tai. Pole usunięte;
+  `update-skills.py --sync --apply` zdejmuje je z manifestu projektu. Scenariusz 13k; test właściciela 5/5.
 - 2026-11-17 **#151 doctor mówi prawdę o strażnikach synchronizacji** — przy złej ścieżce szablonu
   pisał „sync guard will skip silently” (sprzed ADR-002), URL pokazywał bez wyjaśnienia, a po #166 nie
   widział klona obok projektu, który strażnicy już znajdują. Teraz: tryb potwierdzenia (`tai#N` /
