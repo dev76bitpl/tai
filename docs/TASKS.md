@@ -7,6 +7,11 @@ w GitHub Issues (`gh issue list`), nie tutaj. Fazy definiuje [docs/ROADMAP.md](R
 
 ## Stan sesji
 
+- 2026-11-17 **#151 doctor mówi prawdę o strażnikach synchronizacji** — przy złej ścieżce szablonu
+  pisał „sync guard will skip silently” (sprzed ADR-002), URL pokazywał bez wyjaśnienia, a po #166 nie
+  widział klona obok projektu, który strażnicy już znajdują. Teraz: tryb potwierdzenia (`tai#N` /
+  `[skip-sync] <powód>`) opisany przy URL, złej ścieżce i braku ścieżki; klon obok przez autodetekcję
+  z `.claude/hooks/stack.py`. `GUARDS.md`, scenariusz 13a; test właściciela 5/5.
 - 2026-11-17 **#166 jedna reguła dla obu strażników synchronizacji z szablonem** — strażnik commita
   szukał klona tylko w configu (hook: zmienna, `config.local.json`, config, klon obok) i przepuszczał,
   gdy `CLAUDE.md` w klonie miał jakąkolwiek zmianę: przepuszczał niezwiązaną edycję, blokował sekcję

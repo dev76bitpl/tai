@@ -344,7 +344,9 @@ W projekcie postawionym z szablonu (w samym szablonie doctor pokazuje tylko „T
 - [ ] W `.claude/hooks/config.local.json` wpisz `{"lint": "false"}`, zrób commit → `Stack-aware lint` blokuje (komenda z pliku lokalnego wygrała); usuń wpis → commit przechodzi
 - [ ] W `.claude/hooks/config.local.json` wpisz `ai_template_path` na istniejący katalog, `npm run doctor` → `AI template repo: <ścieżka>  (from config.local.json)`
 - [ ] `AI_TEMPLATE_PATH=<inny katalog> npm run doctor` → ta ścieżka i `(from $AI_TEMPLATE_PATH)`
-- [ ] Bez pliku lokalnego i zmiennej, z adresem URL w `config.json` → `(remote, from config.json)`, bez ostrzeżenia
+- [ ] Bez pliku lokalnego i zmiennej, z adresem URL w `config.json` → `(remote, from config.json)` i dopisek o `tai#N or [skip-sync] <reason>`, bez ostrzeżenia
+- [ ] Nieistniejąca ścieżka → `⚠ ai_template_path doesn't exist`, podpowiedź o `tai#N` / `[skip-sync]`, bez słowa „silently” (#151)
+- [ ] Bez zmiennej i bez `ai_template_path`, klon szablonu (`is_template: true`) w katalogu obok → `✓ AI template repo: <klon>  (template clone next to the project)` (#151)
 
 ### Scenariusz 13j — strażnik commita pyta z tego samego powodu co hook (#166)
 

@@ -228,7 +228,9 @@ klon szablonu wskaż jednym z dwóch sposobów (kolejność: pierwszy znaleziony
 
 Bez żadnego z nich działa autodetekcja klona obok projektu, a potem publiczny URL. `npm run doctor`
 pokazuje w sekcji „Optional integrations”, skąd wziął ścieżkę (`from $AI_TEMPLATE_PATH` /
-`from config.local.json` / `from config.json`).
+`from config.local.json` / `from config.json` / `template clone next to the project`). Bez lokalnego
+klona (URL, brak, zła ścieżka) strażnicy nie porównują dokumentów, tylko przy każdej zmianie
+`CLAUDE.md` proszą o `tai#N` albo `[skip-sync] <powód>` — doctor mówi to wprost.
 
 **Skille z lokalnego klona idą zawsze ze stanu `origin/main`**, nie z katalogu roboczego: gałąź w toku i niezacommitowane zmiany w klonie nie trafiają do projektów. Projekty widzą nową wersję szablonu po `git pull` (albo `git fetch`) w klonie. Klon bez `origin/main` → synchronizacja odmawia z komunikatem.
 

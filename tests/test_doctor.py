@@ -181,6 +181,8 @@ def test_should_accept_remote_url_as_template_source(doctor, tmp_path, capsys, n
     doctor.check_claude_template_path()
     out = capsys.readouterr().out
     assert "✓" in out and "remote, from config.json" in out
+    # a URL means no automatic verification: the guards ask for a decision (#151)
+    assert "tai#N or [skip-sync] <reason>" in out
 
 
 def test_should_warn_when_configured_path_does_not_exist(doctor, tmp_path, capsys, no_template_env):
@@ -188,6 +190,8 @@ def test_should_warn_when_configured_path_does_not_exist(doctor, tmp_path, capsy
     doctor.check_claude_template_path()
     out = capsys.readouterr().out
     assert "⚠" in out and "doesn't exist" in out and "from config.json" in out
+    # the guards never skip silently since ADR-002 — the hint must not say they do (#151)
+    assert "silently" not in out and "tai#N or [skip-sync] <reason>" in out
 
 
 def test_should_warn_when_no_source_is_set(doctor, tmp_path, capsys, no_template_env):
@@ -195,6 +199,39 @@ def test_should_warn_when_no_source_is_set(doctor, tmp_path, capsys, no_template
     doctor.check_claude_template_path()
     out = capsys.readouterr().out
     assert "⚠" in out and "ai_template_path not set" in out and "config.local.json" in out
+    assert "tai#N or [skip-sync] <reason>" in out
+
+
+def _project_next_to_template(tmp_path: Path, marked: bool = True) -> Path:
+    """tmp/project with the real .claude/hooks/stack.py, and tmp/tai beside it."""
+    project = tmp_path / "project"
+    (project / ".claude" / "hooks").mkdir(parents=True)
+    (project / ".claude" / "hooks" / "stack.py").write_text(
+        (ROOT / ".claude" / "hooks" / "stack.py").read_text(encoding="utf-8"), encoding="utf-8")
+    template = tmp_path / "tai"
+    (template / ".claude" / "hooks").mkdir(parents=True)
+    (template / "skills-manifest.json").write_text("{}", encoding="utf-8")
+    (template / ".claude" / "hooks" / "config.json").write_text(json.dumps({"is_template": marked}), encoding="utf-8")
+    return project
+
+
+def _messages(doctor, root: Path) -> list[str]:
+    out: list[str] = []
+    doctor.doctor_checks.claude_template_path(root, lambda m: out.append(f"✓ {m}"),
+                                              lambda m, hint="": out.append(f"⚠ {m} {hint}"))
+    return out
+
+
+def test_should_find_a_template_clone_next_to_the_project_like_the_guards(doctor, tmp_path, no_template_env):
+    # the guards autodetect it (#166); doctor used to say "not set" instead (#151)
+    project = _project_next_to_template(tmp_path)
+    assert _messages(doctor, project) == [f"✓ AI template repo: {tmp_path / 'tai'}  (template clone next to the project)"]
+
+
+def test_should_not_take_an_unmarked_neighbour_for_the_template(doctor, tmp_path, no_template_env):
+    project = _project_next_to_template(tmp_path, marked=False)
+    [line] = _messages(doctor, project)
+    assert line.startswith("⚠ ai_template_path not set")
 
 
 def test_should_say_repo_is_template_when_marked(doctor, tmp_path, capsys, no_template_env):
