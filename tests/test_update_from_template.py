@@ -331,3 +331,62 @@ def test_should_wire_a_new_template_hook_into_a_project_with_its_own_example(tmp
 
     assert "guard-pr-merge.py" in target.read_text(encoding="utf-8")
     assert _json.loads((project / mod.SETTINGS_EXAMPLE).read_text(encoding="utf-8")) == own
+
+
+# Deliberate local differences (tai#286): accepted once with a reason, quiet until the template moves.
+
+def _accept(template: Path, project: Path, path: str, reason: str) -> str:
+    report = mod.compare(template, "origin/main", project)
+    return mod.accept(project, report, path, reason, "2026-11-19")
+
+
+def test_should_stop_reporting_a_local_file_accepted_with_a_reason(template, project):
+    assert _accept(template, project, "scripts/mine.py", "own guard kept on purpose") == ""
+    report = mod.compare(template, "origin/main", project)
+    assert report.files["scripts/mine.py"] == mod.ACCEPTED
+    assert report.accepted == {"scripts/mine.py": "own guard kept on purpose"}
+    assert "scripts/mine.py" not in report.pending()
+
+
+def test_should_keep_the_session_notice_quiet_about_accepted_files(template, project):
+    _switch(template, True)
+    before = mod.session_notice(project, str(template), "2026-11-19")
+    assert "zmienionych lokalnie" in before
+    assert _accept(template, project, "scripts/mine.py", "own guard kept on purpose") == ""
+    after = mod.session_notice(project, str(template), "2026-11-19") or ""
+    assert "zmienionych lokalnie" not in after
+
+
+def test_should_compare_an_accepted_file_again_once_the_template_changes_it(template, project):
+    assert _accept(template, project, "scripts/mine.py", "own guard kept on purpose") == ""
+    _commit(template, {"scripts/mine.py": "template v2\n"}, "v3")
+    _git(template, "update-ref", "refs/remotes/origin/main", "HEAD")
+    report = mod.compare(template, "origin/main", project)
+    assert report.files["scripts/mine.py"] == mod.LOCAL
+    assert report.expired == {"scripts/mine.py": "2026-11-19"}
+
+
+@pytest.mark.parametrize("reason", ["", "ours", "two words"])
+def test_should_refuse_to_accept_without_a_real_reason(template, project, reason):
+    assert "powód" in _accept(template, project, "scripts/mine.py", reason)
+    assert not (project / mod.ACCEPTED_FILE).exists()
+
+
+@pytest.mark.parametrize("path", ["scripts/same.py", "scripts/guard.py", "scripts/unknown.py"])
+def test_should_accept_only_a_file_changed_locally(template, project, path):
+    assert _accept(template, project, path, "own guard kept on purpose") != ""
+    assert not (project / mod.ACCEPTED_FILE).exists()
+
+
+def test_should_never_put_the_accepted_list_on_the_template_file_list():
+    spec = json.loads((ROOT / "template-files.json").read_text(encoding="utf-8"))
+    assert not any(mod.matches(mod.ACCEPTED_FILE, pattern) for pattern in spec["copy"])
+
+
+def test_should_show_accepted_files_with_their_reason_in_the_preview(template, project, capsys):
+    _accept(template, project, "scripts/mine.py", "own guard kept on purpose")
+    mod.print_report(mod.compare(template, "origin/main", project), None)
+    out = capsys.readouterr().out
+    assert "celowo inne" in out
+    assert "scripts/mine.py — own guard kept on purpose" in out
+    assert "zmieniony lokalnie" not in out

@@ -56,6 +56,9 @@ nie dociera do projektów, które powstały wcześniej, i nikt o tym nie wie.
    odpowiada żadnej wydanej wersji szablonu) i wymienia jako „zmieniony lokalnie — porównaj
    ręcznie”. Dlaczego: lokalna zmiana bywa świadomym odejściem (ADR-002, `[skip-sync]`);
    nadpisanie jej to utrata pracy.
+   Po przeglądzie różnicę celową przyjmuje się z powodem (`--accept PLIK "powód"`, tai#286):
+   wpis w `.claude/template-accepted.json` wycisza plik do czasu, aż szablon go zmieni.
+   Dlaczego: bez tego przejrzany plik był zgłaszany w każdej sesji i zgłoszenie traciło sens.
 
 6. **`CLAUDE.md` tylko porównywany, nigdy podmieniany.** Skrypt pokazuje sekcje, które
    w szablonie są nowe albo inne. Dlaczego: plik miesza reguły ogólne z regułami projektu,

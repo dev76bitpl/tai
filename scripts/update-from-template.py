@@ -5,13 +5,20 @@ Pokazuje, co projekt może wciągnąć z szablonu (ADR-006), i na życzenie to k
 Użycie:
     python3 scripts/update-from-template.py           # podgląd, niczego nie zmienia
     python3 scripts/update-from-template.py --apply   # kopiuje pliki „do aktualizacji” i „nowe”
+    python3 scripts/update-from-template.py --accept PLIK "powód"   # różnica celowa, przestań zgłaszać
 
 Źródłem jest wydany `main` szablonu (origin/main lokalnego klona albo świeży klon z adresu),
 nigdy jego katalog roboczy (#179). Listę plików szablonu czyta z `template-files.json`
 w tym samym wydaniu. Plik zmieniony w projekcie nie jest nadpisywany, a `CLAUDE.md` tylko
 porównywany po sekcjach.
+
+Plik zmieniony lokalnie po przeglądzie można przyjąć jako celowo inny (`--accept`, tai#286):
+wpis z powodem trafia do `.claude/template-accepted.json` i plik przestaje się liczyć do
+zgłoszeń. Przyjęcie dotyczy wersji szablonu z chwili przyjęcia — gdy szablon zmieni plik,
+wraca on do porównania.
 """
 import argparse
+import datetime
 import fnmatch
 import hashlib
 import importlib.util
@@ -31,7 +38,10 @@ ROOT = Path(__file__).resolve().parent.parent
 RELEASED_REF = "origin/main"
 LIST_FILE = "template-files.json"
 
-CURRENT, OUTDATED, NEW, LOCAL = "current", "outdated", "new", "local"
+ACCEPTED_FILE = ".claude/template-accepted.json"  # project-only: never on the template list
+MIN_REASON_WORDS = 3  # the same bar as [skip-sync] (sync_ack.py)
+
+CURRENT, OUTDATED, NEW, LOCAL, ACCEPTED = "current", "outdated", "new", "local", "accepted"
 LABELS = {
     OUTDATED: "do aktualizacji (starsza wersja z szablonu)",
     NEW: "nowy w szablonie",
@@ -44,9 +54,12 @@ class Report:
     files: dict[str, str] = field(default_factory=dict)  # path -> state
     sections: list[str] = field(default_factory=list)  # "CLAUDE.md: ## X (nowa)" lines
     error: str = ""
+    released: dict[str, str] = field(default_factory=dict)  # path -> released blob id
+    accepted: dict[str, str] = field(default_factory=dict)  # path -> reason, still valid
+    expired: dict[str, str] = field(default_factory=dict)  # path -> accepted date, template changed since
 
     def pending(self) -> list[str]:
-        return [p for p, s in self.files.items() if s != CURRENT]
+        return [p for p, s in self.files.items() if s not in (CURRENT, ACCEPTED)]
 
 
 def git(repo: Path, *args: str) -> subprocess.CompletedProcess:
@@ -145,6 +158,28 @@ def compare_sections(repo: Path, ref: str, project: Path, names: list[str]) -> l
     return lines
 
 
+def read_accepted(project: Path) -> dict:
+    """path -> {"reason", "template_blob", "date"}; an unreadable file counts as empty."""
+    try:
+        data = json.loads((project / ACCEPTED_FILE).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    files = data.get("files") if isinstance(data, dict) else None
+    return files if isinstance(files, dict) else {}
+
+
+def write_accepted(project: Path, files: dict) -> None:
+    target = project / ACCEPTED_FILE
+    target.parent.mkdir(parents=True, exist_ok=True)
+    data = {
+        "_comment": "Template files this project keeps different on purpose (tai#286). Written by "
+                    "scripts/update-from-template.py --accept. An entry holds while the template "
+                    "file stays at template_blob; once the template changes it, the file is compared again.",
+        "files": dict(sorted(files.items())),
+    }
+    target.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
 def compare(repo: Path, ref: str, project: Path) -> Report:
     """Classify every template file in `project` against the template at `ref`."""
     spec = read_list(repo, ref)
@@ -153,7 +188,8 @@ def compare(repo: Path, ref: str, project: Path) -> Report:
     paths = template_paths(repo, ref, spec)
     released = released_blobs(repo, ref, paths)
     history = historical_blobs(repo, ref, paths)
-    report = Report()
+    accepted = read_accepted(project)
+    report = Report(released=released)
     for path in paths:
         local = project / path
         if not local.is_file():
@@ -165,9 +201,32 @@ def compare(repo: Path, ref: str, project: Path) -> Report:
         elif mine in history.get(path, set()):
             report.files[path] = OUTDATED
         else:
-            report.files[path] = LOCAL
+            entry = accepted.get(path)
+            if isinstance(entry, dict) and entry.get("template_blob") == released.get(path):
+                report.files[path] = ACCEPTED
+                report.accepted[path] = str(entry.get("reason", ""))
+            else:
+                report.files[path] = LOCAL
+                if isinstance(entry, dict):
+                    report.expired[path] = str(entry.get("date", ""))
     report.sections = compare_sections(repo, ref, project, spec.get("compare_sections", []))
     return report
+
+
+def accept(project: Path, report: Report, path: str, reason: str, today: str) -> str:
+    """Record `path` as deliberately different; returns an error message or ''."""
+    words = len(re.findall(r"\w+", reason or ""))
+    if words < MIN_REASON_WORDS:
+        return f"podaj powód, co najmniej {MIN_REASON_WORDS} słowa (np. \"własny krok OSV w CI\")"
+    state = report.files.get(path)
+    if state is None:
+        return f"{path} nie jest plikiem szablonu"
+    if state != LOCAL:
+        return f"{path} nie jest zmieniony lokalnie (stan: {state}) — nie ma czego przyjmować"
+    files = read_accepted(project)
+    files[path] = {"reason": reason.strip(), "template_blob": report.released[path], "date": today}
+    write_accepted(project, files)
+    return ""
 
 
 def apply(repo: Path, ref: str, project: Path, report: Report) -> list[str]:
@@ -275,8 +334,12 @@ def session_notice(project: Path, template_path: str, today: str) -> "str | None
 
 def print_report(report: Report, applied: "list[str] | None") -> None:
     pending = report.pending()
+    if report.accepted:
+        print("\ncelowo inne (przyjęte, nie zgłaszane):")
+        for path, reason in sorted(report.accepted.items()):
+            print(f"  · {path} — {reason}")
     if not pending and not report.sections:
-        print("✓ Projekt ma aktualne pliki szablonu.")
+        print("\n✓ Projekt ma aktualne pliki szablonu.")
         return
     for state in (OUTDATED, NEW, LOCAL):
         group = [p for p in pending if report.files[p] == state]
@@ -284,7 +347,11 @@ def print_report(report: Report, applied: "list[str] | None") -> None:
             print(f"\n{LABELS[state]}:")
             for path in group:
                 done = applied is not None and path in applied
-                print(f"  {'✓' if done else '•'} {path}")
+                note = f"  (przyjęty {report.expired[path]}, szablon od tego czasu go zmienił)" \
+                    if path in report.expired else ""
+                print(f"  {'✓' if done else '•'} {path}{note}")
+    if any(report.files[p] == LOCAL for p in pending):
+        print("\nRóżnica celowa? python3 scripts/update-from-template.py --accept PLIK \"powód\"")
     if report.sections:
         print("\nSekcje do przejrzenia ręcznie (skrypt ich nie zmienia):")
         for line in report.sections:
@@ -391,6 +458,8 @@ def run_after_apply(project: Path, applied: "list[str]", repo: "Path | None" = N
 def main() -> int:
     parser = argparse.ArgumentParser(description="Aktualizacja projektu z szablonu (ADR-006)")
     parser.add_argument("--apply", action="store_true", help="skopiuj pliki do aktualizacji i nowe")
+    parser.add_argument("--accept", nargs=2, metavar=("PLIK", "POWÓD"),
+                        help="zapisz plik zmieniony lokalnie jako celowo inny, z powodem")
     parser.add_argument("--after-apply", action="store_true",
                         help="tylko kroki po skopiowaniu (wywołuje je --apply, gdy podmienił ten skrypt)")
     args = parser.parse_args()
@@ -408,6 +477,14 @@ def main() -> int:
         if report.error:
             print(f"❌ {report.error}")
             return 1
+        if args.accept:
+            path, reason = args.accept
+            error = accept(ROOT, report, path, reason, datetime.date.today().isoformat())
+            if error:
+                print(f"❌ {error}")
+                return 1
+            print(f"✓ {path} przyjęty jako celowo inny ({ACCEPTED_FILE}). Zapisz plik w commicie.")
+            return 0
         applied = apply(repo, ref, ROOT, report) if args.apply else None
         print_report(report, applied)
         print_guard_warnings(blocking_guard_commands(repo, ref, ROOT))

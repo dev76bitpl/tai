@@ -120,6 +120,10 @@ Numery scenariuszy są stałe (odwołują się do nich zgłoszenia i log sesji),
   → lista „do aktualizacji”, nic w projekcie się nie zmienia (`git status` czysty)
 - [ ] Dopisz linię do jednego z plików strażników, uruchom ponownie → plik w grupie „zmieniony lokalnie”
 - [ ] `--apply` → pliki „do aktualizacji” podmienione, zmieniony lokalnie nietknięty; kolejny podgląd pokazuje tylko jego
+- [ ] `--accept <ten plik> "własna wersja z powodem"` → `.claude/template-accepted.json` z wpisem; podgląd pokazuje plik
+  w „celowo inne” z powodem, nie w „zmieniony lokalnie”; nowa sesja Claude Code nie liczy go w „🔄 [t-ai] Szablon ma zmiany”
+- [ ] `--accept` z powodem z 1–2 słów albo dla pliku aktualnego → odmowa, plik `.claude/template-accepted.json` nie powstaje
+- [ ] Zmień ten plik w klonie szablonu (commit, `origin/main`) → podgląd znów pokazuje go jako „zmieniony lokalnie (przyjęty …, szablon od tego czasu go zmienił)”
 - [ ] Niezacommitowana zmiana w klonie szablonu nie pojawia się w podglądzie
 - [ ] Szablon z `"template_update_check": true` w `.claude/hooks/config.json` na `origin/main`: pierwsza wiadomość
   nowej sesji Claude Code w projekcie → w terminalu linia „UserPromptSubmit says: 🔄 [t-ai] Szablon ma zmiany: …”; z `false` → nic
