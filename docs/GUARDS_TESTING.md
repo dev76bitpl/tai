@@ -335,6 +335,14 @@ W projekcie z lokalnym klonem tai (np. `cdue-elearning`, na gałęzi roboczej). 
 - [ ] W sesji: scal PR `fix:` → sesja sama sprawdza `gh pr list --state open --search "chore: release in:title"` i proponuje scalenie PR wydania; po scaleniu pokazuje tag z `gh release list --limit 1`
 - [ ] Scal PR `docs:` → sesja nie proponuje wydania
 
+### Scenariusz 13m — skill z GitHuba bez notatek narzędzia autora (`.hive/`) (#236)
+
+- [ ] `ls -a .claude/skills/review` → nie ma katalogu `.hive`
+- [ ] `grep -n ALWAYS_EXCLUDE scripts/skills_upstream.py` → `[".git", ".hive"]` — dotyczy każdego skilla z GitHuba,
+      niezależnie od jego `exclude` w `skills-manifest.json`
+- [ ] `python3 -m pytest -q tests/test_update_skills.py -k hive` → `2 passed` (pobranie pomija `.hive/`;
+      synchronizacja zabiera `.hive/` projektowi, który dostał go ze starszym wydaniem)
+
 ### Scenariusz 13h — start sesji podaje liczbę otwartych issues (#212)
 
 - [ ] Nowa sesja w repo z otwartymi issues → w kontekście startu linijka „📋 Otwarte issues w repo: N — przejrzyj: `gh issue list`”, bez tytułów
