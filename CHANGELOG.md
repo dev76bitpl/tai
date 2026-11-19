@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.27](https://github.com/dev76bitpl/tai/compare/v0.1.26...v0.1.27) (2026-11-19)
+
+
+### Bug Fixes
+
+* **hooks:** Skip session-log headings as open tasks ([#289](https://github.com/dev76bitpl/tai/issues/289)) [user-tested] ([#290](https://github.com/dev76bitpl/tai/issues/290)) ([b0aaaed](https://github.com/dev76bitpl/tai/commit/b0aaaed2ed166aa853c37b65b5184f9a37604e89))
+
 ## [0.1.26](https://github.com/dev76bitpl/tai/compare/v0.1.25...v0.1.26) (2026-11-19)
 
 
