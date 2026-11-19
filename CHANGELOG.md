@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.25](https://github.com/dev76bitpl/tai/compare/v0.1.24...v0.1.25) (2026-11-19)
+
+
+### Bug Fixes
+
+* **hooks:** Show merge bypass as a shell comment ([#280](https://github.com/dev76bitpl/tai/issues/280)) [user-tested] ([#281](https://github.com/dev76bitpl/tai/issues/281)) ([93c705a](https://github.com/dev76bitpl/tai/commit/93c705a8070dbfe2575708b079edd79ed3cc1c7c))
+* **update:** Wire new hooks from template example ([#282](https://github.com/dev76bitpl/tai/issues/282)) [user-tested] ([#284](https://github.com/dev76bitpl/tai/issues/284)) ([50a6be7](https://github.com/dev76bitpl/tai/commit/50a6be73d9b59993482d3a1332c5170cbbdd6a10))
+
 ## [0.1.24](https://github.com/dev76bitpl/tai/compare/v0.1.23...v0.1.24) (2026-11-19)
 
 
