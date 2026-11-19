@@ -7,6 +7,10 @@ w GitHub Issues (`gh issue list`), nie tutaj. Fazy definiuje [docs/ROADMAP.md](R
 
 ## Stan sesji
 
+- 2026-11-19 **#280 flaga pominięcia `guard-pr-merge` jako komentarz powłoki** — przy merge'u PR-a wydania
+  v0.1.24 `gh pr merge 278 --squash [skip-merge-check]` padło na `gh` („accepts at most 1 arg(s)”); działa tylko
+  `# [skip-merge-check]`. Komunikat blokady i `GUARDS.md` podają tę formę, test pilnuje komunikatu, SELF_TEST 9/9.
+  Test mechaniczny uruchomiony przez sesję, właściciel przyjął wynik.
 - 2026-11-19 **#236 skill `code-review` bez `.hive/` autora** — w `.claude/skills/review/.hive/` przyjechały notatki
   i instrukcje dla agenta z narzędzia Hive, którego używa autor u źródła (`PROTOCOL.md` każe agentowi je
   czytać); `exclude` skilla ich nie obejmował, sync rozniósł je do projektów. Teraz `ALWAYS_EXCLUDE`
