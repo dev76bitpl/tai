@@ -199,13 +199,13 @@ Numery scenariuszy są stałe (odwołują się do nich zgłoszenia i log sesji),
 
 ### Scenariusz 11b — hook blokuje, gdy nie odczyta własnego wejścia
 
-Dotyczy czterech hooków blokujących: `guard-process-kill`, `guard-template-sync`, `guard-ai-template`,
-`guard-testing-checklist`. Polecenia niczego nie ubijają ani nie commitują — hook dostaje tylko tekst.
+Dotyczy pięciu hooków blokujących: `guard-process-kill`, `guard-template-sync`, `guard-ai-template`,
+`guard-testing-checklist`, `guard-pr-merge`. Polecenia niczego nie ubijają ani nie commitują — hook dostaje tylko tekst.
 Po każdym poleceniu `echo $?` pokazuje kod wyjścia (blokuje wyłącznie kod **2**).
 
 - [ ] `echo 'not json' | python3 .claude/hooks/guard-process-kill.py; echo $?` → komunikat
       `❌ [BLOCK] guard-process-kill: cannot read its own input (input is not valid JSON)` i kod `2`
-- [ ] To samo dla pozostałych trzech hooków → ten sam komunikat z nazwą hooka i kod `2`
+- [ ] To samo dla pozostałych czterech hooków → ten sam komunikat z nazwą hooka i kod `2`
 - [ ] `printf '' | python3 .claude/hooks/guard-process-kill.py; echo $?` (puste wejście) → blokada, kod `2`
 - [ ] `echo '{"tool_name":"Edit","tool_input":{"file_path":"x"}}' | python3 .claude/hooks/guard-process-kill.py; echo $?`
       → nic nie wypisuje, kod `0` (inne narzędzie niż powłoka — cisza jest poprawnym wynikiem)
@@ -218,6 +218,22 @@ Po każdym poleceniu `echo $?` pokazuje kod wyjścia (blokuje wyłącznie kod **
 - [ ] `echo '{"tool_input":{"command":"pgrep -f node | xargs kill"}}' | python3 .claude/hooks/guard-process-kill.py; echo $?`
       → blokada `kill fed by pgrep`, kod `2`
 - [ ] `python3 -m pytest -q` z katalogu głównego → wszystkie testy zielone, w tym te z `.claude/hooks/tests/`
+
+### Scenariusz 11h — `gh pr merge` tylko przy zielonym CI (#211)
+
+Polecenia niczego nie mergują — hook dostaje tylko tekst. Ostatnie dwa pytają GitHuba (`gh`
+zalogowane, sieć), ale wyłącznie czytają stan PR-a.
+
+- [ ] `echo '{"tool_input":{"command":"gh pr list"}}' | python3 .claude/hooks/guard-pr-merge.py; echo $?`
+      → nic nie wypisuje, kod `0`
+- [ ] `echo '{"tool_input":{"command":"git commit -m \\"docs: gh pr merge policy\\""}}' | python3 .claude/hooks/guard-pr-merge.py; echo $?`
+      → nic nie wypisuje, kod `0` (wzmianka w cudzysłowie to nie komenda)
+- [ ] `echo '{"tool_input":{"command":"gh pr merge 999999999 --squash [skip-merge-check]"}}' | python3 .claude/hooks/guard-pr-merge.py; echo $?`
+      → nic nie wypisuje, kod `0` (flaga pominięcia, `gh` nie jest pytane)
+- [ ] `echo '{"tool_input":{"command":"gh pr merge 999999999 --squash"}}' | python3 .claude/hooks/guard-pr-merge.py; echo $?`
+      → `❌ [BLOCK] guard-pr-merge: could not read the CI state of PR 999999999 (...)`, kod `2`
+- [ ] Ten sam wzór z numerem zmergowanego PR-a z zielonym CI (np. `272`) → nic nie wypisuje, kod `0`
+- [ ] `python3 .claude/hooks/guard-pr-merge.py --self-test` → `8/8 passed`
 
 ### Scenariusz 11d — strażnik commita blokuje, gdy nie może sprawdzić
 

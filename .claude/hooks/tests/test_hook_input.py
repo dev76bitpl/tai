@@ -21,6 +21,7 @@ BLOCKING_HOOKS = [
     "guard-template-sync",
     "guard-ai-template",
     "guard-testing-checklist",
+    "guard-pr-merge",
 ]
 
 
