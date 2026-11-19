@@ -479,6 +479,7 @@ potem przegląd `git diff` i commit. Stany plików:
 | do aktualizacji — w projekcie leży starsza wydana wersja | podmienia |
 | nowy w szablonie | dodaje |
 | zmieniony lokalnie — treść nie pasuje do żadnej wersji szablonu | nic; porównaj ręcznie |
+| celowo inny — przyjęty `--accept PLIK "powód"` (wpis w `.claude/template-accepted.json`) | nic; nie zgłaszany, dopóki szablon nie zmieni pliku |
 
 Podgląd ostrzega też o poleceniu lintu albo testów z `.claude/hooks/config.json`, którego nie da się uruchomić
 — po aktualizacji strażnicy zablokują nim każdy commit (sekcja „Konfiguracja strażników”). Projekt sprzed ADR-006

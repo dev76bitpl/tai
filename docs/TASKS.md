@@ -7,6 +7,12 @@ w GitHub Issues (`gh issue list`), nie tutaj. Fazy definiuje [docs/ROADMAP.md](R
 
 ## Stan sesji
 
+- 2026-11-19 **#286 celowa różnica z szablonem bez zgłoszeń w każdej sesji** — skolaro po v0.1.25 (#571) dalej
+  widziało na starcie sesji 4 pliki „zmienione lokalnie”, choć różnice przejrzano i zostawiono celowo. Teraz
+  `update-from-template.py --accept PLIK "powód"` zapisuje wpis w `.claude/template-accepted.json` (plik projektu);
+  plik idzie do „celowo inne” z powodem i nie liczy się do komunikatu, dopóki szablon go nie zmieni. Powód min.
+  3 słowa. Scenariusz 10l. Pierwsza zmiana w tai prowadzona przez jarvisa (jarvis D-027); test właściciela na
+  kopii skolaro 5/5.
 - 2026-11-19 **#282 aktualizacja podpina nowe hooki także przy własnym przykładzie ustawień** — odbiór v0.1.24
   (jarvis, skolaro): `guard-pr-merge` nie trafiał do `settings.local.json`, bo `claude_settings.py` brał brakujące
   hooki tylko z przykładu projektu, a zmieniony lokalnie przykład aktualizacja zostawia. Teraz `--apply` (i świeża
