@@ -7,6 +7,10 @@ w GitHub Issues (`gh issue list`), nie tutaj. Fazy definiuje [docs/ROADMAP.md](R
 
 ## Stan sesji
 
+- 2026-11-19 **#289 start sesji nie robi zadań z wpisów dziennika** — `session-context.py` w trybie zapasowym brał
+  każdy nagłówek `###` z `docs/TASKS.md` za otwarte zadanie; w skolaro (dziennik sesji, bez checkboxów) wyszło 26
+  fałszywych `- [ ]`. Teraz tryb zapasowy wypisuje tylko nagłówki z `**Status:**` innym niż zakończony. 3 testy
+  (`test_session_context_tasks.py`). Robione przez jarvisa (D-027); test właściciela na TASKS.md skolaro: 26 → 0.
 - 2026-11-19 **#286 celowa różnica z szablonem bez zgłoszeń w każdej sesji** — skolaro po v0.1.25 (#571) dalej
   widziało na starcie sesji 4 pliki „zmienione lokalnie”, choć różnice przejrzano i zostawiono celowo. Teraz
   `update-from-template.py --accept PLIK "powód"` zapisuje wpis w `.claude/template-accepted.json` (plik projektu);
