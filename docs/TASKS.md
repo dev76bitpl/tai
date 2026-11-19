@@ -7,6 +7,12 @@ w GitHub Issues (`gh issue list`), nie tutaj. Fazy definiuje [docs/ROADMAP.md](R
 
 ## Stan sesji
 
+- 2026-11-19 **#211 `gh pr merge` tylko przy zielonym CI** — wymóg zielonego checku po stronie GitHuba (branch
+  protection) na prywatnym repo wymaga płatnego planu; w cdue trzy PR-y weszły z czerwonym CI. Port guarda
+  `guard-pr-merge.py` z cdue-ai-dev-course: blokuje przy czerwonym, trwającym, brakującym albo nieczytelnym stanie
+  checków; flaga `[skip-merge-check]` po zgodzie właściciela. Nie łapie merge'a z GitHuba w przeglądarce (opisane
+  w `GUARDS.md`). PR wydania z release-please z checkami `action_required` też zostanie zablokowany — dopisane do
+  znanych pułapek. Scenariusz 11h; test właściciela 7/7.
 - 2026-11-19 **#271 jedno `--apply` wystarcza, gdy aktualizacja podmienia sam skrypt** — odbiór v0.1.22 przez jarvisa:
   stary `update-from-template.py` kopiował pliki, ale nie znał `wire_hooks()`, więc hooki dochodziły dopiero przy
   drugim `--apply`. Gdy `--apply` podmieni sam skrypt, kroki po skopiowaniu wykonuje świeża kopia
