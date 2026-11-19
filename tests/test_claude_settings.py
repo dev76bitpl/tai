@@ -134,7 +134,7 @@ def test_should_not_add_a_hook_already_wired_in_the_shared_settings(tmp_path):
 
 def test_should_wire_the_hooks_after_a_template_update(tmp_path):
     source = (ROOT / "scripts" / "update-from-template.py").read_text(encoding="utf-8")
-    assert "wire_hooks(ROOT)" in source and "claude_settings.py" in source
+    assert "run_after_apply(ROOT, applied)" in source and "claude_settings.py" in source
 
 
 def test_should_do_nothing_without_the_example(tmp_path):

@@ -102,6 +102,8 @@ Numery scenariuszy są stałe (odwołują się do nich zgłoszenia i log sesji),
 - [ ] Hook, którego skryptu nie ma w `.claude/hooks/`, nie zostaje dopisany
 - [ ] `python3 scripts/update-from-template.py --apply` → po skopiowaniu plików ten sam komunikat; nowa sesja Claude Code pokazuje kontekst startu i informację o zmianach w szablonie
 - [ ] Zepsuty JSON w `settings.local.json` → plik bez zmian, checkout nie pada
+- [ ] `--apply`, które podmienia sam `update-from-template.py` → kroki po skopiowaniu wykonuje świeża kopia (`--after-apply`); jedno `--apply` wystarcza (#271)
+- [ ] Projekt ze skryptem sprzed v0.1.22: po pierwszym `--apply` raz `python3 scripts/claude_settings.py` (stary skrypt nie zna kroków po skopiowaniu)
 
 ### Scenariusz 10k — dołączenie do projektu zaczyna się od doctora
 

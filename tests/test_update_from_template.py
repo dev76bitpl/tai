@@ -267,3 +267,40 @@ def test_should_check_the_real_released_guards_against_an_inherited_composer_lin
     _commit(repo, {mod.GUARD_STACK: (ROOT / mod.GUARD_STACK).read_text(encoding="utf-8")}, "guards")
     found = mod.blocking_guard_commands(repo, "HEAD", project)
     assert len(found) == 1 and found[0].startswith("„lint”: composer lint — ")
+
+
+# #271: an --apply that replaced this very script must run the steps after copying from the
+# fresh copy — the old code still running does not know steps added in the new version.
+def test_should_run_the_steps_after_copying_from_the_fresh_copy_when_the_script_was_replaced(tmp_path, monkeypatch):
+    (tmp_path / "scripts").mkdir()
+    (tmp_path / "scripts" / "update-from-template.py").write_text("", encoding="utf-8")
+    calls, steps = [], []
+    monkeypatch.setattr(mod.subprocess, "run", lambda cmd, **kw: calls.append(cmd))
+    monkeypatch.setattr(mod, "after_apply", lambda project: steps.append(project))
+    mod.run_after_apply(tmp_path, ["scripts/update-from-template.py", "scripts/claude_settings.py"])
+    assert calls == [[mod.sys.executable, str(tmp_path / "scripts" / "update-from-template.py"), "--after-apply"]]
+    assert steps == []
+
+
+def test_should_run_the_steps_itself_when_the_script_was_not_replaced(tmp_path, monkeypatch):
+    calls, steps = [], []
+    monkeypatch.setattr(mod.subprocess, "run", lambda cmd, **kw: calls.append(cmd))
+    monkeypatch.setattr(mod, "after_apply", lambda project: steps.append(project))
+    mod.run_after_apply(tmp_path, ["scripts/claude_settings.py"])
+    assert calls == [] and steps == [tmp_path]
+
+
+def test_should_wire_the_hooks_with_after_apply_alone(tmp_path):
+    """The fresh copy, started with --after-apply, wires the hooks without comparing anything."""
+    import shutil
+    import sys
+    for rel in ("scripts/update-from-template.py", "scripts/claude_settings.py", ".claude/settings.local.json.example",
+                ".claude/hooks/session-context.py"):
+        (tmp_path / rel).parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy(ROOT / rel, tmp_path / rel)
+    target = tmp_path / ".claude" / "settings.local.json"
+    target.write_text('{"hooks": {}}', encoding="utf-8")
+    done = subprocess.run([sys.executable, str(tmp_path / "scripts" / "update-from-template.py"), "--after-apply"],
+                          cwd=tmp_path, capture_output=True, text=True)
+    assert done.returncode == 0, done.stderr
+    assert "session-context.py" in target.read_text(encoding="utf-8")
