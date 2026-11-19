@@ -341,18 +341,42 @@ def print_guard_warnings(found: list[str]) -> None:
 
 
 def wire_hooks(project: Path) -> None:
-    """After copying, wire the template hooks the project's settings.local.json lacks (#268) —
-    with the copy just taken, so a project whose own file never ran session-context.py starts
-    hearing about template changes. Runs as a separate process: the module is fresh from the copy."""
+    """Wire the template hooks the project's settings.local.json lacks (#268) — with the copy just
+    taken, so a project whose own file never ran session-context.py starts hearing about template
+    changes. Runs as a separate process: the module is fresh from the copy."""
     script = project / "scripts" / "claude_settings.py"
     if script.is_file():
         subprocess.run([sys.executable, str(script)], cwd=project)
 
 
+SELF = "scripts/update-from-template.py"
+
+
+def after_apply(project: Path) -> None:
+    """Steps after the files are copied. A new step goes here; see run_after_apply."""
+    wire_hooks(project)
+
+
+def run_after_apply(project: Path, applied: "list[str]") -> None:
+    """When --apply replaced this very script, the steps after copying come from the fresh copy,
+    not from the old code still running (#271): otherwise a step added in the new version would
+    wait for a second --apply."""
+    fresh = project / SELF
+    if SELF in applied and fresh.is_file():
+        subprocess.run([sys.executable, str(fresh), "--after-apply"], cwd=project)
+    else:
+        after_apply(project)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Aktualizacja projektu z szablonu (ADR-006)")
     parser.add_argument("--apply", action="store_true", help="skopiuj pliki do aktualizacji i nowe")
+    parser.add_argument("--after-apply", action="store_true",
+                        help="tylko kroki po skopiowaniu (wywołuje je --apply, gdy podmienił ten skrypt)")
     args = parser.parse_args()
+    if args.after_apply:
+        after_apply(ROOT)
+        return 0
 
     repo, ref, tmp, error = resolve_source(ROOT)
     if error:
@@ -368,7 +392,7 @@ def main() -> int:
         print_report(report, applied)
         print_guard_warnings(blocking_guard_commands(repo, ref, ROOT))
         if args.apply:
-            wire_hooks(ROOT)
+            run_after_apply(ROOT, applied)
     finally:
         if tmp:
             shutil.rmtree(tmp, ignore_errors=True)

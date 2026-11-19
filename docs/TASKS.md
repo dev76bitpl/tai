@@ -7,6 +7,12 @@ w GitHub Issues (`gh issue list`), nie tutaj. Fazy definiuje [docs/ROADMAP.md](R
 
 ## Stan sesji
 
+- 2026-11-19 **#271 jedno `--apply` wystarcza, gdy aktualizacja podmienia sam skrypt** — odbiór v0.1.22 przez jarvisa:
+  stary `update-from-template.py` kopiował pliki, ale nie znał `wire_hooks()`, więc hooki dochodziły dopiero przy
+  drugim `--apply`. Gdy `--apply` podmieni sam skrypt, kroki po skopiowaniu wykonuje świeża kopia
+  (`--after-apply`). Projekty ze skryptem sprzed v0.1.22: raz `python3 scripts/claude_settings.py` — starego kodu
+  z szablonu nie naprawimy; obejście przez `stack.py` odrzucone (ukryty zapis w kroku sprawdzania). Decyzja
+  właściciela: oba punkty.
 - 2026-11-19 **#268 projekt z własnym `settings.local.json` nie słyszał o zmianach w szablonie** — właściciel ze
   skolaro: „przy starcie sesji nie ma info że coś jest nowego”. Plik sprzed szablonu nie podpinał
   `session-context.py`, a `claude_settings.py` istniejącego pliku nie ruszał (#260). Teraz dopisuje brakujące hooki
