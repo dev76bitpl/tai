@@ -340,6 +340,15 @@ def print_guard_warnings(found: list[str]) -> None:
     print("   Popraw wpis albo go usuń (zostanie polecenie dla stosu): docs/GUARDS.md, „Konfiguracja strażników”.")
 
 
+def wire_hooks(project: Path) -> None:
+    """After copying, wire the template hooks the project's settings.local.json lacks (#268) —
+    with the copy just taken, so a project whose own file never ran session-context.py starts
+    hearing about template changes. Runs as a separate process: the module is fresh from the copy."""
+    script = project / "scripts" / "claude_settings.py"
+    if script.is_file():
+        subprocess.run([sys.executable, str(script)], cwd=project)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Aktualizacja projektu z szablonu (ADR-006)")
     parser.add_argument("--apply", action="store_true", help="skopiuj pliki do aktualizacji i nowe")
@@ -358,6 +367,8 @@ def main() -> int:
         applied = apply(repo, ref, ROOT, report) if args.apply else None
         print_report(report, applied)
         print_guard_warnings(blocking_guard_commands(repo, ref, ROOT))
+        if args.apply:
+            wire_hooks(ROOT)
     finally:
         if tmp:
             shutil.rmtree(tmp, ignore_errors=True)

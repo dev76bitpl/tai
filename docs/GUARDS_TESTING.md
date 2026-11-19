@@ -94,6 +94,15 @@ Numery scenariuszy są stałe (odwołują się do nich zgłoszenia i log sesji),
 - [ ] Instalacja bez `post-checkout` → doctor: `⚠ git hook post-checkout not installed` z komendą
 - [ ] Sprzątanie: `git worktree remove ../<repo>-test`, `git branch -D test`
 
+### Scenariusz 10n — własny `settings.local.json` dostaje brakujące hooki szablonu (#268)
+
+- [ ] Projekt z własnym `.claude/settings.local.json` bez `session-context.py` (np. tylko `guard-process-kill.py` i hook projektu) → `python3 scripts/claude_settings.py` wypisuje `[claude-settings] added template hooks …` z listą
+- [ ] W pliku: hooki projektu i inne klucze (`permissions`) bez zmian; dopisane hooki szablonu, bez `INTERPRETER`, bez dubli
+- [ ] Drugi przebieg → cisza, plik bez zmian
+- [ ] Hook, którego skryptu nie ma w `.claude/hooks/`, nie zostaje dopisany
+- [ ] `python3 scripts/update-from-template.py --apply` → po skopiowaniu plików ten sam komunikat; nowa sesja Claude Code pokazuje kontekst startu i informację o zmianach w szablonie
+- [ ] Zepsuty JSON w `settings.local.json` → plik bez zmian, checkout nie pada
+
 ### Scenariusz 10k — dołączenie do projektu zaczyna się od doctora
 
 - [ ] Świeży projekt po `--init`: `README.md` ma sekcję „Po sklonowaniu” z poleceniem `python3 scripts/doctor.py`
