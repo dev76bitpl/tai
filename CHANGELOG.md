@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.28](https://github.com/dev76bitpl/tai/compare/v0.1.27...v0.1.28) (2026-11-19)
+
+
+### Features
+
+* **update:** Accept deliberate CLAUDE.md sections ([#292](https://github.com/dev76bitpl/tai/issues/292)) [user-tested] ([#293](https://github.com/dev76bitpl/tai/issues/293)) ([0ce04f7](https://github.com/dev76bitpl/tai/commit/0ce04f7bffdd080d1498a6b44e9004ad8ce487fd))
+
 ## [0.1.27](https://github.com/dev76bitpl/tai/compare/v0.1.26...v0.1.27) (2026-11-19)
 
 
