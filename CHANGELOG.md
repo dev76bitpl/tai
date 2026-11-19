@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.26](https://github.com/dev76bitpl/tai/compare/v0.1.25...v0.1.26) (2026-11-19)
+
+
+### Bug Fixes
+
+* **update:** Accept deliberate local diffs ([#286](https://github.com/dev76bitpl/tai/issues/286)) [user-tested] ([#287](https://github.com/dev76bitpl/tai/issues/287)) ([78abac6](https://github.com/dev76bitpl/tai/commit/78abac67108f99c5731d07885367f882b427d6ed))
+
 ## [0.1.25](https://github.com/dev76bitpl/tai/compare/v0.1.24...v0.1.25) (2026-11-19)
 
 
