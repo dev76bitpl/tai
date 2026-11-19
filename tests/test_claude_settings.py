@@ -39,20 +39,106 @@ def _with_example(root: Path) -> Path:
 def test_should_create_the_file_with_this_machines_python(tmp_path, platform, command):
     root = _with_example(tmp_path)
     with mock.patch("sys.platform", platform):
-        assert mod.ensure_settings_local(root) == "created"
+        assert mod.ensure_settings_local(root) == ("created", [])
     text = (root / ".claude" / "settings.local.json").read_text(encoding="utf-8")
     assert f'"{command} ${{CLAUDE_PROJECT_DIR}}' in text and "INTERPRETER" not in text
 
 
-def test_should_never_overwrite_an_existing_file(tmp_path):
+def test_should_leave_an_existing_file_alone_when_nothing_is_missing(tmp_path):
     root = _with_example(tmp_path)
     (root / ".claude" / "settings.local.json").write_text('{"mine": true}', encoding="utf-8")
-    assert mod.ensure_settings_local(root) == "present"
+    assert mod.ensure_settings_local(root) == ("present", [])
     assert (root / ".claude" / "settings.local.json").read_text(encoding="utf-8") == '{"mine": true}'
 
 
+def test_should_leave_an_unreadable_file_alone(tmp_path):
+    root = _project(tmp_path, "session-context.py")
+    (root / ".claude" / "settings.local.json").write_text("{broken", encoding="utf-8")
+    assert mod.ensure_settings_local(root) == ("unreadable", [])
+    assert (root / ".claude" / "settings.local.json").read_text(encoding="utf-8") == "{broken"
+
+
+# #268: a project with its own settings.local.json from before the template never ran
+# session-context.py, so its session start never said the template had changes.
+REAL_EXAMPLE = (ROOT / ".claude" / "settings.local.json.example").read_text(encoding="utf-8")
+OWN = {
+    "permissions": {"allow": ["Bash(npm test)"]},
+    "hooks": {
+        "PostToolUse": [{"matcher": "Edit|Write|MultiEdit", "hooks": [
+            {"type": "command", "command": "python3 ${CLAUDE_PROJECT_DIR}/.claude/hooks/help-source-signal.py"}]}],
+        "PreToolUse": [{"matcher": "Bash|PowerShell", "hooks": [
+            {"type": "command", "command": "python3 ${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-process-kill.py"}]}],
+    },
+}
+TEMPLATE_HOOKS = ["session-context.py", "guard-process-kill.py", "guard-ai-template.py",
+                  "guard-template-sync.py", "guard-testing-checklist.py", "suggest-pr.py"]
+
+
+def _project(root: Path, *scripts: str) -> Path:
+    hooks = root / ".claude" / "hooks"
+    hooks.mkdir(parents=True, exist_ok=True)
+    (root / ".claude" / "settings.local.json.example").write_text(REAL_EXAMPLE, encoding="utf-8")
+    for name in scripts:
+        (hooks / name).write_text("", encoding="utf-8")
+    return root
+
+
+def _commands(settings: dict, event: str) -> "list[str]":
+    return [h["command"] for g in settings["hooks"].get(event, []) for h in g["hooks"]]
+
+
+def test_should_add_the_template_hooks_an_own_file_lacks(tmp_path):
+    root = _project(tmp_path, "help-source-signal.py", *TEMPLATE_HOOKS)
+    target = root / ".claude" / "settings.local.json"
+    target.write_text(json.dumps(OWN), encoding="utf-8")
+    with mock.patch("sys.platform", "linux"):
+        state, added = mod.ensure_settings_local(root)
+    assert state == "updated"
+    assert sorted(added) == sorted(set(TEMPLATE_HOOKS) - {"guard-process-kill.py"})
+    settings = json.loads(target.read_text(encoding="utf-8"))
+    assert settings["permissions"] == OWN["permissions"]
+    assert _commands(settings, "UserPromptSubmit") == ["python3 ${CLAUDE_PROJECT_DIR}/.claude/hooks/session-context.py"]
+    pre = _commands(settings, "PreToolUse")
+    assert pre.count("python3 ${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-process-kill.py") == 1
+    assert len(settings["hooks"]["PreToolUse"]) == 1 and len(pre) == 4  # same matcher: one group
+    post = settings["hooks"]["PostToolUse"]
+    assert post[0] == OWN["hooks"]["PostToolUse"][0]  # the project's own hook is untouched
+    assert post[1]["matcher"] == "Bash|PowerShell" and _commands({"hooks": {"x": post[1:]}}, "x") == [
+        "python3 ${CLAUDE_PROJECT_DIR}/.claude/hooks/suggest-pr.py"]
+    assert "INTERPRETER" not in target.read_text(encoding="utf-8")
+
+
+def test_should_add_nothing_the_second_time(tmp_path):
+    root = _project(tmp_path, *TEMPLATE_HOOKS)
+    (root / ".claude" / "settings.local.json").write_text(json.dumps(OWN), encoding="utf-8")
+    mod.ensure_settings_local(root)
+    before = (root / ".claude" / "settings.local.json").read_text(encoding="utf-8")
+    assert mod.ensure_settings_local(root) == ("present", [])
+    assert (root / ".claude" / "settings.local.json").read_text(encoding="utf-8") == before
+
+
+def test_should_not_wire_a_hook_whose_script_the_project_does_not_have(tmp_path):
+    root = _project(tmp_path, "session-context.py")
+    (root / ".claude" / "settings.local.json").write_text(json.dumps(OWN), encoding="utf-8")
+    assert mod.ensure_settings_local(root) == ("updated", ["session-context.py"])
+
+
+def test_should_not_add_a_hook_already_wired_in_the_shared_settings(tmp_path):
+    root = _project(tmp_path, "session-context.py")
+    (root / ".claude" / "settings.json").write_text(json.dumps({"hooks": {"UserPromptSubmit": [{"hooks": [
+        {"type": "command", "command": "py ${CLAUDE_PROJECT_DIR}/.claude/hooks/session-context.py"}]}]}}),
+        encoding="utf-8")
+    (root / ".claude" / "settings.local.json").write_text(json.dumps(OWN), encoding="utf-8")
+    assert mod.ensure_settings_local(root) == ("present", [])
+
+
+def test_should_wire_the_hooks_after_a_template_update(tmp_path):
+    source = (ROOT / "scripts" / "update-from-template.py").read_text(encoding="utf-8")
+    assert "wire_hooks(ROOT)" in source and "claude_settings.py" in source
+
+
 def test_should_do_nothing_without_the_example(tmp_path):
-    assert mod.ensure_settings_local(tmp_path) == "no-example"
+    assert mod.ensure_settings_local(tmp_path) == ("no-example", [])
     assert not (tmp_path / ".claude" / "settings.local.json").exists()
 
 

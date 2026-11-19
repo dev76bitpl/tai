@@ -7,6 +7,12 @@ w GitHub Issues (`gh issue list`), nie tutaj. Fazy definiuje [docs/ROADMAP.md](R
 
 ## Stan sesji
 
+- 2026-11-19 **#268 projekt z własnym `settings.local.json` nie słyszał o zmianach w szablonie** — właściciel ze
+  skolaro: „przy starcie sesji nie ma info że coś jest nowego”. Plik sprzed szablonu nie podpinał
+  `session-context.py`, a `claude_settings.py` istniejącego pliku nie ruszał (#260). Teraz dopisuje brakujące hooki
+  szablonu, nie zmieniając hooków ani ustawień projektu (bez dubli, bez hooka, którego skryptu nie ma);
+  `update-from-template.py --apply` uruchamia to po skopiowaniu. Decyzja właściciela: automatycznie. Scenariusz 10n;
+  test właściciela 6/6.
 - 2026-11-17 **`GUARDS.md`: kolejność przy aktualizacji** — najpierw commit aktualizacji szablonu, potem `git worktree add`
   (inaczej `post-checkout` przerywa się na niezacommitowanym configu). Uwaga z odbioru jarvisa (jarvis#200).
 - 2026-11-17 **#248 reguła wydań (jarvis D-019) w kodeksie, który dociera do projektów** — release-please to
