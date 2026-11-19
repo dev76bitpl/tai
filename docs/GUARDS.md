@@ -375,7 +375,8 @@ Po co: wymóg „zielony check przed merge” po stronie GitHuba (branch protect
 prywatnym repo wymaga płatnego planu (`403 Upgrade to GitHub Pro or make this repository public`).
 Hook daje ten sam efekt lokalnie (tai#211, wzorzec z pilota cdue).
 
-- **Flaga pominięcia:** `[skip-merge-check]` w treści komendy — tylko po zgodzie właściciela
+- **Flaga pominięcia:** `[skip-merge-check]` jako komentarz powłoki na końcu komendy:
+  `gh pr merge 278 --squash  # [skip-merge-check]` (jako argument `gh` ją odrzuca, #280) — tylko po zgodzie właściciela
   na merge mimo czerwonego / trwającego / nieznanego checku.
 - **Granica:** wiąże wyłącznie `gh pr merge` z sesji i z tej maszyny. **Merge kliknięty w GitHubie
   w przeglądarce nie jest sprawdzany** — tę lukę zamyka dopiero branch protection (GitHub Pro).
@@ -498,4 +499,4 @@ o zmianach sam — pod warunkiem, że projekt ma lokalny klon szablonu (`$AI_TEM
 | `error: externally-managed-environment` przy `pip install` | Ubuntu 24.04+ blokuje pip globalnie (PEP 668) | `pipx install pre-commit` |
 | Guard hooki → `python3: not found` (Windows) | Guard hooki wymagają `python3` w PATH | utwórz alias — patrz sekcja „Strażnicy commita” |
 | Release PR (release-please) → CI w stanie `action_required` | GitHub od 2026-06-11 wstrzymuje workflowy z PR-ów tworzonych przez `github-actions[bot]` (zdarzenia z `GITHUB_TOKEN`) — zmiana bezpieczeństwa, nie błąd repo | kliknij „Approve workflows to run" w merge boxie release PR-a, albo zmerguj jeśli brak wymaganych checków; stałe obejście = App token/PAT zamiast `GITHUB_TOKEN` ([changelog](https://github.blog/changelog/2026-06-11-bot-created-pull-requests-can-run-workflows-if-approved/)) |
-| `gh pr merge` PR-a wydania → `[BLOCK] guard-pr-merge` | checki PR-a z release-please czekają na zatwierdzenie (`action_required`) albo go nie ma — strażnik nie widzi zielonego | zatwierdź workflowy i poczekaj na zielone; jeśli PR wydania nie ma wymaganych checków, merge po zgodzie właściciela z `[skip-merge-check]` |
+| `gh pr merge` PR-a wydania → `[BLOCK] guard-pr-merge` | checki PR-a z release-please czekają na zatwierdzenie (`action_required`) albo go nie ma — strażnik nie widzi zielonego | zatwierdź workflowy i poczekaj na zielone; jeśli PR wydania nie ma wymaganych checków, merge po zgodzie właściciela: `gh pr merge <nr> --squash  # [skip-merge-check]` |

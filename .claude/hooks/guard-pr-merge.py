@@ -18,7 +18,9 @@ Scope / limits:
     that cannot confirm green does not pass — but there IS a bypass, because merge is the
     owner's call.
 
-Bypass: put [skip-merge-check] anywhere in the command. Use it only for a deliberate merge
+Bypass: put [skip-merge-check] anywhere in the command — as a shell comment
+(`gh pr merge 48 --squash  # [skip-merge-check]`), since gh rejects it as an extra argument
+(tai#280). Use it only for a deliberate merge
 the owner has approved despite a red/pending/unknown check (e.g. an unrelated flaky external
 check). Unlike guard-process-kill, this guard has a bypass on purpose: it encodes a workflow
 policy, not a safety invariant.
@@ -147,7 +149,8 @@ def main() -> None:
         f"❌ [BLOCK] guard-pr-merge: {reason}.\n"
         "Project rule: a PR is merged only once its CI is green.\n"
         "  - wait for the checks to pass (watch: gh pr checks <pr> --watch), then merge; or\n"
-        f"  - if the owner has approved this merge despite the check, add {BYPASS} to the command.\n"
+        f"  - if the owner has approved this merge despite the check, end the command with a shell comment:\n"
+        f"      gh pr merge <pr> --squash  # {BYPASS}   (gh rejects it as an argument)\n"
         "Note: this guard only covers `gh pr merge`; a merge from the GitHub web UI is not checked.",
         file=sys.stderr,
     )
@@ -159,6 +162,7 @@ SELF_TEST: list[tuple[str, bool]] = [
     ("gh pr merge 48 --squash --delete-branch", True),   # red/pending per fake
     ("gh pr merge --squash", True),
     ("gh pr merge 48 --squash [skip-merge-check]", False),  # bypass
+    ("gh pr merge 48 --squash  # [skip-merge-check]", False),  # bypass as a shell comment
     ("git commit -m 'chore: document gh pr merge policy'", False),  # mention, not command
     ("echo 'run gh pr merge later'", False),
     ("cat <<'EOF'\nthen gh pr merge 48\nEOF", False),  # heredoc body

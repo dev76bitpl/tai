@@ -158,6 +158,7 @@ def run_hook(command: str, tool_name: str | None = "Bash") -> subprocess.Complet
     "ls -la",
     "gh pr view 48 --json statusCheckRollup",
     "gh pr merge 48 --squash [skip-merge-check]",
+    "gh pr merge 48 --squash  # [skip-merge-check]",   # the form gh accepts (#280)
 ])
 def test_should_exit_0_when_no_check_is_needed(cmd):
     result = run_hook(cmd)
@@ -181,3 +182,14 @@ def test_should_mention_the_hook_name_when_blocking():
     )
     assert result.returncode == 2
     assert "[BLOCK] guard-pr-merge" in result.stderr.decode("utf-8")
+
+
+def test_should_show_the_bypass_as_a_shell_comment_gh_accepts():
+    """gh rejects [skip-merge-check] as an extra argument; the hint must give the comment form (#280)."""
+    result = subprocess.run(
+        [sys.executable, str(HOOK)],
+        input=json.dumps({"tool_name": "Bash",
+                          "tool_input": {"command": "gh pr merge 999999999 --squash"}}).encode("utf-8"),
+        capture_output=True,
+    )
+    assert "# [skip-merge-check]" in result.stderr.decode("utf-8")

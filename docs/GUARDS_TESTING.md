@@ -228,12 +228,13 @@ zalogowane, sieć), ale wyłącznie czytają stan PR-a.
       → nic nie wypisuje, kod `0`
 - [ ] `echo '{"tool_input":{"command":"git commit -m \\"docs: gh pr merge policy\\""}}' | python3 .claude/hooks/guard-pr-merge.py; echo $?`
       → nic nie wypisuje, kod `0` (wzmianka w cudzysłowie to nie komenda)
-- [ ] `echo '{"tool_input":{"command":"gh pr merge 999999999 --squash [skip-merge-check]"}}' | python3 .claude/hooks/guard-pr-merge.py; echo $?`
+- [ ] `echo '{"tool_input":{"command":"gh pr merge 999999999 --squash  # [skip-merge-check]"}}' | python3 .claude/hooks/guard-pr-merge.py; echo $?`
       → nic nie wypisuje, kod `0` (flaga pominięcia, `gh` nie jest pytane)
 - [ ] `echo '{"tool_input":{"command":"gh pr merge 999999999 --squash"}}' | python3 .claude/hooks/guard-pr-merge.py; echo $?`
       → `❌ [BLOCK] guard-pr-merge: could not read the CI state of PR 999999999 (...)`, kod `2`
 - [ ] Ten sam wzór z numerem zmergowanego PR-a z zielonym CI (np. `272`) → nic nie wypisuje, kod `0`
-- [ ] `python3 .claude/hooks/guard-pr-merge.py --self-test` → `8/8 passed`
+- [ ] `python3 .claude/hooks/guard-pr-merge.py --self-test` → `9/9 passed`
+- [ ] Komunikat blokady podaje flagę jako komentarz `# [skip-merge-check]` — w tej formie `gh` ją przyjmuje (#280)
 
 ### Scenariusz 11d — strażnik commita blokuje, gdy nie może sprawdzić
 
