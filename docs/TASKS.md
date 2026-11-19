@@ -7,6 +7,11 @@ w GitHub Issues (`gh issue list`), nie tutaj. Fazy definiuje [docs/ROADMAP.md](R
 
 ## Stan sesji
 
+- 2026-11-19 **#282 aktualizacja podpina nowe hooki także przy własnym przykładzie ustawień** — odbiór v0.1.24
+  (jarvis, skolaro): `guard-pr-merge` nie trafiał do `settings.local.json`, bo `claude_settings.py` brał brakujące
+  hooki tylko z przykładu projektu, a zmieniony lokalnie przykład aktualizacja zostawia. Teraz `--apply` (i świeża
+  kopia z `--after-apply`) podaje przykład szablonu z tego samego stanu (`--template-example`); przykład projektu
+  nietknięty. Scenariusz 10n. Test mechaniczny uruchomiony przez sesję.
 - 2026-11-19 **#280 flaga pominięcia `guard-pr-merge` jako komentarz powłoki** — przy merge'u PR-a wydania
   v0.1.24 `gh pr merge 278 --squash [skip-merge-check]` padło na `gh` („accepts at most 1 arg(s)”); działa tylko
   `# [skip-merge-check]`. Komunikat blokady i `GUARDS.md` podają tę formę, test pilnuje komunikatu, SELF_TEST 9/9.

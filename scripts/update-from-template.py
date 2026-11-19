@@ -340,24 +340,44 @@ def print_guard_warnings(found: list[str]) -> None:
     print("   Popraw wpis albo go usuń (zostanie polecenie dla stosu): docs/GUARDS.md, „Konfiguracja strażników”.")
 
 
-def wire_hooks(project: Path) -> None:
+SETTINGS_EXAMPLE = ".claude/settings.local.json.example"
+
+
+def wire_hooks(project: Path, template_example: "Path | None" = None) -> None:
     """Wire the template hooks the project's settings.local.json lacks (#268) — with the copy just
     taken, so a project whose own file never ran session-context.py starts hearing about template
-    changes. Runs as a separate process: the module is fresh from the copy."""
+    changes. Runs as a separate process: the module is fresh from the copy. The template's example
+    goes along: a project that changed its own example keeps it, so a new hook is not in it (#282)."""
     script = project / "scripts" / "claude_settings.py"
     if script.is_file():
-        subprocess.run([sys.executable, str(script)], cwd=project)
+        extra = ["--template-example", str(template_example)] if template_example else []
+        subprocess.run([sys.executable, str(script), *extra], cwd=project)
 
 
 SELF = "scripts/update-from-template.py"
 
 
-def after_apply(project: Path) -> None:
-    """Steps after the files are copied. A new step goes here; see run_after_apply."""
-    wire_hooks(project)
+def after_apply(project: Path, repo: "Path | None" = None, ref: str = "") -> None:
+    """Steps after the files are copied. A new step goes here; see run_after_apply.
+    Without repo/ref (the fresh copy started with --after-apply) the template is found again."""
+    tmp = None
+    if repo is None:
+        repo, ref, tmp, error = resolve_source(project)
+    with tempfile.TemporaryDirectory(prefix="ai-template-example-") as scratch:
+        example = None
+        if repo is not None:
+            shown = git(repo, "show", f"{ref}:{SETTINGS_EXAMPLE}")
+            if shown.returncode == 0:
+                example = Path(scratch) / "settings.local.json.example"
+                example.write_bytes(shown.stdout)
+        try:
+            wire_hooks(project, example)
+        finally:
+            if tmp:
+                shutil.rmtree(tmp, ignore_errors=True)
 
 
-def run_after_apply(project: Path, applied: "list[str]") -> None:
+def run_after_apply(project: Path, applied: "list[str]", repo: "Path | None" = None, ref: str = "") -> None:
     """When --apply replaced this very script, the steps after copying come from the fresh copy,
     not from the old code still running (#271): otherwise a step added in the new version would
     wait for a second --apply."""
@@ -365,7 +385,7 @@ def run_after_apply(project: Path, applied: "list[str]") -> None:
     if SELF in applied and fresh.is_file():
         subprocess.run([sys.executable, str(fresh), "--after-apply"], cwd=project)
     else:
-        after_apply(project)
+        after_apply(project, repo, ref)
 
 
 def main() -> int:
@@ -392,7 +412,7 @@ def main() -> int:
         print_report(report, applied)
         print_guard_warnings(blocking_guard_commands(repo, ref, ROOT))
         if args.apply:
-            run_after_apply(ROOT, applied)
+            run_after_apply(ROOT, applied, repo, ref)
     finally:
         if tmp:
             shutil.rmtree(tmp, ignore_errors=True)

@@ -134,7 +134,7 @@ def test_should_not_add_a_hook_already_wired_in_the_shared_settings(tmp_path):
 
 def test_should_wire_the_hooks_after_a_template_update(tmp_path):
     source = (ROOT / "scripts" / "update-from-template.py").read_text(encoding="utf-8")
-    assert "run_after_apply(ROOT, applied)" in source and "claude_settings.py" in source
+    assert "run_after_apply(ROOT, applied, repo, ref)" in source and "claude_settings.py" in source
 
 
 def test_should_do_nothing_without_the_example(tmp_path):
@@ -184,3 +184,50 @@ def test_should_wire_the_hooks_in_a_new_worktree_end_to_end(tmp_path):
                    capture_output=True)
     settings = json.loads((tmp_path / "wt" / ".claude" / "settings.local.json").read_text(encoding="utf-8"))
     assert "INTERPRETER" not in json.dumps(settings) and "hooks" in settings
+
+
+# #282: a project that changed its own .example keeps it through the template update, so a new
+# template hook (guard-pr-merge in v0.1.24) never appeared there and was never wired.
+OWN_EXAMPLE = json.dumps({"hooks": {"PreToolUse": [{"matcher": "Bash|PowerShell", "hooks": [
+    {"type": "command", "command": "INTERPRETER ${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-process-kill.py"}]}]}})
+TEMPLATE_EXAMPLE = json.dumps({"hooks": {"PreToolUse": [{"matcher": "Bash|PowerShell", "hooks": [
+    {"type": "command", "command": "INTERPRETER ${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-process-kill.py"},
+    {"type": "command", "command": "INTERPRETER ${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-pr-merge.py"}]}]}})
+
+
+def _own_example_project(root: Path) -> Path:
+    (root / ".claude" / "hooks").mkdir(parents=True)
+    for name in ("guard-process-kill.py", "guard-pr-merge.py"):
+        (root / ".claude" / "hooks" / name).write_text("", encoding="utf-8")
+    (root / ".claude" / "settings.local.json.example").write_text(OWN_EXAMPLE, encoding="utf-8")
+    (root / ".claude" / "settings.local.json").write_text(OWN_EXAMPLE.replace("INTERPRETER", "python3"),
+                                                          encoding="utf-8")
+    template = root / "template.example"
+    template.write_text(TEMPLATE_EXAMPLE, encoding="utf-8")
+    return template
+
+
+def test_should_not_see_a_new_template_hook_from_a_locally_changed_example_alone(tmp_path):
+    _own_example_project(tmp_path)
+    assert mod.ensure_settings_local(tmp_path) == ("present", [])
+
+
+def test_should_wire_a_new_hook_from_the_template_example_when_the_own_one_lacks_it(tmp_path):
+    template = _own_example_project(tmp_path)
+    assert mod.ensure_settings_local(tmp_path, template_example=template) == ("updated", ["guard-pr-merge.py"])
+    settings = json.loads((tmp_path / ".claude" / "settings.local.json").read_text(encoding="utf-8"))
+    assert any(c.endswith("/guard-pr-merge.py") and "INTERPRETER" not in c for c in _commands(settings, "PreToolUse"))
+    # the project's own example is not touched
+    assert (tmp_path / ".claude" / "settings.local.json.example").read_text(encoding="utf-8") == OWN_EXAMPLE
+
+
+def test_should_ignore_an_unreadable_template_example(tmp_path):
+    template = _own_example_project(tmp_path)
+    template.write_text("{broken", encoding="utf-8")
+    assert mod.ensure_settings_local(tmp_path, template_example=template) == ("present", [])
+
+
+def test_should_take_the_template_example_from_the_command_line():
+    assert mod.template_example_arg(["--template-example", "x.json"]) == Path("x.json")
+    assert mod.template_example_arg([]) is None
+    assert mod.template_example_arg(["--template-example"]) is None
