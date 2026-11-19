@@ -7,6 +7,12 @@ w GitHub Issues (`gh issue list`), nie tutaj. Fazy definiuje [docs/ROADMAP.md](R
 
 ## Stan sesji
 
+- 2026-11-19 **#236 skill `code-review` bez `.hive/` autora** — w `.claude/skills/review/.hive/` przyjechały notatki
+  i instrukcje dla agenta z narzędzia Hive, którego używa autor u źródła (`PROTOCOL.md` każe agentowi je
+  czytać); `exclude` skilla ich nie obejmował, sync rozniósł je do projektów. Teraz `ALWAYS_EXCLUDE`
+  (`.git`, `.hive`) w `skills_upstream.py` dla każdego skilla z GitHuba, `.hive/` usunięty z tai; projekty tracą go
+  przy następnym `--sync --apply` (test). Scenariusz 13m. Test mechaniczny uruchomiony przez sesję, właściciel
+  przyjął wynik (od teraz tak przy testach bez ekranu i żywej sesji).
 - 2026-11-19 **#211 `gh pr merge` tylko przy zielonym CI** — wymóg zielonego checku po stronie GitHuba (branch
   protection) na prywatnym repo wymaga płatnego planu; w cdue trzy PR-y weszły z czerwonym CI. Port guarda
   `guard-pr-merge.py` z cdue-ai-dev-course: blokuje przy czerwonym, trwającym, brakującym albo nieczytelnym stanie

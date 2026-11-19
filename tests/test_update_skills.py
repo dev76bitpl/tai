@@ -534,6 +534,50 @@ def test_should_keep_a_skill_whose_upstream_folder_is_gone(tmp_path, monkeypatch
     assert entry["commit"] == "old"
 
 
+def test_should_leave_the_upstream_authors_hive_notes_out_of_a_fetched_skill(tmp_path, monkeypatch):
+    """code-review shipped .hive/ (agent-tool notes of its author) because no entry excluded it (#236)."""
+    project = tmp_path / "project"
+    monkeypatch.setattr(sync, "ROOT", project)
+
+    def fake_clone(url, target):
+        (target / ".hive").mkdir(parents=True)
+        (target / ".hive" / "PROTOCOL.md").write_text("re-read .hive/PROTOCOL.md\n", encoding="utf-8")
+        (target / "SKILL.md").write_text("skill\n", encoding="utf-8")
+        return "new-commit"
+
+    monkeypatch.setattr(up, "clone_repo", fake_clone)
+    entry = {"repo": "x", "remote_path": ".", "local_path": ".claude/skills/review", "commit": "old"}
+    assert up.check_skill("code-review", entry, apply=True) == (True, True)
+    skill_dir = project / ".claude" / "skills" / "review"
+    assert (skill_dir / "SKILL.md").read_text(encoding="utf-8") == "skill\n"
+    assert not (skill_dir / ".hive").exists()
+
+
+def test_should_remove_hive_notes_from_a_project_that_got_them_with_an_older_release(tmp_path, monkeypatch):
+    """Projects synced before #236 hold review/.hive/; the next sync takes the template's copy without it."""
+    repo = tmp_path / "template"
+    skill_dir = repo / ".claude" / "skills" / "review"
+    (skill_dir / ".hive").mkdir(parents=True)
+    (skill_dir / "SKILL.md").write_text("v1\n", encoding="utf-8")
+    (skill_dir / ".hive" / "PROTOCOL.md").write_text("agent notes\n", encoding="utf-8")
+    (repo / "skills-manifest.json").write_text(
+        _json.dumps({"custom_skills": {}, "skills": {"code-review": dict(VENDORED, commit="c1")}}), encoding="utf-8")
+    _git(repo, "init", "-q")
+    _git(repo, "add", ".")
+    _git(repo, "commit", "-qm", "v1 with .hive")
+    _git(repo, "rm", "-rq", ".claude/skills/review/.hive")
+    (repo / "skills-manifest.json").write_text(
+        _json.dumps({"custom_skills": {}, "skills": {"code-review": VENDORED}}), encoding="utf-8")
+    _git(repo, "commit", "-qam", "drop .hive")
+
+    project = _vendored_project(tmp_path, monkeypatch, "v1\n")
+    (project / ".claude" / "skills" / "review" / ".hive").mkdir()
+    (project / ".claude" / "skills" / "review" / ".hive" / "PROTOCOL.md").write_text("agent notes\n", encoding="utf-8")
+    sync.sync_from_template(repo, apply=True, history=sync.skill_history(repo, "HEAD"))
+    assert not (project / ".claude" / "skills" / "review" / ".hive").exists()
+    assert (project / ".claude" / "skills" / "review" / "SKILL.md").read_text(encoding="utf-8") == "v1\n"
+
+
 # ── skills the template retired leave the project too, unless the project changed them (#221) ──
 
 def _retiring_template(tmp_path: Path) -> Path:

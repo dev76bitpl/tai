@@ -40,6 +40,12 @@ SUSPICIOUS_MD_INJECTION_PATTERNS = [
 ]
 
 
+# Left out of every vendored skill, whatever its manifest entry says: git metadata and the
+# upstream author's agent-tool notes (Hive's .hive/ — PROTOCOL.md tells an agent how to behave),
+# which are not part of the skill and must not reach the projects (#236).
+ALWAYS_EXCLUDE = [".git", ".hive"]
+
+
 def clone_repo(repo_url: str, target_dir: Path) -> str:
     """Klonuje repo do katalogu tymczasowego. Zwraca hash HEAD."""
     print(f"  ↓ Pobieranie {repo_url}...")
@@ -147,7 +153,7 @@ def check_skill(
     print(f"   Ostatnio sprawdzony: {skill.get('checked', 'never')}")
 
     local_path = base.ROOT / skill["local_path"]
-    exclude = skill.get("exclude", [])
+    exclude = list(dict.fromkeys(ALWAYS_EXCLUDE + skill.get("exclude", [])))
 
     with tempfile.TemporaryDirectory() as tmp:
         tmp_path = Path(tmp) / "repo"
