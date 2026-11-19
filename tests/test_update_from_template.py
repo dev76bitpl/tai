@@ -390,3 +390,64 @@ def test_should_show_accepted_files_with_their_reason_in_the_preview(template, p
     assert "celowo inne" in out
     assert "scripts/mine.py — own guard kept on purpose" in out
     assert "zmieniony lokalnie" not in out
+
+
+# Deliberately different CLAUDE.md sections (tai#292): the same rule as files, keyed by header.
+
+def _accept_section(template: Path, project: Path, header: str, reason: str) -> str:
+    report = mod.compare(template, "origin/main", project)
+    return mod.accept_section(project, report, header, reason, "2026-11-19")
+
+
+def test_should_stop_reporting_a_section_accepted_with_a_reason(template, project):
+    assert _accept_section(template, project, "## One", "project keeps its own wording") == ""
+    report = mod.compare(template, "origin/main", project)
+    assert report.accepted_sections == {"CLAUDE.md: ## One": "project keeps its own wording"}
+    assert not any("## One" in line for line in report.sections)
+    assert any("## Three" in line for line in report.sections)
+
+
+def test_should_accept_a_section_given_with_its_file_name(template, project):
+    assert _accept_section(template, project, "CLAUDE.md: ## Three", "not used in this project") == ""
+    report = mod.compare(template, "origin/main", project)
+    assert "CLAUDE.md: ## Three" in report.accepted_sections
+
+
+def test_should_keep_the_session_notice_quiet_about_accepted_sections(template, project):
+    _switch(template, True)
+    assert "2 sekcji CLAUDE.md" in mod.session_notice(project, str(template), "2026-11-19")
+    _accept_section(template, project, "## One", "project keeps its own wording")
+    _accept_section(template, project, "## Three", "not used in this project")
+    assert "sekcji CLAUDE.md" not in (mod.session_notice(project, str(template), "2026-11-19") or "")
+
+
+def test_should_compare_an_accepted_section_again_once_the_template_changes_it(template, project):
+    _accept_section(template, project, "## One", "project keeps its own wording")
+    _commit(template, {"CLAUDE.md": CLAUDE_V2.replace("first, changed", "first, changed again")}, "v3")
+    _git(template, "update-ref", "refs/remotes/origin/main", "HEAD")
+    report = mod.compare(template, "origin/main", project)
+    assert report.expired_sections == {"CLAUDE.md: ## One": "2026-11-19"}
+    assert any("## One" in line and "przyjęta 2026-11-19" in line for line in report.sections)
+
+
+def test_should_refuse_a_section_that_is_not_different_or_a_short_reason(template, project):
+    assert "nie jest sekcją" in _accept_section(template, project, "## Two", "same as the template")
+    assert "powód" in _accept_section(template, project, "## One", "ours")
+    assert not (project / mod.ACCEPTED_FILE).exists()
+
+
+def test_should_keep_accepted_files_and_sections_side_by_side(template, project):
+    assert _accept(template, project, "scripts/mine.py", "own guard kept on purpose") == ""
+    assert _accept_section(template, project, "## One", "project keeps its own wording") == ""
+    assert _accept(template, project, "scripts/mine.py", "own guard kept, reworded reason") == ""
+    report = mod.compare(template, "origin/main", project)
+    assert report.files["scripts/mine.py"] == mod.ACCEPTED
+    assert "CLAUDE.md: ## One" in report.accepted_sections
+
+
+def test_should_show_accepted_sections_with_their_reason_in_the_preview(template, project, capsys):
+    _accept_section(template, project, "## One", "project keeps its own wording")
+    mod.print_report(mod.compare(template, "origin/main", project), None)
+    out = capsys.readouterr().out
+    assert "CLAUDE.md: ## One — project keeps its own wording" in out
+    assert "--accept-section" in out  # ## Three still waits, so the hint shows

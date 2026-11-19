@@ -124,6 +124,9 @@ Numery scenariuszy są stałe (odwołują się do nich zgłoszenia i log sesji),
   w „celowo inne” z powodem, nie w „zmieniony lokalnie”; nowa sesja Claude Code nie liczy go w „🔄 [t-ai] Szablon ma zmiany”
 - [ ] `--accept` z powodem z 1–2 słów albo dla pliku aktualnego → odmowa, plik `.claude/template-accepted.json` nie powstaje
 - [ ] Zmień ten plik w klonie szablonu (commit, `origin/main`) → podgląd znów pokazuje go jako „zmieniony lokalnie (przyjęty …, szablon od tego czasu go zmienił)”
+- [ ] Projekt z sekcją `CLAUDE.md` inną niż w szablonie: `--accept-section "<nagłówek z podglądu>" "powód z kilku słów"` → sekcja
+  w „celowo inne” z powodem, nie w „Sekcje do przejrzenia”; start sesji nie liczy jej w „sekcji CLAUDE.md”; nagłówek spoza
+  podglądu albo powód z 1–2 słów → odmowa
 - [ ] Niezacommitowana zmiana w klonie szablonu nie pojawia się w podglądzie
 - [ ] Szablon z `"template_update_check": true` w `.claude/hooks/config.json` na `origin/main`: pierwsza wiadomość
   nowej sesji Claude Code w projekcie → w terminalu linia „UserPromptSubmit says: 🔄 [t-ai] Szablon ma zmiany: …”; z `false` → nic

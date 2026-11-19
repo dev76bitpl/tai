@@ -7,6 +7,11 @@ w GitHub Issues (`gh issue list`), nie tutaj. Fazy definiuje [docs/ROADMAP.md](R
 
 ## Stan sesji
 
+- 2026-11-19 **#292 celowo inna sekcja `CLAUDE.md` do przyjęcia z powodem** — po rozprowadzeniu v0.1.27 cdue i
+  cdue-elearning dalej zgłaszały sekcję `## 📚 Reguły referencyjne` z blokiem `nextjs-agent-rules`, który dopisuje
+  `next dev` (musi zostać). `--accept-section "## Nagłówek" "powód"` zapisuje sekcję w `.claude/template-accepted.json`
+  (`sections`, skrót treści szablonu); wygasa, gdy szablon ją zmieni. `--accept` dla już przyjętego pliku podmienia powód.
+  7 testów, scenariusz 10l. Robione przez jarvisa (D-027).
 - 2026-11-19 **#289 start sesji nie robi zadań z wpisów dziennika** — `session-context.py` w trybie zapasowym brał
   każdy nagłówek `###` z `docs/TASKS.md` za otwarte zadanie; w skolaro (dziennik sesji, bez checkboxów) wyszło 26
   fałszywych `- [ ]`. Teraz tryb zapasowy wypisuje tylko nagłówki z `**Status:**` innym niż zakończony. 3 testy

@@ -487,7 +487,9 @@ nie ma jeszcze tego skryptu: dwa razy `python3 scripts/update-skills.py --sync -
 skrypt synchronizacji, drugi dokłada aktualizację), z podglądem `--sync` przed pierwszym — stara synchronizacja
 nadpisuje skille zmienione w projekcie. Nowa zostawia je w spokoju i wypisuje jako „zmieniony lokalnie”.
 
-`CLAUDE.md` jest tylko porównywany: skrypt wymienia sekcje nowe i inne niż w szablonie. Gdy szablon włączy
+`CLAUDE.md` jest tylko porównywany: skrypt wymienia sekcje nowe i inne niż w szablonie. Sekcję celowo inną
+przyjmuje `--accept-section "## Nagłówek" "powód"` (wpis w `.claude/template-accepted.json`); wraca do porównania,
+gdy szablon ją zmieni. Gdy szablon włączy
 sprawdzanie (`"template_update_check": true` w swoim `.claude/hooks/config.json`), hook startu sesji mówi
 o zmianach sam — pod warunkiem, że projekt ma lokalny klon szablonu (`$AI_TEMPLATE_PATH`). Dlaczego tak:
 [ADR-006](adr/ADR-006-updating-projects-from-template.md).
