@@ -63,6 +63,8 @@ nie dociera do projektów, które powstały wcześniej, i nikt o tym nie wie.
 6. **`CLAUDE.md` tylko porównywany, nigdy podmieniany.** Skrypt pokazuje sekcje, które
    w szablonie są nowe albo inne. Dlaczego: plik miesza reguły ogólne z regułami projektu,
    a podział na sekcje nie jest egzekwowany kodem — automatyczne scalanie byłoby zgadywaniem.
+   Sekcję celowo inną po przeglądzie przyjmuje się z powodem (`--accept-section "## Nagłówek" "powód"`,
+   tai#292) — tak jak plik w punkcie 5: wygasa, gdy szablon zmieni tę sekcję.
 
 7. **Hook startu sesji tylko informuje.** Zastępuje dzisiejsze porównanie samych hooków
    (`check_template_sync`) porównaniem całej listy z decyzji 4 wobec wydanego `main` i mówi

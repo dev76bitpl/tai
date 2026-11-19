@@ -6,6 +6,7 @@ Użycie:
     python3 scripts/update-from-template.py           # podgląd, niczego nie zmienia
     python3 scripts/update-from-template.py --apply   # kopiuje pliki „do aktualizacji” i „nowe”
     python3 scripts/update-from-template.py --accept PLIK "powód"   # różnica celowa, przestań zgłaszać
+    python3 scripts/update-from-template.py --accept-section "## Nagłówek" "powód"   # to samo dla sekcji CLAUDE.md
 
 Źródłem jest wydany `main` szablonu (origin/main lokalnego klona albo świeży klon z adresu),
 nigdy jego katalog roboczy (#179). Listę plików szablonu czyta z `template-files.json`
@@ -15,7 +16,8 @@ porównywany po sekcjach.
 Plik zmieniony lokalnie po przeglądzie można przyjąć jako celowo inny (`--accept`, tai#286):
 wpis z powodem trafia do `.claude/template-accepted.json` i plik przestaje się liczyć do
 zgłoszeń. Przyjęcie dotyczy wersji szablonu z chwili przyjęcia — gdy szablon zmieni plik,
-wraca on do porównania.
+wraca on do porównania. Tak samo sekcja `CLAUDE.md` (`--accept-section`, tai#292): przyjęcie
+trzyma treść sekcji szablonu i wygasa, gdy szablon ją zmieni.
 """
 import argparse
 import datetime
@@ -57,6 +59,9 @@ class Report:
     released: dict[str, str] = field(default_factory=dict)  # path -> released blob id
     accepted: dict[str, str] = field(default_factory=dict)  # path -> reason, still valid
     expired: dict[str, str] = field(default_factory=dict)  # path -> accepted date, template changed since
+    section_hashes: dict[str, str] = field(default_factory=dict)  # "CLAUDE.md: ## X" -> template body hash
+    accepted_sections: dict[str, str] = field(default_factory=dict)  # same key -> reason, still valid
+    expired_sections: dict[str, str] = field(default_factory=dict)  # same key -> accepted date
 
     def pending(self) -> list[str]:
         return [p for p, s in self.files.items() if s not in (CURRENT, ACCEPTED)]
@@ -141,8 +146,13 @@ def sections(text: str) -> dict[str, str]:
     return found
 
 
-def compare_sections(repo: Path, ref: str, project: Path, names: list[str]) -> list[str]:
-    lines = []
+def section_hash(body: str) -> str:
+    return hashlib.sha1(body.encode("utf-8")).hexdigest()
+
+
+def section_diffs(repo: Path, ref: str, project: Path, names: list[str]) -> list[tuple[str, str, str]]:
+    """(key, report line, template body hash) for every section new or different in the template."""
+    found = []
     for name in names:
         shown = git(repo, "show", f"{ref}:{name}")
         local = project / name
@@ -151,32 +161,51 @@ def compare_sections(repo: Path, ref: str, project: Path, names: list[str]) -> l
         theirs = sections(shown.stdout.decode("utf-8"))
         ours = sections(local.read_text(encoding="utf-8"))
         for header, body in theirs.items():
+            key = f"{name}: {header}"
             if header not in ours:
-                lines.append(f"{name}: {header}  (nowa w szablonie)")
+                found.append((key, f"{key}  (nowa w szablonie)", section_hash(body)))
             elif ours[header] != body:
-                lines.append(f"{name}: {header}  (inna niż w szablonie)")
-    return lines
+                found.append((key, f"{key}  (inna niż w szablonie)", section_hash(body)))
+    return found
 
 
-def read_accepted(project: Path) -> dict:
-    """path -> {"reason", "template_blob", "date"}; an unreadable file counts as empty."""
+def compare_sections(repo: Path, ref: str, project: Path, names: list[str]) -> list[str]:
+    return [line for _, line, _ in section_diffs(repo, ref, project, names)]
+
+
+def _accepted_part(project: Path, part: str) -> dict:
     try:
         data = json.loads((project / ACCEPTED_FILE).read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return {}
-    files = data.get("files") if isinstance(data, dict) else None
-    return files if isinstance(files, dict) else {}
+    found = data.get(part) if isinstance(data, dict) else None
+    return found if isinstance(found, dict) else {}
 
 
-def write_accepted(project: Path, files: dict) -> None:
+def read_accepted(project: Path) -> dict:
+    """path -> {"reason", "template_blob", "date"}; an unreadable file counts as empty."""
+    return _accepted_part(project, "files")
+
+
+def read_accepted_sections(project: Path) -> dict:
+    """"CLAUDE.md: ## X" -> {"reason", "template_hash", "date"} (tai#292)."""
+    return _accepted_part(project, "sections")
+
+
+def write_accepted(project: Path, files: dict, sections: "dict | None" = None) -> None:
     target = project / ACCEPTED_FILE
     target.parent.mkdir(parents=True, exist_ok=True)
+    if sections is None:
+        sections = read_accepted_sections(project)
     data = {
-        "_comment": "Template files this project keeps different on purpose (tai#286). Written by "
-                    "scripts/update-from-template.py --accept. An entry holds while the template "
-                    "file stays at template_blob; once the template changes it, the file is compared again.",
+        "_comment": "Template files and CLAUDE.md sections this project keeps different on purpose "
+                    "(tai#286, tai#292). Written by scripts/update-from-template.py --accept / "
+                    "--accept-section. An entry holds while the template file stays at template_blob "
+                    "(a section: at template_hash); once the template changes it, it is compared again.",
         "files": dict(sorted(files.items())),
     }
+    if sections:
+        data["sections"] = dict(sorted(sections.items()))
     target.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
@@ -209,7 +238,17 @@ def compare(repo: Path, ref: str, project: Path) -> Report:
                 report.files[path] = LOCAL
                 if isinstance(entry, dict):
                     report.expired[path] = str(entry.get("date", ""))
-    report.sections = compare_sections(repo, ref, project, spec.get("compare_sections", []))
+    accepted_sections = read_accepted_sections(project)
+    for key, line, digest in section_diffs(repo, ref, project, spec.get("compare_sections", [])):
+        report.section_hashes[key] = digest
+        entry = accepted_sections.get(key)
+        if isinstance(entry, dict) and entry.get("template_hash") == digest:
+            report.accepted_sections[key] = str(entry.get("reason", ""))
+            continue
+        if isinstance(entry, dict):
+            report.expired_sections[key] = str(entry.get("date", ""))
+            line += f"  (przyjęta {entry.get('date', '')}, szablon od tego czasu ją zmienił)"
+        report.sections.append(line)
     return report
 
 
@@ -221,11 +260,28 @@ def accept(project: Path, report: Report, path: str, reason: str, today: str) ->
     state = report.files.get(path)
     if state is None:
         return f"{path} nie jest plikiem szablonu"
-    if state != LOCAL:
+    if state not in (LOCAL, ACCEPTED):  # ACCEPTED: a new reason replaces the old one
         return f"{path} nie jest zmieniony lokalnie (stan: {state}) — nie ma czego przyjmować"
     files = read_accepted(project)
     files[path] = {"reason": reason.strip(), "template_blob": report.released[path], "date": today}
-    write_accepted(project, files)
+    write_accepted(project, files, read_accepted_sections(project))
+    return ""
+
+
+def accept_section(project: Path, report: Report, header: str, reason: str, today: str) -> str:
+    """Record a CLAUDE.md section as deliberately different (tai#292); returns an error message or ''."""
+    words = len(re.findall(r"\w+", reason or ""))
+    if words < MIN_REASON_WORDS:
+        return f"podaj powód, co najmniej {MIN_REASON_WORDS} słowa (np. \"blok Next.js dopisuje next dev\")"
+    wanted = header.strip()
+    keys = [k for k in report.section_hashes if k == wanted or k.split(": ", 1)[1] == wanted]
+    if not keys:
+        return f"„{wanted}” nie jest sekcją inną niż w szablonie — podaj nagłówek dokładnie jak w podglądzie"
+    if len(keys) > 1:
+        return f"„{wanted}” pasuje do kilku plików: {', '.join(keys)} — podaj „PLIK: nagłówek”"
+    sections = read_accepted_sections(project)
+    sections[keys[0]] = {"reason": reason.strip(), "template_hash": report.section_hashes[keys[0]], "date": today}
+    write_accepted(project, read_accepted(project), sections)
     return ""
 
 
@@ -334,9 +390,9 @@ def session_notice(project: Path, template_path: str, today: str) -> "str | None
 
 def print_report(report: Report, applied: "list[str] | None") -> None:
     pending = report.pending()
-    if report.accepted:
+    if report.accepted or report.accepted_sections:
         print("\ncelowo inne (przyjęte, nie zgłaszane):")
-        for path, reason in sorted(report.accepted.items()):
+        for path, reason in sorted({**report.accepted, **report.accepted_sections}.items()):
             print(f"  · {path} — {reason}")
     if not pending and not report.sections:
         print("\n✓ Projekt ma aktualne pliki szablonu.")
@@ -356,6 +412,7 @@ def print_report(report: Report, applied: "list[str] | None") -> None:
         print("\nSekcje do przejrzenia ręcznie (skrypt ich nie zmienia):")
         for line in report.sections:
             print(f"  • {line}")
+        print("Sekcja celowo inna? python3 scripts/update-from-template.py --accept-section \"## Nagłówek\" \"powód\"")
     if applied is None and any(report.files[p] in (OUTDATED, NEW) for p in pending):
         print("\nSkopiowanie plików „do aktualizacji” i „nowych”: python3 scripts/update-from-template.py --apply")
     elif applied:
@@ -460,6 +517,8 @@ def main() -> int:
     parser.add_argument("--apply", action="store_true", help="skopiuj pliki do aktualizacji i nowe")
     parser.add_argument("--accept", nargs=2, metavar=("PLIK", "POWÓD"),
                         help="zapisz plik zmieniony lokalnie jako celowo inny, z powodem")
+    parser.add_argument("--accept-section", nargs=2, metavar=("NAGŁÓWEK", "POWÓD"),
+                        help="zapisz sekcję CLAUDE.md inną niż w szablonie jako celowo inną, z powodem")
     parser.add_argument("--after-apply", action="store_true",
                         help="tylko kroki po skopiowaniu (wywołuje je --apply, gdy podmienił ten skrypt)")
     args = parser.parse_args()
@@ -484,6 +543,14 @@ def main() -> int:
                 print(f"❌ {error}")
                 return 1
             print(f"✓ {path} przyjęty jako celowo inny ({ACCEPTED_FILE}). Zapisz plik w commicie.")
+            return 0
+        if args.accept_section:
+            header, reason = args.accept_section
+            error = accept_section(ROOT, report, header, reason, datetime.date.today().isoformat())
+            if error:
+                print(f"❌ {error}")
+                return 1
+            print(f"✓ sekcja „{header}” przyjęta jako celowo inna ({ACCEPTED_FILE}). Zapisz plik w commicie.")
             return 0
         applied = apply(repo, ref, ROOT, report) if args.apply else None
         print_report(report, applied)
