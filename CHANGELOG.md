@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.22](https://github.com/dev76bitpl/tai/compare/v0.1.21...v0.1.22) (2026-11-19)
+
+
+### Bug Fixes
+
+* **hooks:** Wire missing template hooks into own settings ([#268](https://github.com/dev76bitpl/tai/issues/268)) ([#269](https://github.com/dev76bitpl/tai/issues/269)) ([6d45907](https://github.com/dev76bitpl/tai/commit/6d45907cbc34caf2f38bcb7b7b1c8fc8000fb6aa))
+
 ## [0.1.21](https://github.com/dev76bitpl/tai/compare/v0.1.20...v0.1.21) (2026-11-17)
 
 
