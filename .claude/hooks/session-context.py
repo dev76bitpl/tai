@@ -79,7 +79,8 @@ def extract_open_tasks(content: str, max_detail_lines: int = 3) -> str:
     if checkbox_found:
         return "\n".join(parts).strip()
 
-    # Mode 2: ### heading + **Status:** format (fallback dla BE-style TASKS.md)
+    # Mode 2: ### heading + **Status:** format (fallback dla BE-style TASKS.md).
+    # A heading without **Status:** is a session-log entry, not a task (tai#289).
     parts = []
     current_section = ""
     last_section_added = ""
@@ -101,7 +102,7 @@ def extract_open_tasks(content: str, max_detail_lines: int = 3) -> str:
                 if next_stripped.startswith("**Status:**"):
                     status = next_stripped.replace("**Status:**", "").strip()
                     break
-            if status and any(s in status for s in completed_statuses):
+            if not status or any(s in status for s in completed_statuses):
                 i += 1
                 continue
             if current_section != last_section_added:
