@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.23](https://github.com/dev76bitpl/tai/compare/v0.1.22...v0.1.23) (2026-11-19)
+
+
+### Bug Fixes
+
+* **update:** Run after-apply steps from the fresh copy ([#271](https://github.com/dev76bitpl/tai/issues/271)) ([#272](https://github.com/dev76bitpl/tai/issues/272)) ([f3ca3dc](https://github.com/dev76bitpl/tai/commit/f3ca3dc82c8023d3da47343c060198f8deb09ca4))
+
 ## [0.1.22](https://github.com/dev76bitpl/tai/compare/v0.1.21...v0.1.22) (2026-11-19)
 
 
