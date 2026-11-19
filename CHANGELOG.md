@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.24](https://github.com/dev76bitpl/tai/compare/v0.1.23...v0.1.24) (2026-11-19)
+
+
+### Features
+
+* **hooks:** Block gh pr merge until CI is green ([#211](https://github.com/dev76bitpl/tai/issues/211)) [user-tested] ([#277](https://github.com/dev76bitpl/tai/issues/277)) ([4a799ce](https://github.com/dev76bitpl/tai/commit/4a799cec833c3d6985e8f3084b1a6d0fbc4efb1c))
+
+
+### Bug Fixes
+
+* **skills:** Drop upstream .hive/ from skills ([#236](https://github.com/dev76bitpl/tai/issues/236)) [user-tested] ([#279](https://github.com/dev76bitpl/tai/issues/279)) ([1eb7a08](https://github.com/dev76bitpl/tai/commit/1eb7a0862d275bf451b20a5b11c241a851485b89))
+
 ## [0.1.23](https://github.com/dev76bitpl/tai/compare/v0.1.22...v0.1.23) (2026-11-19)
 
 
