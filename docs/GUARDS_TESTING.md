@@ -104,6 +104,8 @@ Numery scenariuszy są stałe (odwołują się do nich zgłoszenia i log sesji),
 - [ ] Zepsuty JSON w `settings.local.json` → plik bez zmian, checkout nie pada
 - [ ] `--apply`, które podmienia sam `update-from-template.py` → kroki po skopiowaniu wykonuje świeża kopia (`--after-apply`); jedno `--apply` wystarcza (#271)
 - [ ] Projekt ze skryptem sprzed v0.1.22: po pierwszym `--apply` raz `python3 scripts/claude_settings.py` (stary skrypt nie zna kroków po skopiowaniu)
+- [ ] Projekt z własnym, zmienionym `settings.local.json.example` (aktualizacja go nie nadpisuje): po `--apply` nowy hook szablonu (np. `guard-pr-merge.py`) i tak trafia do `settings.local.json` — brane z przykładu szablonu; przykład projektu bez zmian (#282)
+- [ ] Samo `python3 scripts/claude_settings.py` zna tylko przykład projektu — nowe hooki szablonu dochodzą przez `update-from-template.py --apply`
 
 ### Scenariusz 10k — dołączenie do projektu zaczyna się od doctora
 

@@ -276,7 +276,7 @@ def test_should_run_the_steps_after_copying_from_the_fresh_copy_when_the_script_
     (tmp_path / "scripts" / "update-from-template.py").write_text("", encoding="utf-8")
     calls, steps = [], []
     monkeypatch.setattr(mod.subprocess, "run", lambda cmd, **kw: calls.append(cmd))
-    monkeypatch.setattr(mod, "after_apply", lambda project: steps.append(project))
+    monkeypatch.setattr(mod, "after_apply", lambda project, *a: steps.append(project))
     mod.run_after_apply(tmp_path, ["scripts/update-from-template.py", "scripts/claude_settings.py"])
     assert calls == [[mod.sys.executable, str(tmp_path / "scripts" / "update-from-template.py"), "--after-apply"]]
     assert steps == []
@@ -285,7 +285,7 @@ def test_should_run_the_steps_after_copying_from_the_fresh_copy_when_the_script_
 def test_should_run_the_steps_itself_when_the_script_was_not_replaced(tmp_path, monkeypatch):
     calls, steps = [], []
     monkeypatch.setattr(mod.subprocess, "run", lambda cmd, **kw: calls.append(cmd))
-    monkeypatch.setattr(mod, "after_apply", lambda project: steps.append(project))
+    monkeypatch.setattr(mod, "after_apply", lambda project, *a: steps.append(project))
     mod.run_after_apply(tmp_path, ["scripts/claude_settings.py"])
     assert calls == [] and steps == [tmp_path]
 
@@ -304,3 +304,30 @@ def test_should_wire_the_hooks_with_after_apply_alone(tmp_path):
                           cwd=tmp_path, capture_output=True, text=True)
     assert done.returncode == 0, done.stderr
     assert "session-context.py" in target.read_text(encoding="utf-8")
+
+
+# #282: after --apply the hooks come also from the TEMPLATE's example, not only the project's —
+# a project that changed its own example (skolaro) keeps it, and a new hook was never wired.
+def test_should_wire_a_new_template_hook_into_a_project_with_its_own_example(tmp_path):
+    import json as _json
+    import shutil
+    own = {"hooks": {"PreToolUse": [{"matcher": "Bash|PowerShell", "hooks": [
+        {"type": "command", "command": "INTERPRETER ${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-process-kill.py"}]}]}}
+    repo = tmp_path / "template"
+    repo.mkdir()
+    _git(repo, "init", "-q", "-b", "main")
+    _commit(repo, {mod.SETTINGS_EXAMPLE: (ROOT / mod.SETTINGS_EXAMPLE).read_text(encoding="utf-8")}, "example")
+    project = tmp_path / "project"
+    (project / "scripts").mkdir(parents=True)
+    shutil.copy(ROOT / "scripts" / "claude_settings.py", project / "scripts" / "claude_settings.py")
+    (project / ".claude" / "hooks").mkdir(parents=True)
+    for name in ("guard-process-kill.py", "guard-pr-merge.py"):
+        (project / ".claude" / "hooks" / name).write_text("", encoding="utf-8")
+    (project / mod.SETTINGS_EXAMPLE).write_text(_json.dumps(own), encoding="utf-8")
+    target = project / ".claude" / "settings.local.json"
+    target.write_text(_json.dumps(own).replace("INTERPRETER", "python3"), encoding="utf-8")
+
+    mod.after_apply(project, repo, "HEAD")
+
+    assert "guard-pr-merge.py" in target.read_text(encoding="utf-8")
+    assert _json.loads((project / mod.SETTINGS_EXAMPLE).read_text(encoding="utf-8")) == own
